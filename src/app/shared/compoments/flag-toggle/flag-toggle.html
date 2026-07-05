@@ -1,0 +1,21 @@
+<button
+  type="button"
+  class="flag-card"
+  [class.is-yes]="value() === 'Yes'"
+  (click)="toggle.emit()"
+  [attr.aria-pressed]="value() === 'Yes'"
+>
+  <div class="flag-top">
+    <span class="flag-dot" [class.dot-on]="value() === 'Yes'"></span>
+    <div>
+      <span class="flag-name">{{ flag().label }}</span>
+      <span class="flag-hint">{{ flag().hint }}</span>
+    </div>
+  </div>
+  <span class="flag-badge" [class.b-yes]="value() === 'Yes'" [class.b-no]="value() === 'No'">
+    @if (value() === 'Yes') {
+      <span class="badge-check-icon" aria-hidden="true"></span>
+    }
+    {{ value() }}
+  </span>
+</button>

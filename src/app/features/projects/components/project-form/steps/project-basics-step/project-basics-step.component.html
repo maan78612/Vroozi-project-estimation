@@ -1,0 +1,140 @@
+<div class="step-body" [formGroup]="form()">
+
+  @if (isEditMode()) {
+    <div class="field-block">
+      <span class="field-label">Project Name</span>
+      <h2 class="project-name-heading">{{ form().get('projectName')?.value }}</h2>
+    </div>
+  } @else {
+    <!-- New project, or another supplier for an existing one -->
+    <div class="field-block">
+      <span class="field-label">What are you adding?</span>
+      <div class="mode-toggle" role="radiogroup" aria-label="What are you adding?">
+        <button
+          type="button"
+          class="mode-option"
+          role="radio"
+          [attr.aria-checked]="entryMode() === 'new'"
+          [class.is-selected]="entryMode() === 'new'"
+          (click)="entryModeChange.emit('new')"
+        >
+          <span class="mode-icon-wrap" aria-hidden="true">
+            <span class="mode-icon icon-folder-plus"></span>
+          </span>
+          <span class="mode-texts">
+            <span class="mode-title">New project</span>
+            <span class="mode-desc">Start a project with its first supplier</span>
+          </span>
+          <span class="mode-check" aria-hidden="true">
+            <span class="mode-check-icon icon-check"></span>
+          </span>
+        </button>
+        <button
+          type="button"
+          class="mode-option"
+          role="radio"
+          [attr.aria-checked]="entryMode() === 'existing'"
+          [class.is-selected]="entryMode() === 'existing'"
+          [disabled]="existingProjects().length === 0"
+          (click)="entryModeChange.emit('existing')"
+        >
+          <span class="mode-icon-wrap" aria-hidden="true">
+            <span class="mode-icon icon-users"></span>
+          </span>
+          <span class="mode-texts">
+            <span class="mode-title">Existing project</span>
+            <span class="mode-desc">Add another supplier's estimation to a project</span>
+          </span>
+          <span class="mode-check" aria-hidden="true">
+            <span class="mode-check-icon icon-check"></span>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    @if (entryMode() === 'existing') {
+      <div class="field-block">
+        <label class="field-label" for="f-existingProject">
+          Project <span class="required-mark" aria-hidden="true">*</span>
+        </label>
+        <select
+          id="f-existingProject"
+          class="field-input"
+          [class.is-error]="hasError('projectName')"
+          [value]="form().get('projectName')?.value || ''"
+          (change)="onProjectPicked($event)"
+        >
+          <option value="" disabled>Choose a project…</option>
+          @for (name of existingProjects(); track name) {
+            <option [value]="name">{{ name }}</option>
+          }
+        </select>
+        @if (hasError('projectName')) {
+          <span class="field-error" role="alert">Choose which project this supplier belongs to</span>
+        }
+      </div>
+    } @else {
+      <div class="field-block">
+        <label class="field-label" for="f-projectName">
+          Project Name <span class="required-mark" aria-hidden="true">*</span>
+        </label>
+        <input
+          id="f-projectName"
+          type="text"
+          class="field-input"
+          [class.is-error]="hasError('projectName')"
+          formControlName="projectName"
+          placeholder="e.g. Forest Lawn Integration"
+          autocomplete="off"
+        />
+        @if (hasError('projectName')) {
+          <span class="field-error" role="alert">Project name is required (min. 2 characters)</span>
+        }
+      </div>
+    }
+  }
+
+  @if (isAdmin()) {
+    <div class="field-block">
+      <span class="field-label">
+        Assigned To <span class="required-mark" aria-hidden="true">*</span>
+      </span>
+      <app-employee-select
+        formControlName="user"
+        [employees]="assignableUsers()"
+        [isError]="hasError('user')"
+      />
+      @if (hasError('user')) {
+        <span class="field-error" role="alert">Choose who this project is assigned to</span>
+      }
+    </div>
+  }
+
+  <div class="field-block">
+    <label class="field-label" for="f-erp">ERP System</label>
+    <input
+      id="f-erp"
+      type="text"
+      class="field-input"
+      formControlName="erp"
+      placeholder="e.g. SAP S/4HANA, NetSuite"
+      autocomplete="off"
+    />
+  </div>
+
+  <div class="field-block">
+    <label class="field-label" for="f-supplier">Supplier</label>
+    <input
+      id="f-supplier"
+      type="text"
+      class="field-input"
+      formControlName="supplier"
+      placeholder="e.g. Acme Supplies Ltd"
+      autocomplete="off"
+    />
+    <span class="field-hint">
+      Each entry covers one supplier — add more suppliers as separate entries later.
+    </span>
+  </div>
+
+</div>

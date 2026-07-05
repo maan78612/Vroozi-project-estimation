@@ -1,0 +1,86 @@
+@import (reference) 'styles.less';
+
+@breakpoint-sm: 580px;
+
+.stepper-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.125rem;
+}
+
+.stepper-card {
+  background: #f8f9fa;
+  border: 1.5px solid @color-border;
+  border-radius: 16px;
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: rgba(107, 78, 15, 0.3); }
+}
+
+.stepper-card-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: @color-text-secondary;
+  margin: 0 0 0.875rem;
+  line-height: 1.4;
+}
+
+.stepper-control {
+  display: flex;
+  align-items: center;
+  gap: 1.125rem;
+  margin-bottom: 0.875rem;
+}
+
+.stepper-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid @color-border;
+  background: @color-bg-card;
+  color: @color-text-primary;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  font-family: inherit;
+
+  &:hover:not(:disabled) {
+    border-color: @color-primary;
+    background: rgba(107, 78, 15, 0.06);
+    color: @color-primary;
+  }
+
+  &:disabled { opacity: 0.28; cursor: not-allowed; }
+}
+
+.stepper-value {
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: @color-text-primary;
+  min-width: 56px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.stepper-hint {
+  font-size: 0.72rem;
+  color: @color-text-muted;
+  line-height: 1.45;
+  margin: 0;
+}
+
+@media (max-width: @breakpoint-sm) {
+  .stepper-grid  { grid-template-columns: 1fr; gap: 0.875rem; }
+  .stepper-value { font-size: 2.25rem; }
+}

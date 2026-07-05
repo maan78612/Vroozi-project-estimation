@@ -1,0 +1,71 @@
+<!-- Escape is handled here so it closes the panel no matter which inner element has focus -->
+<div class="emp-select" (keydown.escape)="onEscape($event)">
+  <button
+    type="button"
+    class="emp-trigger"
+    [class.is-open]="isOpen()"
+    [class.is-error]="isError()"
+    [disabled]="isDisabled()"
+    (click)="toggle()"
+    (keydown)="onTriggerKeydown($event)"
+    aria-haspopup="listbox"
+    [attr.aria-expanded]="isOpen()"
+  >
+    @if (selectedEmployee(); as employee) {
+      <!-- initials pipe → "Sara Ahmed" becomes "SA" (same pipe as the option rows below) -->
+      <span class="emp-avatar" aria-hidden="true">{{ displayName(employee) | initials }}</span>
+      <span class="emp-trigger-text">
+        <span class="emp-trigger-name">{{ displayName(employee) }}</span>
+        <span class="emp-trigger-username">&#64;{{ employee.username }}</span>
+      </span>
+    } @else {
+      <span class="emp-placeholder">{{ placeholder() }}</span>
+    }
+    <span class="emp-chevron" aria-hidden="true"></span>
+  </button>
+
+  @if (isOpen()) {
+    <div class="emp-panel">
+      <div class="emp-search">
+        <span class="emp-search-icon" aria-hidden="true"></span>
+        <!-- appAutofocus: the cursor lands here the moment the panel opens -->
+        <input
+          appAutofocus
+          type="text"
+          class="emp-search-input"
+          placeholder="Search by name or username…"
+          autocomplete="off"
+          [value]="searchQuery()"
+          (input)="onSearch($event)"
+          (keydown)="onSearchKeydown($event)"
+        />
+      </div>
+
+      <ul class="emp-options" role="listbox">
+        @for (employee of filteredEmployees(); track employee.id; let i = $index) {
+          <li role="option" [attr.aria-selected]="employee.username === value()">
+            <button
+              type="button"
+              class="emp-option"
+              [class.is-active]="i === activeIndex()"
+              [class.is-selected]="employee.username === value()"
+              (click)="select(employee)"
+              (mouseenter)="activeIndex.set(i)"
+            >
+              <span class="emp-avatar" aria-hidden="true">{{ displayName(employee) | initials }}</span>
+              <span class="emp-option-text">
+                <span class="emp-option-name">{{ displayName(employee) }}</span>
+                <span class="emp-option-username">&#64;{{ employee.username }}</span>
+              </span>
+              @if (employee.username === value()) {
+                <span class="emp-check" aria-hidden="true"></span>
+              }
+            </button>
+          </li>
+        } @empty {
+          <li class="emp-empty">No employees match “{{ searchQuery() }}”</li>
+        }
+      </ul>
+    </div>
+  }
+</div>

@@ -1,0 +1,43 @@
+<div class="stepper-grid">
+
+  <div class="stepper-card">
+    <p class="stepper-card-label">Master Data<br>Interfaces</p>
+    <div class="stepper-control">
+      <button type="button" class="stepper-btn" (click)="decrement('masterDataInterfaces')" [disabled]="numVal('masterDataInterfaces') <= 0" aria-label="Decrease">−</button>
+      <span class="stepper-value">{{ numVal('masterDataInterfaces') }}</span>
+      <button type="button" class="stepper-btn" (click)="increment('masterDataInterfaces')" aria-label="Increase">+</button>
+    </div>
+    <p class="stepper-hint">Products, vendors, customers…</p>
+  </div>
+
+  <div class="stepper-card">
+    <p class="stepper-card-label">Transactional<br>Interfaces</p>
+    <div class="stepper-control">
+      <button type="button" class="stepper-btn" (click)="decrement('transactionalInterfaces')" [disabled]="numVal('transactionalInterfaces') <= 0" aria-label="Decrease">−</button>
+      <span class="stepper-value">{{ numVal('transactionalInterfaces') }}</span>
+      <button type="button" class="stepper-btn" (click)="increment('transactionalInterfaces')" aria-label="Increase">+</button>
+    </div>
+    <p class="stepper-hint">POs, invoices, orders…</p>
+  </div>
+
+  <div class="stepper-card">
+    <p class="stepper-card-label">Inbound<br>Flows</p>
+    <div class="stepper-control">
+      <button type="button" class="stepper-btn" (click)="decrement('inbound')" [disabled]="numVal('inbound') <= 0" aria-label="Decrease">−</button>
+      <span class="stepper-value">{{ numVal('inbound') }}</span>
+      <button type="button" class="stepper-btn" (click)="increment('inbound')" aria-label="Increase">+</button>
+    </div>
+    <p class="stepper-hint">Data entering the system</p>
+  </div>
+
+  <div class="stepper-card">
+    <p class="stepper-card-label">Outbound<br>Flows</p>
+    <div class="stepper-control">
+      <button type="button" class="stepper-btn" (click)="decrement('outbound')" [disabled]="numVal('outbound') <= 0" aria-label="Decrease">−</button>
+      <span class="stepper-value">{{ numVal('outbound') }}</span>
+      <button type="button" class="stepper-btn" (click)="increment('outbound')" aria-label="Increase">+</button>
+    </div>
+    <p class="stepper-hint">Data leaving the system</p>
+  </div>
+
+</div>

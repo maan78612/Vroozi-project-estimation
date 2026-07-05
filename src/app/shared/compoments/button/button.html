@@ -1,0 +1,22 @@
+<button
+  [type]="type()"
+  class="btn"
+  [class.btn-primary]="variant() === 'primary'"
+  [class.btn-link]="variant() === 'link'"
+  [class.btn-full-width]="fullWidth()"
+  [class.btn-loading]="loading()"
+  [class.btn-disabled]="isDisabled()"
+  [disabled]="isDisabled()"
+  [attr.aria-busy]="loading()"
+  (click)="onClick()"
+>
+  @if (loading()) {
+    <span class="btn-spinner" aria-hidden="true"></span>
+  }
+
+  @if (showBackArrow() && !loading()) {
+    <span class="back-arrow">←</span>
+  }
+
+  <span class="btn-label">{{ displayLabel() }}</span>
+</button>

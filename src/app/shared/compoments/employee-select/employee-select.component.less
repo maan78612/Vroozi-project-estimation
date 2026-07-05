@@ -1,0 +1,229 @@
+@import (reference) 'styles.less';
+
+:host {
+  display: block;
+}
+
+.emp-select {
+  position: relative;
+}
+
+// ── Trigger (styled to match .field-input) ──────────────────────────────────
+
+.emp-trigger {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 48px;
+  padding: 0.5rem 2.5rem 0.5rem 0.7rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  text-align: left;
+  color: @color-text-primary;
+  background: #f8f9fa;
+  border: 1.5px solid @color-border;
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+
+  &:focus-visible,
+  &.is-open {
+    border-color: @color-primary;
+    background: @color-bg-card;
+    box-shadow: 0 0 0 3px rgba(107, 78, 15, 0.1);
+  }
+
+  &.is-error {
+    border-color: @color-error;
+
+    &:focus-visible { box-shadow: 0 0 0 3px rgba(214, 69, 58, 0.12); }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.emp-placeholder {
+  color: @color-text-muted;
+  padding-left: 0.35rem;
+}
+
+.emp-trigger-text {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.emp-trigger-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emp-trigger-username {
+  font-size: 0.78rem;
+  color: @color-text-muted;
+}
+
+.emp-chevron {
+  position: absolute;
+  right: 1rem;
+  top: calc(50% - 5.5px);
+  width: 11px;
+  height: 11px;
+  background-color: @color-text-secondary;
+  mask: url('/assets/icons/chevron-right.svg') no-repeat center / contain;
+  -webkit-mask: url('/assets/icons/chevron-right.svg') no-repeat center / contain;
+  rotate: 90deg;
+  transition: rotate 0.18s ease;
+
+  .emp-trigger.is-open & { rotate: -90deg; }
+}
+
+// ── Avatar initials (shared by trigger + options) ────────────────────────────
+
+.emp-avatar {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(107, 78, 15, 0.12);
+  color: @color-primary;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+// ── Dropdown panel ───────────────────────────────────────────────────────────
+
+.emp-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: @color-bg-card;
+  border: 1.5px solid @color-border;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.06),
+    0 16px 40px rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+  animation: emp-panel-in 0.14s ease;
+}
+
+@keyframes emp-panel-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.emp-search {
+  position: relative;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.emp-search-icon {
+  position: absolute;
+  left: 0.9rem;
+  top: calc(50% - 7px);
+  width: 14px;
+  height: 14px;
+  background-color: @color-text-muted;
+  mask: url('/assets/icons/search.svg') no-repeat center / contain;
+  -webkit-mask: url('/assets/icons/search.svg') no-repeat center / contain;
+}
+
+.emp-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  outline: none;
+  padding: 0.75rem 1rem 0.75rem 2.35rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: @color-text-primary;
+  background: transparent;
+
+  &::placeholder { color: @color-text-muted; }
+}
+
+// ── Options list ─────────────────────────────────────────────────────────────
+
+.emp-options {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0.35rem;
+  max-height: 246px;
+  overflow-y: auto;
+}
+
+.emp-option {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: @color-text-primary;
+  text-align: left;
+  cursor: pointer;
+
+  &.is-active { background: rgba(107, 78, 15, 0.07); }
+
+  &.is-selected .emp-option-name { color: @color-primary-dark; }
+}
+
+.emp-option-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.emp-option-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emp-option-username {
+  font-size: 0.75rem;
+  color: @color-text-muted;
+}
+
+.emp-check {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  background-color: @color-primary;
+  mask: url('/assets/icons/check.svg') no-repeat center / contain;
+  -webkit-mask: url('/assets/icons/check.svg') no-repeat center / contain;
+}
+
+.emp-empty {
+  padding: 0.9rem 1rem;
+  font-size: 0.83rem;
+  color: @color-text-muted;
+  text-align: center;
+}

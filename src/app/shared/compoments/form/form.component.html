@@ -1,0 +1,70 @@
+<!--  ──────────────────────────────────────────────────────────────────
+  * [class.grid-layout] → dynamically adds "grid-layout" class 
+  * to form element; in LESS, use the element name 
+  *(e.g. form.grid-layout) to target it
+ ─────────────────────────────────────────────────────────────────────-->
+
+<form [formGroup]="formGroup" (ngSubmit)="onSubmit()"  [class.grid-layout]="gridLayout()">
+  <div class="form-fields">
+    @for (field of fields(); track field.key) {
+      <div class="field">
+        <label [for]="field.key">{{ field.label }}</label>
+
+        @if (field.type === FieldTypeEnum.Dropdown) {
+          <select
+            [id]="field.key"
+            [formControlName]="field.key"
+            [class.invalid]="isInvalid(field.key)"
+          >
+            <option value="" disabled>Select...</option>
+            @for (opt of field.options ?? []; track opt) {
+              <option [value]="opt">{{ opt }}</option>
+            }
+          </select>
+        } @else {
+          <!-- ───────────────────────────────────────────────────────────
+            * [attr.min] & [attr.max] → only applied when 
+            * Percentage; enforces 0–100 range
+           ────────────────────────────────────────────────────────────-->
+          <input
+            [id]="field.key"
+            [type]="
+              field.inputType ??
+              (field.type === FieldTypeEnum.Number || field.type === FieldTypeEnum.Percentage
+                ? 'number'
+                : 'text')
+            "
+            [attr.min]="field.type === FieldTypeEnum.Percentage ? 0 : null"
+            [attr.max]="field.type === FieldTypeEnum.Percentage ? 100 : null"
+            [placeholder]="field.placeholder ?? ''"
+            [formControlName]="field.key"
+            [class.invalid]="isInvalid(field.key)"
+          />
+        }
+
+        @if (isInvalid(field.key)) {
+          <span class="error-text">{{ field.label }} is required.</span>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="form-actions">
+    <app-button
+      type="submit"
+      [label]="submitLabel()"
+      [loadingLabel]="loadingLabel()"
+      [loading]="isSubmitting()"
+      [disabled]="isSubmitting()"
+      [fullWidth]="!gridLayout()"
+    />
+
+    @if (submitSuccess()) {
+      <p class="success-text">{{ successMessage() }}</p>
+    }
+
+    @if (submitError()) {
+      <p class="error-banner">{{ submitError() }}</p>
+    }
+  </div>
+</form>

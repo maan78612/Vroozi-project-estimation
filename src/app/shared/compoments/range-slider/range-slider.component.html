@@ -1,0 +1,47 @@
+<div class="rs-wrap" [class.is-disabled]="disabled()">
+  <div class="rs-values">
+    <span class="rs-value">{{ minValue() }} <small>{{ unit() }}</small></span>
+    <span class="rs-value">{{ maxValue() }} <small>{{ unit() }}</small></span>
+  </div>
+
+  <div class="rs-track-wrap">
+    <div class="rs-track"></div>
+    <div class="rs-fill" [style.left.%]="minPct()" [style.right.%]="100 - maxPct()"></div>
+
+    <input
+      type="range"
+      class="rs-input"
+      [class.is-active]="activeThumb() === 'min'"
+      [min]="min()"
+      [max]="max()"
+      [step]="step()"
+      [value]="minValue()"
+      [disabled]="disabled()"
+      (input)="onMinInput($event)"
+      (pointerdown)="onThumbActive('min')"
+      (focus)="onThumbActive('min')"
+      (blur)="onThumbBlur()"
+      aria-label="Minimum days"
+    />
+    <input
+      type="range"
+      class="rs-input rs-input-max"
+      [class.is-active]="activeThumb() === 'max'"
+      [min]="min()"
+      [max]="max()"
+      [step]="step()"
+      [value]="maxValue()"
+      [disabled]="disabled()"
+      (input)="onMaxInput($event)"
+      (pointerdown)="onThumbActive('max')"
+      (focus)="onThumbActive('max')"
+      (blur)="onThumbBlur()"
+      aria-label="Maximum days"
+    />
+  </div>
+
+  <div class="rs-scale">
+    <span>{{ min() }}</span>
+    <span>{{ max() }}</span>
+  </div>
+</div>

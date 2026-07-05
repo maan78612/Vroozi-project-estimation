@@ -1,0 +1,67 @@
+//* ──────────────────────────────────────────────────────────────────
+// Global color palette
+//* ──────────────────────────────────────────────────────────────────
+
+// Brand / primary
+@color-primary: #6b4e0f;
+@color-primary-dark: #3a2e0a;
+
+// Background
+@color-bg-black: #0a0a0a;
+@color-bg-black-soft: #1a1a1a;
+@color-bg-card: #ffffff;
+@color-white: #ffffff;
+
+// Text
+@color-text-primary: #1a1a1a;
+@color-text-secondary: #6b6b6b;
+@color-text-secondary-focus: #6b5a2e;
+@color-text-muted: #9a9a9a;
+
+// Semantic
+@color-error: #d6453a;
+@color-success: #1c6e56;
+@color-success-hover: #15543f;
+
+// Border
+@color-border: #e0e0e0;
+@color-border-focus: @color-primary;
+
+// Background gradient
+@bg-gradient: linear-gradient(
+  135deg,
+  @color-bg-black 0%,
+  @color-bg-black-soft 55%,
+  @color-primary-dark 85%,
+  @color-primary 100%
+);
+
+//* ──────────────────────────────────────────────────────────────────
+// Global styles
+//* ──────────────────────────────────────────────────────────────────
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+:root {
+  --color-primary: @color-primary;
+  --color-primary-dark: @color-primary-dark;
+  --color-bg-black: @color-bg-black;
+  --color-bg-black-soft: @color-bg-black-soft;
+  --color-bg-card: @color-bg-card;
+  --color-white: @color-white;
+  --color-text-primary: @color-text-primary;
+  --color-text-secondary: @color-text-secondary;
+  --color-text-muted: @color-text-muted;
+  --color-error: @color-error;
+  --color-success: @color-success;
+  --color-success-hover: @color-success-hover;
+  --color-border: @color-border;
+  --color-border-focus: @color-border-focus;
+
+  background: @bg-gradient;
+}

@@ -1,0 +1,180 @@
+@import (reference) 'styles.less';
+
+@breakpoint-mobile: 768px;
+
+// ── Page wrapper ──────────────────────────────────────────────────────────────
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 2rem 1.5rem;
+  overflow-y: auto;
+}
+
+// ── Outer card shell ──────────────────────────────────────────────────────────
+.auth-group {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  max-width: 860px;
+  // Locks both login and forgot-password to the same height — prevents jerk on route change
+  min-height: 460px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 24px 64px rgba(0, 0, 0, 0.6);
+
+  @media (max-width: @breakpoint-mobile) {
+    flex-direction: column;
+    max-width: 420px;
+    min-height: unset;
+    border-radius: 16px;
+  }
+}
+
+// ── Left brand panel — glass surface over the page gradient ───────────────────
+.brand-panel {
+  flex: 0 0 38%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.75rem;
+  padding: 3.5rem 2.5rem;
+  position: relative;
+  // Glass morphism: lets the bg gradient show through but reads as a distinct pane
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+
+  // Soft inner ambient glow
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse 120% 80% at 60% 110%,
+      rgba(107, 78, 15, 0.18) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+
+  .logo {
+    width: 180px;
+    height: auto;
+    max-width: 100%;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
+  }
+
+  .brand-tagline {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.38);
+    text-align: center;
+    letter-spacing: 0.06em;
+    line-height: 1.7;
+    position: relative;
+    z-index: 1;
+    margin: 0;
+  }
+
+  .brand-dots {
+    display: flex;
+    gap: 7px;
+    position: relative;
+    z-index: 1;
+
+    span {
+      display: block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(107, 78, 15, 0.4);
+
+      &:first-child {
+        background: @color-primary;
+        box-shadow: 0 0 8px rgba(107, 78, 15, 0.7);
+      }
+    }
+  }
+
+  @media (max-width: @breakpoint-mobile) {
+    flex: none;
+    padding: 1.75rem 2rem;
+    flex-direction: row;
+    gap: 1rem;
+    justify-content: center;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    .logo { width: 100px; }
+    .brand-tagline,
+    .brand-dots { display: none; }
+  }
+}
+
+// ── Right form panel ──────────────────────────────────────────────────────────
+.auth-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  background: @color-bg-card;
+  min-width: 0;
+  box-sizing: border-box;
+
+  .auth-header {
+    padding: 2.25rem 2.5rem 1.25rem;
+    border-bottom: 1px solid @color-border;
+
+    h2 {
+      margin: 0 0 0.3rem;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: @color-text-primary;
+      letter-spacing: -0.01em;
+    }
+
+    .auth-subtitle {
+      margin: 0;
+      font-size: 0.85rem;
+      color: @color-text-secondary;
+      line-height: 1.55;
+    }
+  }
+
+  .auth-footer {
+    padding: 0.75rem 2.5rem 1.75rem;
+    text-align: center;
+
+    .auth-link {
+      font-size: 0.85rem;
+      color: @color-text-secondary;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: color 0.2s;
+
+      &:hover {
+        color: @color-text-secondary-focus;
+      }
+    }
+  }
+
+  @media (max-width: @breakpoint-mobile) {
+    .auth-header {
+      padding: 1.5rem 1.5rem 1rem;
+    }
+
+    .auth-footer {
+      padding: 0.75rem 1.5rem 1.25rem;
+    }
+  }
+}

@@ -1,0 +1,140 @@
+@import (reference) 'styles.less';
+
+@size-s-color: #1c6e56;
+@size-m-color: #856404;
+@size-l-color: #7d4e1a;
+@size-xl-color: #7d3510;
+@size-xxl-color: #842029;
+
+.rs-wrap {
+  width: 100%;
+
+  &.is-disabled { opacity: 0.6; pointer-events: none; }
+}
+
+.rs-values {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.1rem;
+}
+
+.rs-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: @color-primary;
+  background: rgba(107, 78, 15, 0.08);
+  padding: 0.35rem 0.9rem;
+  border-radius: 10px;
+  letter-spacing: -0.02em;
+
+  small {
+    font-size: 0.6em;
+    font-weight: 700;
+    color: @color-text-secondary;
+    margin-left: 0.15rem;
+  }
+}
+
+.rs-track-wrap {
+  position: relative;
+  height: 22px;
+  display: flex;
+  align-items: center;
+}
+
+.rs-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 6px;
+  border-radius: 3px;
+  // Visual zones matching the S/M/L/XL/XXL size tiers, so the user can
+  // see which bucket the max handle will land in before they let go.
+  background: linear-gradient(
+    to right,
+    @size-s-color 0%, @size-s-color 13.3%,
+    @size-m-color 13.3%, @size-m-color 20%,
+    @size-l-color 20%, @size-l-color 33.3%,
+    @size-xl-color 33.3%, @size-xl-color 40%,
+    @size-xxl-color 40%, @size-xxl-color 100%
+  );
+  opacity: 0.25;
+}
+
+.rs-fill {
+  position: absolute;
+  height: 6px;
+  border-radius: 3px;
+  background: @color-primary;
+}
+
+.rs-input {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: none;
+  z-index: 2;
+  outline: none;
+
+  &.rs-input-max { z-index: 3; }
+  &.is-active { z-index: 4; }
+
+  &::-webkit-slider-runnable-track {
+    -webkit-appearance: none;
+    height: 22px;
+    background: transparent;
+  }
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    pointer-events: auto;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: @color-primary;
+    cursor: grab;
+    border: 3px solid @color-bg-card;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  &:hover::-webkit-slider-thumb,
+  &.is-active::-webkit-slider-thumb {
+    transform: scale(1.18);
+    box-shadow: 0 2px 10px rgba(107, 78, 15, 0.35);
+  }
+
+  &:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 4px rgba(107, 78, 15, 0.18);
+  }
+
+  &::-moz-range-track { height: 6px; background: transparent; border: none; }
+
+  &::-moz-range-thumb {
+    pointer-events: auto;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: @color-primary;
+    cursor: grab;
+    border: 3px solid @color-bg-card;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.rs-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+
+  span {
+    font-size: 0.68rem;
+    color: @color-text-muted;
+  }
+}

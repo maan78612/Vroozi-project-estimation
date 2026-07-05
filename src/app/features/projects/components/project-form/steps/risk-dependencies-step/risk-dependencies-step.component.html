@@ -1,0 +1,49 @@
+<div class="flag-grid flag-grid-2">
+  @for (flag of flags(); track flag.key) {
+    <app-flag-toggle [flag]="flag" [value]="yn(flag.key)" (toggle)="toggle(flag.key)" />
+  }
+</div>
+
+<div class="sliders-section" [formGroup]="form()">
+
+  <div class="range-wrap">
+    <div class="range-header">
+      <div>
+        <p class="range-name">Data Layer</p>
+        <p class="range-desc">Percentage of data layer complexity</p>
+      </div>
+      <span class="range-pct">{{ numVal('dataLayer') }}<sup>%</sup></span>
+    </div>
+    <input
+      type="range"
+      class="range-input"
+      formControlName="dataLayer"
+      min="0" max="100"
+      [style.background]="sliderTrack('dataLayer')"
+    />
+    <div class="range-ticks">
+      <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+    </div>
+  </div>
+
+  <div class="range-wrap">
+    <div class="range-header">
+      <div>
+        <p class="range-name">Uncertainties</p>
+        <p class="range-desc">Percentage of scope uncertainty</p>
+      </div>
+      <span class="range-pct">{{ numVal('uncertainties') }}<sup>%</sup></span>
+    </div>
+    <input
+      type="range"
+      class="range-input"
+      formControlName="uncertainties"
+      min="0" max="100"
+      [style.background]="sliderTrack('uncertainties')"
+    />
+    <div class="range-ticks">
+      <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+    </div>
+  </div>
+
+</div>

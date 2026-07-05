@@ -1,0 +1,93 @@
+<div
+  class="project-card"
+  [class.size-s]="size() === ProjectSizeEnum.S"
+  [class.size-m]="size() === ProjectSizeEnum.M"
+  [class.size-l]="size() === ProjectSizeEnum.L"
+  [class.size-xl]="size() === ProjectSizeEnum.XL"
+  [class.size-xxl]="size() === ProjectSizeEnum.XXL"
+>
+  <!-- Name + badge -->
+  <div class="card-top">
+    <h3 class="card-name">{{ projectName() }}</h3>
+    @if (size()) {
+      <span class="size-badge size-{{ size()!.toLowerCase() }}">
+        {{ size() }}
+      </span>
+    }
+  </div>
+
+  <!-- Assignee + ERP + Supplier chips -->
+  <div class="card-chips">
+    @if (assignedToName()) {
+      <span class="chip chip-assignee">
+        <span class="chip-label">Assigned</span>
+        <span class="chip-value">{{ assignedToName() }}</span>
+      </span>
+    }
+    @if (erp()) {
+      <span class="chip">
+        <span class="chip-label">ERP</span>
+        <span class="chip-value">{{ erp() }}</span>
+      </span>
+    }
+    @if (suppliers().length > 0) {
+      <span class="chip">
+        <span class="chip-label">{{ suppliers().length > 1 ? 'Suppliers' : 'Supplier' }}</span>
+        <!-- listSummary:2 pipe → show 2 names, collapse the rest into "+N" -->
+        <span class="chip-value">{{ suppliers() | listSummary: 2 }}</span>
+      </span>
+    }
+  </div>
+
+  <!-- Complexity signal tags -->
+  @if (visibleSignals().length > 0) {
+    <div class="card-signals">
+      @for (flag of visibleSignals(); track flag) {
+        <span class="signal-tag">{{ flag }}</span>
+      }
+      @if (remainingSignalsCount() > 0) {
+        <span class="signal-tag signal-tag-more">+{{ remainingSignalsCount() }} more</span>
+      }
+    </div>
+  }
+
+  <!-- Metrics (highest value across the suppliers) -->
+  <div class="card-metrics">
+    <div class="metric">
+      <div class="metric-head">
+        <span>Data Layer</span><strong>{{ dataLayer() }}%</strong>
+      </div>
+      <div class="metric-track">
+        <div class="metric-fill fill-data" [style.width.%]="dataLayer()"></div>
+      </div>
+    </div>
+    <div class="metric">
+      <div class="metric-head">
+        <span>Uncertainty</span><strong>{{ uncertainties() }}%</strong>
+      </div>
+      <div class="metric-track">
+        <div class="metric-fill fill-uncertainty" [style.width.%]="uncertainties()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Range highlight (earliest start → latest end across suppliers) -->
+  @if (rangeLabel()) {
+    <div class="card-range">
+      <span class="range-label">Estimated range</span>
+      <span class="range-value">{{ rangeLabel() }} days</span>
+    </div>
+  }
+
+  <!-- Footer: totals + edit -->
+  <div class="card-footer">
+    <span class="card-meta-text">
+      {{ interfacesTotal() }} interfaces
+      &nbsp;·&nbsp; ↓{{ inboundTotal() }} ↑{{ outboundTotal() }}
+      @if (entries().length > 1) {
+        &nbsp;·&nbsp; {{ entries().length }} suppliers
+      }
+    </span>
+    <app-button variant="link" label="Edit" [fullWidth]="false" (clicked)="edit.emit()" />
+  </div>
+</div>

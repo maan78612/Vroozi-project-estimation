@@ -1,0 +1,179 @@
+<div class="wizard-page">
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="wizard-header">
+    <div class="wizard-header-inner">
+      <img src="/assets/images/company-logo.png" alt="Company logo" class="logo" />
+
+      <div class="header-right">
+        <app-button
+          variant="link"
+          label="Back to projects"
+          [fullWidth]="false"
+          [showBackArrow]="true"
+          (clicked)="onBack()"
+        />
+        @if (!isAdmin()) {
+          <span class="header-divider"></span>
+          <span class="username">{{ username() }}</span>
+          <span class="header-divider"></span>
+          <app-button variant="link" label="Sign out" [fullWidth]="false" (clicked)="signOut()" />
+        }
+      </div>
+    </div>
+  </header>
+
+  <div class="wizard-scroll">
+    <!-- ── Error state ────────────────────────────────────────────────────── -->
+    @if (loadError()) {
+      <div class="wizard-state is-error">
+        <span class="state-icon" aria-hidden="true"></span>
+        <p>{{ loadError() }}</p>
+      </div>
+    } @else {
+      <!-- ── Step progress bar ───────────────────────────────────────────── -->
+      <nav class="wizard-progress" aria-label="Form progress">
+        @for (step of stepMeta; track step.title; let i = $index) {
+          <button
+            type="button"
+            class="progress-item"
+            [class.is-done]="currentStep() > i"
+            [class.is-active]="currentStep() === i"
+            [disabled]="i >= currentStep()"
+            (click)="goToStep(i)"
+            [attr.aria-current]="currentStep() === i ? 'step' : null"
+          >
+            <div class="progress-circle">
+              @if (currentStep() > i) {
+                <span class="progress-check-icon" aria-hidden="true"></span>
+              } @else {
+                {{ i + 1 }}
+              }
+            </div>
+            <span class="progress-label">{{ step.title }}</span>
+          </button>
+
+          @if (i < stepMeta.length - 1) {
+            <div
+              class="progress-connector"
+              [class.is-filled]="currentStep() > i"
+              aria-hidden="true"
+            ></div>
+          }
+        }
+      </nav>
+
+      <!-- ── Wizard body ──────────────────────────────────────────────────── -->
+      <main class="wizard-body">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+          <div class="step-card">
+            <!-- Step header -->
+            <div class="step-header">
+              <div class="project-identity">
+                <span class="project-identity-dot" aria-hidden="true"></span>
+                <h2 class="project-identity-name">{{ form.get('projectName')?.value || 'Untitled Project' }}</h2>
+              </div>
+              <span class="step-eyebrow">Step {{ currentStep() + 1 }} of {{ totalSteps }}</span>
+              <h1 class="step-title">{{ stepMeta[currentStep()].title }}</h1>
+              <p class="step-subtitle">{{ stepMeta[currentStep()].subtitle }}</p>
+            </div>
+            <div class="step-rule"></div>
+
+            <!-- ── 1 · Project Basics ────────────────────────────────────── -->
+            @if (currentStep() === 0) {
+              <div class="step-body">
+                <app-project-basics-step
+                  [form]="form"
+                  [isEditMode]="isEditMode()"
+                  [isAdmin]="isAdmin()"
+                  [assignableUsers]="assignableUsers"
+                  [entryMode]="entryMode()"
+                  [existingProjects]="existingProjects()"
+                  (entryModeChange)="setEntryMode($event)"
+                  (existingProjectPicked)="onExistingProjectPicked($event)"
+                />
+              </div>
+            }
+
+            <!-- ── 2 · Integration Scope ─────────────────────────────────── -->
+            @if (currentStep() === 1) {
+              <div class="step-body">
+                <app-integration-scope-step [form]="form" />
+              </div>
+            }
+
+            <!-- ── 3 · Complexity Factors ────────────────────────────────── -->
+            @if (currentStep() === 2) {
+              <div class="step-body">
+                <p class="step-hint">
+                  Click a card to toggle. Selected items signal higher complexity.
+                </p>
+                <app-complexity-factors-step [form]="form" [flags]="complexityFlags" />
+              </div>
+            }
+
+            <!-- ── 4 · Risk & Dependencies ───────────────────────────────── -->
+            @if (currentStep() === 3) {
+              <div class="step-body">
+                <p class="step-hint">
+                  Toggle risk factors, then set the percentage estimates with the sliders.
+                </p>
+                <app-risk-dependencies-step [form]="form" [flags]="riskFlags" />
+              </div>
+            }
+
+            <!-- ── 5 · Estimation ─────────────────────────────────────────── -->
+            @if (currentStep() === 4) {
+              <div class="step-body">
+                <app-estimation-step [form]="form" />
+              </div>
+            }
+
+            <!-- ── 6 · Review & Submit ───────────────────────────────────── -->
+            @if (currentStep() === 5) {
+              <div class="step-body review-body">
+                <app-review-submit-step
+                  [form]="form"
+                  [complexityFlags]="complexityFlags"
+                  [riskFlags]="riskFlags"
+                  [assignableUsers]="assignableUsers"
+                  [submitSuccess]="submitSuccess()"
+                  [submitError]="submitError()"
+                  (edit)="goToStep($event)"
+                />
+              </div>
+            }
+          </div>
+          <!-- /step-card -->
+
+          <!-- ── Navigation ────────────────────────────────────────────────── -->
+          <div class="wizard-nav">
+            @if (currentStep() > 0) {
+              <button type="button" class="nav-btn btn-ghost" (click)="prevStep()">
+                <span class="nav-icon-back" aria-hidden="true"></span>
+                Back
+              </button>
+            } @else {
+              <span></span>
+            }
+
+            @if (!isLastStep()) {
+              <button type="button" class="nav-btn btn-primary" (click)="nextStep()">
+                Continue
+                <span class="nav-icon-continue" aria-hidden="true"></span>
+              </button>
+            } @else {
+              <button type="submit" class="nav-btn btn-primary" [disabled]="isSubmitting()">
+                @if (isSubmitting()) {
+                  <span class="btn-spinner"></span> Saving…
+                } @else {
+                  {{ isEditMode() ? 'Update Project' : 'Save Project' }}
+                  <span class="nav-icon-save" aria-hidden="true"></span>
+                }
+              </button>
+            }
+          </div>
+        </form>
+      </main>
+    }
+  </div>
+</div>

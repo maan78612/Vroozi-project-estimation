@@ -1,0 +1,42 @@
+<div class="toolbar">
+  <div class="search-wrapper">
+    <span class="search-icon" aria-hidden="true"></span>
+    <input
+      #searchRef
+      type="text"
+      [value]="searchQuery()"
+      (input)="searchChange.emit(searchRef.value)"
+      [placeholder]="searchPlaceholder()"
+    />
+  </div>
+
+  <select class="filter-select" [value]="erpFilter()" (change)="erpChange.emit($any($event.target).value)">
+    <option value="">All ERPs</option>
+    @for (erp of availableErps(); track erp) {
+      <option [value]="erp">{{ erp }}</option>
+    }
+  </select>
+
+  <select class="filter-select" [value]="sortBy()" (change)="sortChange.emit($any($event.target).value)">
+    <option value="name">Sort: Name (A–Z)</option>
+    <option value="size">Sort: Largest first</option>
+    <option value="range">Sort: Longest range first</option>
+  </select>
+</div>
+
+<div class="size-filter-row">
+  <span class="size-filter-label">Size</span>
+  @for (size of sizeOrder; track size) {
+    <button
+      type="button"
+      class="size-chip"
+      [class.is-active]="sizeFilter() === size"
+      (click)="sizeToggle.emit(size)"
+    >
+      {{ size }}
+    </button>
+  }
+  @if (hasActiveFilters()) {
+    <button type="button" class="clear-filters-btn" (click)="clear.emit()">Clear filters</button>
+  }
+</div>

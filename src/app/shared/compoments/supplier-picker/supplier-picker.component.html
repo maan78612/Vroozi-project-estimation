@@ -1,0 +1,58 @@
+<div class="picker-backdrop" (click)="closed.emit()">
+  <div
+    class="picker-panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Choose a supplier of ' + group().projectName"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="picker-head">
+      <div class="picker-head-texts">
+        <span class="picker-eyebrow">Edit project</span>
+        <h3 class="picker-title">{{ group().projectName }}</h3>
+        <p class="picker-subtitle">
+          {{ group().entries.length }} suppliers — choose which one to edit
+        </p>
+      </div>
+      <button type="button" class="picker-close" aria-label="Close" (click)="closed.emit()">
+        ×
+      </button>
+    </div>
+
+    <!-- Supplier rows -->
+    <div class="picker-list">
+      @for (entry of group().entries; track entry.supplier; let i = $index) {
+        <button
+          type="button"
+          class="picker-row"
+          [style.animation-delay.ms]="i * 35"
+          (click)="pick.emit(entry)"
+        >
+          <span class="row-avatar" aria-hidden="true">
+            {{ (entry.supplier | initials) || '—' }}
+          </span>
+
+          <span class="row-main">
+            <span class="row-name">{{ entry.supplier || 'No supplier' }}</span>
+            <span class="row-meta">
+              {{ interfacesOf(entry) }} interfaces
+              &nbsp;·&nbsp; ↓{{ entry.inbound }} ↑{{ entry.outbound }}
+              @if (entry.tentativeRangeDays) {
+                &nbsp;·&nbsp; {{ entry.tentativeRangeDays }} days
+              }
+            </span>
+          </span>
+
+          @if (entry.tentativeProjectSize) {
+            <span class="row-size size-{{ entry.tentativeProjectSize.toLowerCase() }}">
+              {{ entry.tentativeProjectSize }}
+            </span>
+          }
+
+          <span class="row-chevron" aria-hidden="true"></span>
+        </button>
+      }
+    </div>
+  </div>
+</div>

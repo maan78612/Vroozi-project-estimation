@@ -1,0 +1,5 @@
+<div class="flag-grid">
+  @for (flag of flags(); track flag.key) {
+    <app-flag-toggle [flag]="flag" [value]="yn(flag.key)" (toggle)="toggle(flag.key)" />
+  }
+</div>
