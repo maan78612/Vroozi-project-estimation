@@ -1,3 +1,5 @@
+import erpSuppliersJson from './erp-suppliers.json';
+
 /*
  * ──────────────────────────────────────────────────────────────────
  !  Fixed pick-lists for the ERP System and Supplier dropdowns
@@ -8,24 +10,6 @@
  * ──────────────────────────────────────────────────────────────────
  */
 
-export const ERP_SYSTEMS: string[] = [
-  'SAP S/4HANA',
-  'SAP ECC',
-  'Oracle Fusion',
-  'Oracle EBS',
-  'Microsoft D365',
-  'NetSuite',
-];
+export const ERP_SYSTEMS: string[] = erpSuppliersJson.erpSystems;
 
-export const SUPPLIERS: string[] = [
-  'Acme Supplies Ltd',
-  'AndesTrade Ltda',
-  'AsiaTrade Partners',
-  'BrasilVend SA',
-  'Daymark Retail',
-  'GulfTech LLC',
-  'MedSupply Inc',
-  'NordicPower AB',
-  'Siffron',
-  'TechVend Corp',
-];
+export const SUPPLIERS: string[] = erpSuppliersJson.suppliers;

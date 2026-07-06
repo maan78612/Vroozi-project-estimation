@@ -3,12 +3,11 @@ import { ProjectSizeEnum } from '../../enums/project-size.enum';
 export type YesNo = 'Yes' | 'No';
 
 /*
- * One entry = one supplier row in the spreadsheet, carrying its own
- * full data. A project (e.g. "HEB") is simply every entry sharing the
- * same projectName.
+ * One entry = one supplier row, carrying its own full data. A project
+ * (e.g. "HEB") is simply every entry sharing the same projectName.
  */
 export interface ProjectInterface {
-  projectName: string; // groups entries into a project; column A in the sheet
+  projectName: string; // groups entries into a project
   erp: string;
   supplier: string; // this entry's supplier — may be empty
   masterDataInterfaces: number;

@@ -1,3 +1,5 @@
+import authJson from './auth.json';
+
 /*
  * ──────────────────────────────────────────────────────────────────
  !  Static auth copy
@@ -7,13 +9,7 @@
  * ──────────────────────────────────────────────────────────────────
  */
 
-export const STATIC_PASSWORD_RESET_HINTS: Record<string, string> = {
-  admin: 'A reset link was sent to admin@vroozi.com. Demo password: admin123',
-  ali: 'A reset link was sent to ali@vroozi.com. Demo password: pass123',
-  sara: 'A reset link was sent to sara@vroozi.com. Demo password: pass123',
-};
+export const STATIC_PASSWORD_RESET_HINTS: Record<string, string> = authJson.passwordResetHints;
 
-export const STATIC_AUTH_MESSAGES = {
-  userNotFound: 'No account found with that username.',
-  loginFailed: 'Invalid username or password.',
-} as const;
+export const STATIC_AUTH_MESSAGES: { userNotFound: string; loginFailed: string } =
+  authJson.messages;

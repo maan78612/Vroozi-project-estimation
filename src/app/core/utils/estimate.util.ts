@@ -2,12 +2,10 @@ import { ProjectInterface, YesNo } from '../intefaces/form/project.interface';
 
 /*
  * ──────────────────────────────────────────────────────────────────
- !  Tentative day range — mirrors Code.gs's estimateRangeDays()
+ !  Tentative day range — derived client-side from the form's inputs
  *
- *  Both ends must stay in lockstep with the Apps Script backend,
- *  which is the source of truth once saved: this client copy only
- *  drives the live preview in the form (Review step + optimistic
- *  local updates) before the sheet round-trips.
+ *  Drives the live preview in the form (Review step) and the value
+ *  saved into the project entry.
  * ──────────────────────────────────────────────────────────────────
  */
 

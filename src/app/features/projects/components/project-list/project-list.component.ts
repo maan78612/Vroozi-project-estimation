@@ -55,7 +55,7 @@ export class ProjectListComponent {
 
   readonly username = computed(() => this.authService.getCurrentUser()?.username ?? '');
 
-  // Sheet load progress — drives the loading / retry states in the template.
+  // Load progress — drives the loading / retry states in the template.
   readonly projectsLoading = this.projectsStore.loading;
   readonly projectsLoadError = this.projectsStore.loadError;
 

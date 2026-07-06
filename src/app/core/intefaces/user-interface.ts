@@ -6,5 +6,4 @@ export interface UserInterface {
   username: string;
   password: string;
   role: RoleEnum;
-  spreadsheetId: string | null; // null for admin, set for regular users
 }

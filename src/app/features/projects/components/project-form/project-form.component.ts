@@ -2,7 +2,7 @@
  * ──────────────────────────────────────────────────────────────────
  !  Multi-step project estimation form
  *
- *  Each submission saves ONE supplier entry (one spreadsheet row).
+ *  Each submission saves ONE supplier entry.
  *  Creating offers two modes: start a new project, or add a supplier
  *  to an existing project — the rest of the form is the same.
  *  Admins can assign/reassign entries to an employee; employees can
@@ -208,8 +208,8 @@ export class ProjectFormComponent {
       });
     });
 
-    // Edit mode: look the project up once the store has finished loading
-    // from the sheet. No route key means a brand-new project — form starts blank.
+    // Edit mode: look the project up once the store has finished loading.
+    // No route key means a brand-new project — form starts blank.
     effect(() => {
       if (!this._routeKey || this.editingProject()) return;
       if (this.projectsStore.loading()) return;
@@ -220,9 +220,7 @@ export class ProjectFormComponent {
   /*
    * ──────────────────────────────────────────────────────────────────
    !  Tentative range + size — no longer entered on an Estimation step;
-   *  the backend (Code.gs) computes the authoritative values on save,
-   *  this mirrors that formula so the Review step (and the optimistic
-   *  local update in ProjectsStoreService) can show it immediately.
+   *  derived client-side so the Review step can show it immediately.
    * ──────────────────────────────────────────────────────────────────
    */
   private recomputeEstimate(): void {
@@ -395,7 +393,6 @@ export class ProjectFormComponent {
     this.submitError.set('');
     this.submitSuccess.set(false);
 
-    // Saves to the shared Google Sheet; the store only updates after the sheet confirms.
     const save$ = editing
       ? this.projectsStore.updateEntry(editing.projectName, editing.supplier, entry)
       : this.projectsStore.add(entry);
@@ -409,7 +406,7 @@ export class ProjectFormComponent {
       error: (err: unknown) => {
         this.isSubmitting.set(false);
         this.submitError.set(
-          err instanceof Error ? err.message : 'Could not save to the shared Google Sheet. Please try again.',
+          err instanceof Error ? err.message : 'Could not save the project. Please try again.',
         );
       },
     });
