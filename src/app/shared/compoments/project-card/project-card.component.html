@@ -16,38 +16,34 @@
     }
   </div>
 
-  <!-- Assignee + ERP + Supplier chips -->
-  <div class="card-chips">
-    @if (assignedToName()) {
-      <span class="chip chip-assignee">
-        <span class="chip-label">Assigned</span>
-        <span class="chip-value">{{ assignedToName() }}</span>
-      </span>
-    }
-    @if (erp()) {
-      <span class="chip">
-        <span class="chip-label">ERP</span>
-        <span class="chip-value">{{ erp() }}</span>
-      </span>
-    }
-    @if (suppliers().length > 0) {
-      <span class="chip">
-        <span class="chip-label">{{ suppliers().length > 1 ? 'Suppliers' : 'Supplier' }}</span>
-        <!-- listSummary:2 pipe → show 2 names, collapse the rest into "+N" -->
-        <span class="chip-value">{{ suppliers() | listSummary: 2 }}</span>
-      </span>
-    }
-  </div>
+  <!-- Assigned + ERP (same line, opposite ends) -->
+  @if (assignedToName() || erp()) {
+    <div class="card-chips">
+      @if (assignedToName()) {
+        <span class="chip chip-assignee">
+          <span class="chip-label">Assigned</span>
+          <span class="chip-value">{{ assignedToName() }}</span>
+        </span>
+      }
+      @if (erp()) {
+        <span class="chip">
+          <span class="chip-label">ERP</span>
+          <span class="chip-value">{{ erp() }}</span>
+        </span>
+      }
+    </div>
+  }
 
-  <!-- Complexity signal tags -->
-  @if (visibleSignals().length > 0) {
-    <div class="card-signals">
-      @for (flag of visibleSignals(); track flag) {
-        <span class="signal-tag">{{ flag }}</span>
-      }
-      @if (remainingSignalsCount() > 0) {
-        <span class="signal-tag signal-tag-more">+{{ remainingSignalsCount() }} more</span>
-      }
+  <!-- Supplier(s) — own line -->
+  @if (suppliers().length > 0) {
+    <div class="card-chips">
+      <span class="chip chip-supplier">
+        <span class="chip-label">{{ suppliers().length > 1 ? 'Suppliers' : 'Supplier' }}</span>
+        <span class="chip-value">{{ visibleSuppliers() }}</span>
+        @if (hiddenSuppliersCount() > 0) {
+          <span class="chip-more">+{{ hiddenSuppliersCount() }}</span>
+        }
+      </span>
     </div>
   }
 
@@ -88,6 +84,9 @@
         &nbsp;·&nbsp; {{ entries().length }} suppliers
       }
     </span>
-    <app-button variant="link" label="Edit" [fullWidth]="false" (clicked)="edit.emit()" />
+    <div class="card-footer-actions">
+      <app-button variant="link" [danger]="true" label="Delete" [fullWidth]="false" (clicked)="delete.emit()" />
+      <app-button variant="link" label="Edit" [fullWidth]="false" (clicked)="edit.emit()" />
+    </div>
   </div>
 </div>

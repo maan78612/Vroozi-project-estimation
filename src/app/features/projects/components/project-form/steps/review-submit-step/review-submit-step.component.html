@@ -4,10 +4,18 @@
     <button type="button" class="rv-edit" (click)="edit.emit(0)">Edit</button>
   </div>
   <div class="rv-rows">
-    <div class="rv-row"><span class="rk">Project Name</span><span class="r-val">{{ fieldValue('projectName') }}</span></div>
-    <div class="rv-row"><span class="rk">Assigned To</span><span class="r-val">{{ assignedToName() }}</span></div>
-    <div class="rv-row"><span class="rk">ERP System</span><span class="r-val">{{ fieldValue('erp') }}</span></div>
-    <div class="rv-row"><span class="rk">Supplier</span><span class="r-val">{{ fieldValue('supplier') }}</span></div>
+    <div class="rv-row">
+      <span class="rk">Project Name</span><span class="r-val">{{ fieldValue('projectName') }}</span>
+    </div>
+    <div class="rv-row">
+      <span class="rk">Assigned To</span><span class="r-val">{{ assignedToName() }}</span>
+    </div>
+    <div class="rv-row">
+      <span class="rk">ERP System</span><span class="r-val">{{ fieldValue('erp') }}</span>
+    </div>
+    <div class="rv-row">
+      <span class="rk">Supplier</span><span class="r-val">{{ fieldValue('supplier') }}</span>
+    </div>
   </div>
 </div>
 
@@ -17,10 +25,20 @@
     <button type="button" class="rv-edit" (click)="edit.emit(1)">Edit</button>
   </div>
   <div class="rv-rows rv-grid2">
-    <div class="rv-row"><span class="rk">Master Data</span><span class="r-val">{{ numVal('masterDataInterfaces') }}</span></div>
-    <div class="rv-row"><span class="rk">Transactional</span><span class="r-val">{{ numVal('transactionalInterfaces') }}</span></div>
-    <div class="rv-row"><span class="rk">Inbound</span><span class="r-val">{{ numVal('inbound') }}</span></div>
-    <div class="rv-row"><span class="rk">Outbound</span><span class="r-val">{{ numVal('outbound') }}</span></div>
+    <div class="rv-row">
+      <span class="rk">Master Data</span
+      ><span class="r-val">{{ numVal('masterDataInterfaces') }}</span>
+    </div>
+    <div class="rv-row">
+      <span class="rk">Transactional</span
+      ><span class="r-val">{{ numVal('transactionalInterfaces') }}</span>
+    </div>
+    <div class="rv-row">
+      <span class="rk">Inbound</span><span class="r-val">{{ numVal('inbound') }}</span>
+    </div>
+    <div class="rv-row">
+      <span class="rk">Outbound</span><span class="r-val">{{ numVal('outbound') }}</span>
+    </div>
   </div>
 </div>
 
@@ -33,7 +51,12 @@
     @for (flag of complexityFlags(); track flag.key) {
       <div class="rv-row">
         <span class="rk">{{ flag.label }}</span>
-        <span class="r-badge" [class.b-yes]="yn(flag.key) === 'Yes'" [class.b-no]="yn(flag.key) === 'No'">{{ yn(flag.key) }}</span>
+        <span
+          class="r-badge"
+          [class.b-yes]="yn(flag.key) === 'Yes'"
+          [class.b-no]="yn(flag.key) === 'No'"
+          >{{ yn(flag.key) }}</span
+        >
       </div>
     }
   </div>
@@ -48,21 +71,32 @@
     @for (flag of riskFlags(); track flag.key) {
       <div class="rv-row">
         <span class="rk">{{ flag.label }}</span>
-        <span class="r-badge" [class.b-yes]="yn(flag.key) === 'Yes'" [class.b-no]="yn(flag.key) === 'No'">{{ yn(flag.key) }}</span>
+        <span
+          class="r-badge"
+          [class.b-yes]="yn(flag.key) === 'Yes'"
+          [class.b-no]="yn(flag.key) === 'No'"
+          >{{ yn(flag.key) }}</span
+        >
       </div>
     }
-    <div class="rv-row"><span class="rk">Data Layer</span><span class="r-val">{{ numVal('dataLayer') }}%</span></div>
-    <div class="rv-row"><span class="rk">Uncertainties</span><span class="r-val">{{ numVal('uncertainties') }}%</span></div>
+    <div class="rv-row">
+      <span class="rk">Data Layer</span><span class="r-val">{{ numVal('dataLayer') }}%</span>
+    </div>
+    <div class="rv-row">
+      <span class="rk">Uncertainties</span><span class="r-val">{{ numVal('uncertainties') }}%</span>
+    </div>
   </div>
 </div>
 
-<div class="rv-section">
+<div class="rv-section rv-computed">
   <div class="rv-head">
-    <div class="rv-title"><span class="rv-num">05</span> Estimation</div>
-    <button type="button" class="rv-edit" (click)="edit.emit(4)">Edit</button>
+    <div class="rv-title">Estimated Effort</div>
   </div>
   <div class="rv-rows">
-    <div class="rv-row"><span class="rk">Tentative Range (Days)</span><span class="r-val">{{ fieldValue('tentativeRangeDays') }}</span></div>
+    <div class="rv-row">
+      <span class="rk">Tentative Range (Days)</span
+      ><span class="r-val">{{ fieldValue('tentativeRangeDays') }}</span>
+    </div>
     <div class="rv-row">
       <span class="rk">Tentative Project Size</span>
       @if (projectSize()) {
@@ -72,6 +106,7 @@
       }
     </div>
   </div>
+  <p class="rv-computed-hint">Calculated automatically from the inputs above</p>
 </div>
 
 @if (submitSuccess()) {

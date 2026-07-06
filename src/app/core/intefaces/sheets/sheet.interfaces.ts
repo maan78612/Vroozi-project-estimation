@@ -8,7 +8,7 @@
  * ──────────────────────────────────────────────────────────────────
  */
 
-// One spreadsheet row, ordered A → T to match FORM_DATA column letters.
+// One spreadsheet row, ordered A → T to match entryToRow() in project-sheet.util.ts.
 export type SheetRow = (string | number)[];
 
 /*

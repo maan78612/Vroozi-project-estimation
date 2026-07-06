@@ -37,10 +37,11 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'projects', pathMatch: 'full' },
       {
+        // Shared with the /project route below — it renders the admin view by role.
         path: 'projects',
         loadComponent: () =>
-          import('./features/admin/components/projects-list/projects-list.component').then(
-            (m) => m.ProjectsListComponent,
+          import('./features/projects/components/project-list/project-list.component').then(
+            (m) => m.ProjectListComponent,
           ),
       },
       {

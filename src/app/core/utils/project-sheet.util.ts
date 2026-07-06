@@ -7,14 +7,14 @@ import { estimateProjectSize } from './project-size.util';
  * ──────────────────────────────────────────────────────────────────
  !  Converts supplier entries to/from spreadsheet rows.
  *
- *  Column order is A → T, matching FORM_DATA and the sheet headers.
+ *  Column order is A → T, matching entryToRow() below and the sheet headers.
  *  Every row carries its own full data. The project name (column A)
  *  is written only on the first row of a project's group — the rows
  *  below it belong to the same project, like the company sheet.
  * ──────────────────────────────────────────────────────────────────
  */
 
-export function entryToRow(entry: ProjectInterface): SheetRow {
+function entryToRow(entry: ProjectInterface): SheetRow {
   return [
     entry.projectName,
     entry.erp,

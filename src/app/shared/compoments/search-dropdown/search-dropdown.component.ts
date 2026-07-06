@@ -9,60 +9,57 @@ import {
   signal,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { UserInterface } from '../../../core/intefaces/user-interface';
 import { InitialsPipe } from '../../pipes/initials.pipe';
 import { AutofocusDirective } from '../../directives/autofocus.directive';
 
+// One row in the list: `id` is the real form value, `label`/`sublabel` are just display text.
+export interface SearchDropdownOption {
+  id: string;
+  label: string;
+  sublabel?: string;
+}
+
 /*
  * ──────────────────────────────────────────────────────────────────
- !  Searchable employee dropdown
+ !  Generic searchable dropdown — pick one option from a closed list
  *
- *  Replaces the plain <select> for assigning a project to an
- *  employee: click the box → a panel opens with a search field and
- *  the list of people. Type to filter, arrows + Enter to pick,
- *  Escape or an outside click to close.
+ *  Click the box → a panel opens with a search field and the option
+ *  list. Type to filter, arrows + Enter to pick, Escape or an
+ *  outside click to close. Used for "Assigned To", "ERP System" and
+ *  "Supplier" — same component, just a different `options` list.
  *
  *  It connects to the form with two pieces:
  *   1. ControlValueAccessor  → HOW the form talks to us
  *      (four standard methods, at the bottom of this file).
  *   2. NG_VALUE_ACCESSOR     → HOW the form finds us
  *      (the registration in `providers` below).
- *  Result: formControlName="user" works here like on any normal
- *  input, and the stored value is just a username like "sara".
+ *  Result: formControlName="erp" works here like on any normal
+ *  input, and the stored value is just the option's `id`.
  * ──────────────────────────────────────────────────────────────────
  */
-
 @Component({
-  selector: 'app-employee-select',
+  selector: 'app-search-dropdown',
   standalone: true,
   imports: [InitialsPipe, AutofocusDirective],
-  templateUrl: './employee-select.component.html',
-  styleUrl: './employee-select.component.less',
+  templateUrl: './search-dropdown.component.html',
+  styleUrl: './search-dropdown.component.less',
   providers: [
-    /*
-     * NG_VALUE_ACCESSOR = how the form FINDS us.
-     * formControlName never looks inside our class — it only checks
-     * this registration. Without it: "No value accessor" error.
-     *
-     *  - forwardRef(...) → class is defined further down; look it up later
-     *  - useExisting     → reuse this component instance, don't build a new one
-     *  - multi: true     → the key holds a list (Angular requires this)
-     */
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => EmployeeSelectComponent),
+      useExisting: forwardRef(() => SearchDropdownComponent),
       multi: true,
     },
   ],
 })
-export class EmployeeSelectComponent implements ControlValueAccessor {
+export class SearchDropdownComponent implements ControlValueAccessor {
   /*
    * ──────────────────────────────────────────────────────────────────
    !  Settings passed in from the parent page
    * ──────────────────────────────────────────────────────────────────
    */
-  employees = input<UserInterface[]>([]); // the list of people to choose from
-  placeholder = input('Select an employee…'); // grey text when nothing is picked yet
+  options = input<SearchDropdownOption[]>([]); // the pick-list
+  placeholder = input('Select…'); // grey text when nothing is picked yet
+  searchPlaceholder = input('Search…'); // placeholder inside the search box
   isError = input(false); // true → red border (validation failed)
 
   // Our own piece of the page — used to tell inside clicks from outside clicks.
@@ -76,45 +73,36 @@ export class EmployeeSelectComponent implements ControlValueAccessor {
   readonly isOpen = signal(false); // is the panel showing?
   readonly searchQuery = signal(''); // text typed in the search field
   readonly activeIndex = signal(-1); // highlighted row for keyboard use (-1 = none)
-  readonly value = signal(''); // username of the chosen employee
+  readonly value = signal(''); // id of the chosen option
   readonly isDisabled = signal(false); // true → whole control greyed out
 
   // The two functions the form hands us (see registerOnChange /
   // registerOnTouched below). We call them to report back:
-  //   onChange('sara') → "user picked sara"
-  //   onTouched()      → "user interacted with me" (allows the red error)
+  //   onChange('sap') → "user picked sap"
+  //   onTouched()     → "user interacted with me" (allows the red error)
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
 
-  // Full record of the chosen employee, so the closed box can show
-  // their name and initials. Updates by itself when value changes.
-  readonly selectedEmployee = computed(
-    () => this.employees().find((e) => e.username === this.value()) ?? null,
-  );
-
-  // The list shown in the panel: everyone, or only people whose name
-  // or username contains the search text (case-insensitive).
-  readonly filteredEmployees = computed(() => {
-    const query = this.searchQuery().trim().toLowerCase();
-    if (!query) return this.employees();
-    return this.employees().filter(
-      (e) =>
-        e.username.toLowerCase().includes(query) ||
-        (e.fullName ?? '').toLowerCase().includes(query),
-    );
+  // The option matching the current value. Falls back to showing the raw
+  // stored value if it's no longer in `options()` (e.g. an old entry),
+  // so editing never looks like the value silently disappeared.
+  readonly selectedOption = computed(() => {
+    const found = this.options().find((o) => o.id === this.value());
+    if (found) return found;
+    return this.value() ? { id: this.value(), label: this.value() } : null;
   });
 
-  /*
-   * ──────────────────────────────────────────────────────────────────
-   !  Small display helpers
-   * ──────────────────────────────────────────────────────────────────
-   */
-
-  // Full name, or username if no full name is set (e.g. admin).
-  // The avatar letters come from the shared `initials` pipe (see template).
-  displayName(employee: UserInterface): string {
-    return employee.fullName || employee.username;
-  }
+  // The list shown in the panel: everyone, or only rows whose label or
+  // sublabel contains the search text (case-insensitive).
+  readonly filteredOptions = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    if (!query) return this.options();
+    return this.options().filter(
+      (o) =>
+        o.label.toLowerCase().includes(query) ||
+        (o.sublabel ?? '').toLowerCase().includes(query),
+    );
+  });
 
   /*
    * ──────────────────────────────────────────────────────────────────
@@ -136,7 +124,7 @@ export class EmployeeSelectComponent implements ControlValueAccessor {
     this.isOpen.set(true);
     this.searchQuery.set(''); // fresh empty search each time
     // Start the keyboard highlight on whoever is already chosen.
-    this.activeIndex.set(this.employees().findIndex((e) => e.username === this.value()));
+    this.activeIndex.set(this.options().findIndex((o) => o.id === this.value()));
     // The search field focuses itself via the appAutofocus directive (see template).
   }
 
@@ -166,22 +154,32 @@ export class EmployeeSelectComponent implements ControlValueAccessor {
 
   /*
    * ──────────────────────────────────────────────────────────────────
-   !  Picking someone + keyboard support
+   !  Picking + clearing + keyboard support
    * ──────────────────────────────────────────────────────────────────
    */
 
   // The moment of choice: remember it, report it to the form, close.
-  select(employee: UserInterface): void {
-    this.value.set(employee.username);
-    this.onChange(employee.username);
+  select(option: SearchDropdownOption): void {
+    this.value.set(option.id);
+    this.onChange(option.id);
     this.closePanel();
+  }
+
+  // The small × on the trigger — resets back to "nothing picked" without
+  // opening the panel. Stops the click from also toggling the panel open.
+  clear(event: Event): void {
+    event.stopPropagation();
+    if (this.isDisabled()) return;
+    this.value.set('');
+    this.onChange('');
+    this.onTouched();
   }
 
   // Every keystroke: store the text (the list re-filters itself) and
   // highlight the first match so Enter always picks something sensible.
   onSearch(event: Event): void {
     this.searchQuery.set((event.target as HTMLInputElement).value);
-    this.activeIndex.set(this.filteredEmployees().length > 0 ? 0 : -1);
+    this.activeIndex.set(this.filteredOptions().length > 0 ? 0 : -1);
   }
 
   // On the closed box: Enter/Space already "click" a button natively,
@@ -194,9 +192,9 @@ export class EmployeeSelectComponent implements ControlValueAccessor {
   }
 
   // In the search field: arrows move the highlight, Enter picks the
-  // highlighted person, Tab means the user is leaving → close.
+  // highlighted option, Tab means the user is leaving → close.
   onSearchKeydown(event: KeyboardEvent): void {
-    const options = this.filteredEmployees();
+    const options = this.filteredOptions();
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
@@ -219,14 +217,14 @@ export class EmployeeSelectComponent implements ControlValueAccessor {
   }
 
   // Move the highlight one row; the % math wraps it around (down on
-  // the last person jumps to the first, and the other way round).
+  // the last option jumps to the first, and the other way round).
   private moveActive(step: number, count: number): void {
     if (count === 0) return;
     this.activeIndex.set((this.activeIndex() + step + count) % count);
     // setTimeout: let the highlight get drawn first, then scroll to it.
     setTimeout(() =>
       this.host.nativeElement
-        .querySelector('.emp-option.is-active')
+        .querySelector('.sd-option.is-active')
         ?.scrollIntoView({ block: 'nearest' }),
     );
   }
@@ -236,11 +234,6 @@ export class EmployeeSelectComponent implements ControlValueAccessor {
    !  ControlValueAccessor = how the form TALKS to us.
    *  Four standard methods every form input must have.
    *  The form calls them — we never call them ourselves.
-   *
-   *  Live example: editing a project → form.patchValue({user:'ali'})
-   *  → the form calls writeValue('ali') → box shows Ali Khan.
-   *  Picking Sara → we call onChange('sara') → the form now holds
-   *  user:'sara', which is what Save reads via getRawValue().
    * ──────────────────────────────────────────────────────────────────
    */
 
@@ -249,7 +242,7 @@ export class EmployeeSelectComponent implements ControlValueAccessor {
     this.value.set(value ?? '');
   }
 
-  // Form → us: "call fn whenever your value changes" (we do, in select()).
+  // Form → us: "call fn whenever your value changes" (we do, in select()/clear()).
   registerOnChange(fn: (value: string) => void): void {
     this.onChange = fn;
   }

@@ -1,23 +1,18 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ProjectInterface } from '../../../../../../core/intefaces/form/project.interface';
 import { UserInterface } from '../../../../../../core/intefaces/user-interface';
 import { hasError } from '../../../../../../core/utils/form-control.util';
-import { EmployeeSelectComponent } from '../../../../../../shared/compoments/employee-select/employee-select.component';
+import { ERP_SYSTEMS, SUPPLIERS } from '../../../../../../core/data/static-erp-suppliers.data';
+import {
+  SearchDropdownComponent,
+  SearchDropdownOption,
+} from '../../../../../../shared/compoments/search-dropdown/search-dropdown.component';
 
-/*
- * ──────────────────────────────────────────────────────────────────
- !  Step 1 — pick what you're adding, then the basics
- *
- *  Create mode starts with a choice: brand-new project, or another
- *  supplier for an existing project (picked from a dropdown). Each
- *  saved entry is one supplier row with its own data.
- * ──────────────────────────────────────────────────────────────────
- */
 @Component({
   selector: 'app-project-basics-step',
   standalone: true,
-  imports: [ReactiveFormsModule, EmployeeSelectComponent],
+  imports: [ReactiveFormsModule, SearchDropdownComponent],
   templateUrl: './project-basics-step.component.html',
   styleUrl: './project-basics-step.component.less',
 })
@@ -31,6 +26,26 @@ export class ProjectBasicsStepComponent {
 
   entryModeChange = output<'new' | 'existing'>();
   existingProjectPicked = output<string>();
+
+  // Fixed pick-lists — same options every time, so this component owns them
+  // directly rather than the parent form threading them in.
+  readonly erpOptions: SearchDropdownOption[] = ERP_SYSTEMS.map((name) => ({
+    id: name,
+    label: name,
+  }));
+  readonly supplierOptions: SearchDropdownOption[] = SUPPLIERS.map((name) => ({
+    id: name,
+    label: name,
+  }));
+
+  // Employees a project can be assigned to, shaped for the search dropdown.
+  readonly employeeOptions = computed<SearchDropdownOption[]>(() =>
+    this.assignableUsers().map((u) => ({
+      id: u.username,
+      label: u.fullName || u.username,
+      sublabel: `@${u.username}`,
+    })),
+  );
 
   hasError(key: keyof ProjectInterface): boolean {
     return hasError(this.form(), key);

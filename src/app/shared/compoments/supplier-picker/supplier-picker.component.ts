@@ -24,6 +24,7 @@ export class SupplierPickerComponent {
   group = input.required<ProjectGroup>();
 
   pick = output<ProjectInterface>();
+  delete = output<ProjectInterface>();
   closed = output<void>();
 
   interfacesOf(entry: ProjectInterface): number {

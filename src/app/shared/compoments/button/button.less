@@ -76,6 +76,31 @@
   }
 }
 
+.btn-primary.btn-danger {
+  background: @color-error;
+
+  &:hover:not(:disabled):not(.btn-disabled) {
+    background: darken(@color-error, 8%);
+  }
+
+  &.btn-disabled,
+  &:disabled {
+    background: fade(@color-error, 75%);
+  }
+
+  &.btn-loading {
+    background: darken(@color-error, 8%);
+  }
+}
+
+.btn-link.btn-danger {
+  color: @color-error;
+
+  &:hover:not(:disabled):not(.btn-disabled) {
+    color: darken(@color-error, 12%);
+  }
+}
+
 .btn-spinner {
   width: 1rem;
   height: 1rem;

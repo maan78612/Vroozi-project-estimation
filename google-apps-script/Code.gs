@@ -26,7 +26,7 @@
 
 var SHEET_NAME = 'Projects';
 
-// Column order A → T — must match FORM_DATA in the Angular app.
+// Column order A → T — must match entryToRow() in project-sheet.util.ts.
 var HEADERS = [
   'Projects',
   'ERP',
@@ -68,6 +68,10 @@ var SIZE_COLORS = {
 
 var YES_COLOR = '#d9ead3';
 var NO_COLOR = '#f4cccc';
+
+// Columns the backend always computes (S, T) — protected so nobody hand-edits them.
+var COMPUTED_COLUMNS_RANGE = 'S2:T';
+var COMPUTED_COLUMNS_PROTECTION_DESC = 'Auto-calculated by the app — do not edit directly';
 
 /*
  * ──────────────────────────────────────────────────────────────────
@@ -162,6 +166,29 @@ function formatSheet(sheet) {
   });
 
   sheet.setConditionalFormatRules(rules);
+
+  protectComputedColumns(sheet);
+}
+
+/*
+ * ──────────────────────────────────────────────────────────────────
+ !  Tentative Project Size (S) and Tentative Range (T) are always
+ *  written by writeBlock() below — collaborators can't hand-edit
+ *  them in the Sheets UI. The script itself (running as the sheet
+ *  owner) can still write to a protected range, so this doesn't
+ *  block appends/updates.
+ * ──────────────────────────────────────────────────────────────────
+ */
+function protectComputedColumns(sheet) {
+  var protections = sheet.getProtections(SpreadsheetApp.ProtectionType.RANGE);
+  for (var i = 0; i < protections.length; i++) {
+    if (protections[i].getDescription() === COMPUTED_COLUMNS_PROTECTION_DESC) return; // already protected
+  }
+
+  var protection = sheet.getRange(COMPUTED_COLUMNS_RANGE).protect();
+  protection.setDescription(COMPUTED_COLUMNS_PROTECTION_DESC);
+  protection.removeEditors(protection.getEditors());
+  if (protection.canDomainEdit()) protection.setDomainEdit(false);
 }
 
 /*
@@ -248,6 +275,14 @@ function replaceBlock(sheet, startRow, rows) {
 }
 
 function writeBlock(sheet, startRow, rows) {
+  // Tentative Project Size (S) and Tentative Range (T) are never trusted
+  // from the client — always recomputed here from the row's own D–R values.
+  rows.forEach(function (row) {
+    var range = estimateRangeDays(row);
+    row[18] = estimateSize(range);
+    row[19] = range;
+  });
+
   sheet.getRange(startRow, 1, rows.length, rows[0].length).setValues(rows);
   mergeBlockHead(sheet, startRow, rows.length);
 }
@@ -284,6 +319,72 @@ function findRowByKey(sheet, rowKey) {
     if (String(keys[i][0]).trim() === String(rowKey).trim()) return i + 2;
   }
   return -1;
+}
+
+/*
+ * ──────────────────────────────────────────────────────────────────
+ !  Tentative size + day range — ported from the company sheet's old
+ *  ESTIMATE() / ESTIMATE_SIZE() formulas (once live spreadsheet
+ *  formulas), remapped to this sheet's column layout and run here
+ *  instead so every append/update writes plain computed values.
+ *
+ *  row is a full 20-column array (A → T, 0-indexed 0 → 19):
+ *  3=Master Data, 4=Transactional, 5=Custom Logic, 6=UI Impact,
+ *  8=New API/Flows, 9=Integrations, 10=Client Dependency,
+ *  11=Reporting/Analytics, 12=Data Layer, 13=Uncertainties,
+ *  16=Existing ERP, 17=Hyper Care.
+ * ──────────────────────────────────────────────────────────────────
+ */
+function isYesValue(v) {
+  return String(v || '').trim().toLowerCase() === 'yes';
+}
+
+function toPercent(v) {
+  var s = String(v || '').replace('%', '').trim();
+  var n = parseFloat(s);
+  if (isNaN(n)) return 0;
+  return n > 1 ? n / 100 : n;
+}
+
+function estimateRangeDays(row) {
+  var base = 5;
+  var interfaces = (Number(row[3]) || 0) + (Number(row[4]) || 0);
+
+  var yesEffort =
+    (isYesValue(row[5]) ? 3 : 0) + // Custom Logic
+    (isYesValue(row[6]) ? 2 : 0) + // UI Impact
+    (isYesValue(row[8]) ? 3 : 0) + // New API Or Business Flows
+    (isYesValue(row[9]) ? 2 : 0) + // Integrations
+    (isYesValue(row[10]) ? 2 : 0) + // Client Dependency
+    (isYesValue(row[11]) ? 3 : 0) + // Reporting/Analytics
+    (isYesValue(row[17]) ? 2 : 0); // Hyper Care
+
+  var erpMultiplier = isYesValue(row[16]) ? 0.7 : 1.4; // Existing ERP
+  var dataLayer = toPercent(row[12]);
+  var uncertainties = toPercent(row[13]);
+
+  var effort =
+    (base + 1.5 * interfaces + yesEffort) * erpMultiplier * (1 + dataLayer) * (1 + uncertainties);
+  var buffer = (effort <= 20 ? 5 : 10) + effort * 0.25;
+
+  var min = Math.ceil(effort / 5) * 5;
+  var max = Math.ceil((effort + buffer) / 5) * 5;
+
+  return min + '-' + max;
+}
+
+function estimateSize(rangeStr) {
+  var parts = String(rangeStr || '').split('-');
+  if (parts.length !== 2) return '';
+
+  var maxVal = parseFloat(parts[1]);
+  if (isNaN(maxVal)) return '';
+
+  if (maxVal <= 20) return 'S';
+  if (maxVal <= 30) return 'M';
+  if (maxVal <= 50) return 'L';
+  if (maxVal <= 60) return 'XL';
+  return 'XXL';
 }
 
 function respond(body) {

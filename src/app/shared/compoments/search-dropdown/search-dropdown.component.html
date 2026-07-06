@@ -1,0 +1,78 @@
+<!-- Escape is handled here so it closes the panel no matter which inner element has focus -->
+<div class="sd-select" (keydown.escape)="onEscape($event)">
+  <button
+    type="button"
+    class="sd-trigger"
+    [class.is-open]="isOpen()"
+    [class.is-error]="isError()"
+    [disabled]="isDisabled()"
+    (click)="toggle()"
+    (keydown)="onTriggerKeydown($event)"
+    aria-haspopup="listbox"
+    [attr.aria-expanded]="isOpen()"
+  >
+    @if (selectedOption(); as option) {
+      <span class="sd-avatar" aria-hidden="true">{{ option.label | initials }}</span>
+      <span class="sd-trigger-text">
+        <span class="sd-trigger-name">{{ option.label }}</span>
+        @if (option.sublabel) {
+          <span class="sd-trigger-sublabel">{{ option.sublabel }}</span>
+        }
+      </span>
+    } @else {
+      <span class="sd-placeholder">{{ placeholder() }}</span>
+    }
+    <span class="sd-chevron" aria-hidden="true"></span>
+  </button>
+
+  <!-- Sibling, not nested in .sd-trigger — a <button> can't contain another <button>. -->
+  @if (selectedOption() && !isDisabled()) {
+    <button type="button" class="sd-clear" aria-label="Clear selection" (click)="clear($event)"></button>
+  }
+
+  @if (isOpen()) {
+    <div class="sd-panel">
+      <div class="sd-search">
+        <span class="sd-search-icon" aria-hidden="true"></span>
+        <input
+          appAutofocus
+          type="text"
+          class="sd-search-input"
+          [placeholder]="searchPlaceholder()"
+          autocomplete="off"
+          [value]="searchQuery()"
+          (input)="onSearch($event)"
+          (keydown)="onSearchKeydown($event)"
+        />
+      </div>
+
+      <ul class="sd-options" role="listbox">
+        @for (option of filteredOptions(); track option.id; let i = $index) {
+          <li role="option" [attr.aria-selected]="option.id === value()">
+            <button
+              type="button"
+              class="sd-option"
+              [class.is-active]="i === activeIndex()"
+              [class.is-selected]="option.id === value()"
+              (click)="select(option)"
+              (mouseenter)="activeIndex.set(i)"
+            >
+              <span class="sd-avatar" aria-hidden="true">{{ option.label | initials }}</span>
+              <span class="sd-option-text">
+                <span class="sd-option-name">{{ option.label }}</span>
+                @if (option.sublabel) {
+                  <span class="sd-option-sublabel">{{ option.sublabel }}</span>
+                }
+              </span>
+              @if (option.id === value()) {
+                <span class="sd-check" aria-hidden="true"></span>
+              }
+            </button>
+          </li>
+        } @empty {
+          <li class="sd-empty">No results match "{{ searchQuery() }}"</li>
+        }
+      </ul>
+    </div>
+  }
+</div>

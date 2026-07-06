@@ -186,6 +186,39 @@
   &.size-xxl { background: #f8d7da; color: @size-xxl-color; }
 }
 
+.row-delete {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &::before {
+    content: '';
+    width: 15px;
+    height: 15px;
+    display: block;
+    background-color: @color-error;
+    opacity: 0.55;
+    mask: url('/assets/icons/trash.svg') no-repeat center / contain;
+    -webkit-mask: url('/assets/icons/trash.svg') no-repeat center / contain;
+    transition: opacity 0.15s;
+  }
+
+  &:hover {
+    background: fade(@color-error, 12%);
+
+    &::before { opacity: 1; }
+  }
+}
+
 .row-chevron {
   flex-shrink: 0;
   width: 16px;

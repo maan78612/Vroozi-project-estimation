@@ -9,9 +9,11 @@
 
 :host {
   display: block;
+  height: 100%;
 }
 
 .project-card {
+  height: 100%;
   background: @color-bg-card;
   border-radius: 12px;
   display: flex;
@@ -61,6 +63,7 @@
 .card-chips {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
   gap: 0.4rem;
   padding: 0 1.25rem 0.875rem;
 }
@@ -69,11 +72,13 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+  max-width: 100%;
   background: #f3f4f6;
   border-radius: 6px;
   padding: 0.22rem 0.55rem;
 
   .chip-label {
+    flex-shrink: 0;
     font-size: 0.68rem;
     font-weight: 700;
     color: @color-text-muted;
@@ -93,28 +98,30 @@
     .chip-label { color: @color-primary; }
     .chip-value { color: @color-primary-dark; font-weight: 600; }
   }
-}
 
-// ── Complexity signal tags ──────────────────────────────────────────────────
+  // Supplier chip alone fills its row, so its value must shrink and
+  // truncate (never wrap to a second line) however many names there are.
+  &.chip-supplier {
+    min-width: 0;
+    background: rgba(107, 78, 15, 0.06);
 
-.card-signals {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  padding: 0 1.25rem 0.875rem;
-}
-
-.signal-tag {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: @color-primary;
-  background: rgba(107, 78, 15, 0.08);
-  border-radius: 999px;
-  padding: 0.14rem 0.55rem;
-
-  &.signal-tag-more {
-    background: rgba(107, 78, 15, 0.16);
+    .chip-value {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
+}
+
+.chip-more {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: @color-primary-dark;
+  background: rgba(107, 78, 15, 0.18);
+  border-radius: 999px;
+  padding: 0.05rem 0.42rem;
 }
 
 // ── Metrics (data layer / uncertainty) ──────────────────────────────────────
@@ -183,6 +190,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.7rem 1.25rem;
+  margin-top: auto;
 
   .card-meta-text {
     font-size: 0.75rem;
@@ -191,13 +199,22 @@
 
   ::ng-deep .btn-link {
     font-size: 0.82rem;
-    color: @color-primary;
     font-weight: 600;
+  }
+
+  ::ng-deep .btn-link:not(.btn-danger) {
+    color: @color-primary;
 
     &:hover:not(:disabled) {
       color: @color-primary-dark;
     }
   }
+}
+
+.card-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
 }
 
 // ── Size badges ───────────────────────────────────────────────────────────────

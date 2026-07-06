@@ -2,9 +2,7 @@ import { Component, input, output } from '@angular/core';
 import { ProjectInterface } from '../../../core/intefaces/form/project.interface';
 import { ProjectSizeEnum } from '../../../core/enums/project-size.enum';
 import { PROJECT_SIZE_ORDER } from '../../../core/utils/project-sort.util';
-import { COMPLEXITY_FLAGS } from '../../../core/data/feature-flags.data';
 import { ButtonComponent } from '../button/button';
-import { ListSummaryPipe } from '../../pipes/list-summary.pipe';
 
 /*
  * ──────────────────────────────────────────────────────────────────
@@ -17,13 +15,13 @@ import { ListSummaryPipe } from '../../pipes/list-summary.pipe';
  *  the parent list (direct edit, or supplier picker when several).
  * ──────────────────────────────────────────────────────────────────
  */
-// Cards show at most this many signal tags before collapsing the rest into "+N more".
-const MAX_VISIBLE_SIGNALS = 3;
+// Supplier chip shows at most this many names before collapsing the rest into "+N".
+const MAX_VISIBLE_SUPPLIERS = 2;
 
 @Component({
   selector: 'app-project-card',
   standalone: true,
-  imports: [ButtonComponent, ListSummaryPipe],
+  imports: [ButtonComponent],
   templateUrl: './project-card.component.html',
   styleUrl: './project-card.component.less',
 })
@@ -32,9 +30,9 @@ export class ProjectCardComponent {
   assignedToName = input<string | null>(null);
 
   edit = output<void>();
+  delete = output<void>();
 
   readonly ProjectSizeEnum = ProjectSizeEnum;
-  private readonly complexityFlags = COMPLEXITY_FLAGS;
 
   projectName(): string {
     return this.entries()[0]?.projectName ?? '';
@@ -48,6 +46,14 @@ export class ProjectCardComponent {
     return this.entries()
       .map((e) => e.supplier)
       .filter(Boolean);
+  }
+
+  visibleSuppliers(): string {
+    return this.suppliers().slice(0, MAX_VISIBLE_SUPPLIERS).join(', ');
+  }
+
+  hiddenSuppliersCount(): number {
+    return Math.max(0, this.suppliers().length - MAX_VISIBLE_SUPPLIERS);
   }
 
   // Largest size across the suppliers — the project is at least this big.
@@ -102,20 +108,5 @@ export class ProjectCardComponent {
     }
 
     return low === Infinity ? '' : `${low}-${high}`;
-  }
-
-  // A flag counts when ANY supplier entry has it set to Yes.
-  private activeFlags(): string[] {
-    return this.complexityFlags
-      .filter((f) => this.entries().some((e) => e[f.key] === 'Yes'))
-      .map((f) => f.label);
-  }
-
-  visibleSignals(): string[] {
-    return this.activeFlags().slice(0, MAX_VISIBLE_SIGNALS);
-  }
-
-  remainingSignalsCount(): number {
-    return Math.max(0, this.activeFlags().length - MAX_VISIBLE_SIGNALS);
   }
 }

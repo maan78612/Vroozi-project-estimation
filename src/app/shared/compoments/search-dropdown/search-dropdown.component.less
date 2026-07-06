@@ -4,13 +4,13 @@
   display: block;
 }
 
-.emp-select {
+.sd-select {
   position: relative;
 }
 
 // ── Trigger (styled to match .field-input) ──────────────────────────────────
 
-.emp-trigger {
+.sd-trigger {
   position: relative;
   width: 100%;
   box-sizing: border-box;
@@ -18,7 +18,7 @@
   align-items: center;
   gap: 0.65rem;
   min-height: 48px;
-  padding: 0.5rem 2.5rem 0.5rem 0.7rem;
+  padding: 0.5rem 3.75rem 0.5rem 0.7rem;
   font-size: 0.9rem;
   font-family: inherit;
   text-align: left;
@@ -49,31 +49,31 @@
   }
 }
 
-.emp-placeholder {
+.sd-placeholder {
   color: @color-text-muted;
   padding-left: 0.35rem;
 }
 
-.emp-trigger-text {
+.sd-trigger-text {
   display: flex;
   align-items: baseline;
   gap: 0.45rem;
   min-width: 0;
 }
 
-.emp-trigger-name {
+.sd-trigger-name {
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.emp-trigger-username {
+.sd-trigger-sublabel {
   font-size: 0.78rem;
   color: @color-text-muted;
 }
 
-.emp-chevron {
+.sd-chevron {
   position: absolute;
   right: 1rem;
   top: calc(50% - 5.5px);
@@ -85,12 +85,43 @@
   rotate: 90deg;
   transition: rotate 0.18s ease;
 
-  .emp-trigger.is-open & { rotate: -90deg; }
+  .sd-trigger.is-open & { rotate: -90deg; }
+}
+
+// ── Clear button (× — sits between the value and the chevron) ───────────────
+
+.sd-clear {
+  position: absolute;
+  right: 2.35rem;
+  top: calc(50% - 10px);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: @color-text-muted;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &::before {
+    content: '×';
+    font-size: 16px;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: @color-text-primary;
+  }
 }
 
 // ── Avatar initials (shared by trigger + options) ────────────────────────────
 
-.emp-avatar {
+.sd-avatar {
   flex-shrink: 0;
   width: 28px;
   height: 28px;
@@ -107,7 +138,7 @@
 
 // ── Dropdown panel ───────────────────────────────────────────────────────────
 
-.emp-panel {
+.sd-panel {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
@@ -120,20 +151,20 @@
     0 4px 8px rgba(0, 0, 0, 0.06),
     0 16px 40px rgba(0, 0, 0, 0.16);
   overflow: hidden;
-  animation: emp-panel-in 0.14s ease;
+  animation: sd-panel-in 0.14s ease;
 }
 
-@keyframes emp-panel-in {
+@keyframes sd-panel-in {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.emp-search {
+.sd-search {
   position: relative;
   border-bottom: 1px solid #f0f0f0;
 }
 
-.emp-search-icon {
+.sd-search-icon {
   position: absolute;
   left: 0.9rem;
   top: calc(50% - 7px);
@@ -144,7 +175,7 @@
   -webkit-mask: url('/assets/icons/search.svg') no-repeat center / contain;
 }
 
-.emp-search-input {
+.sd-search-input {
   width: 100%;
   box-sizing: border-box;
   border: none;
@@ -160,7 +191,7 @@
 
 // ── Options list ─────────────────────────────────────────────────────────────
 
-.emp-options {
+.sd-options {
   list-style: none;
   display: flex;
   flex-direction: column;
@@ -171,7 +202,7 @@
   overflow-y: auto;
 }
 
-.emp-option {
+.sd-option {
   width: 100%;
   box-sizing: border-box;
   display: flex;
@@ -189,10 +220,10 @@
 
   &.is-active { background: rgba(107, 78, 15, 0.07); }
 
-  &.is-selected .emp-option-name { color: @color-primary-dark; }
+  &.is-selected .sd-option-name { color: @color-primary-dark; }
 }
 
-.emp-option-text {
+.sd-option-text {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -200,19 +231,19 @@
   min-width: 0;
 }
 
-.emp-option-name {
+.sd-option-name {
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.emp-option-username {
+.sd-option-sublabel {
   font-size: 0.75rem;
   color: @color-text-muted;
 }
 
-.emp-check {
+.sd-check {
   flex-shrink: 0;
   width: 15px;
   height: 15px;
@@ -221,7 +252,7 @@
   -webkit-mask: url('/assets/icons/check.svg') no-repeat center / contain;
 }
 
-.emp-empty {
+.sd-empty {
   padding: 0.9rem 1rem;
   font-size: 0.83rem;
   color: @color-text-muted;

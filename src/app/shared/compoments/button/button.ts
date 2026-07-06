@@ -35,6 +35,8 @@ export class ButtonComponent {
 
   showBackArrow = input(false);
 
+  danger = input(false); //Renders the button in the error color. Combines with any variant.
+
   /*
    * ──────────────────────────────────────────────────────────────────
    !  Outputs — events sent back to the parent screen

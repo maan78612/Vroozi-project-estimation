@@ -20,12 +20,12 @@ import { ProjectInterface, YesNo } from '../../../../core/intefaces/form/project
 import { RoleEnum } from '../../../../core/enums/role-enum';
 import { ProjectSizeEnum } from '../../../../core/enums/project-size.enum';
 import { estimateProjectSize } from '../../../../core/utils/project-size.util';
+import { estimateRangeDays } from '../../../../core/utils/estimate.util';
 import { ButtonComponent } from '../../../../shared/compoments/button/button';
 import { ProjectBasicsStepComponent } from './steps/project-basics-step/project-basics-step.component';
 import { IntegrationScopeStepComponent } from './steps/integration-scope-step/integration-scope-step.component';
 import { ComplexityFactorsStepComponent } from './steps/complexity-factors-step/complexity-factors-step.component';
 import { RiskDependenciesStepComponent } from './steps/risk-dependencies-step/risk-dependencies-step.component';
-import { EstimationStepComponent } from './steps/estimation-step/estimation-step.component';
 import { ReviewSubmitStepComponent } from './steps/review-submit-step/review-submit-step.component';
 
 @Component({
@@ -38,7 +38,6 @@ import { ReviewSubmitStepComponent } from './steps/review-submit-step/review-sub
     IntegrationScopeStepComponent,
     ComplexityFactorsStepComponent,
     RiskDependenciesStepComponent,
-    EstimationStepComponent,
     ReviewSubmitStepComponent,
   ],
   templateUrl: './project-form.component.html',
@@ -61,7 +60,6 @@ export class ProjectFormComponent {
     { title: 'Integration Scope', subtitle: 'Count the interfaces and connection directions' },
     { title: 'Complexity Factors', subtitle: 'Flag the technical complexity drivers' },
     { title: 'Risk & Dependencies', subtitle: 'Quantify uncertainty and external dependencies' },
-    { title: 'Estimation', subtitle: 'Set the tentative day range for this project' },
     { title: 'Review & Submit', subtitle: 'Confirm everything looks right before saving' },
   ];
 
@@ -77,11 +75,10 @@ export class ProjectFormComponent {
    * ──────────────────────────────────────────────────────────────────
    */
   private readonly stepRequiredFields: (keyof ProjectInterface)[][] = [
-    ['projectName', 'user'],
+    ['projectName', 'user', 'erp'],
     ['masterDataInterfaces', 'transactionalInterfaces', 'inbound', 'outbound'],
     [],
     ['dataLayer', 'uncertainties'],
-    ['tentativeRangeDays'],
     [],
   ];
 
@@ -96,7 +93,7 @@ export class ProjectFormComponent {
    */
   readonly form = this.fb.group({
     projectName: ['', [Validators.required, Validators.minLength(2)]],
-    erp: [''],
+    erp: ['', [Validators.required]],
     supplier: [''],
     user: ['', [Validators.required]],
     masterDataInterfaces: [0, [Validators.required, Validators.min(0)]],
@@ -113,7 +110,8 @@ export class ProjectFormComponent {
     reportingAnalytics: ['No'],
     dataLayer: [10, [Validators.required, Validators.min(0), Validators.max(100)]],
     uncertainties: [10, [Validators.required, Validators.min(0), Validators.max(100)]],
-    tentativeRangeDays: ['', [Validators.required, Validators.pattern(/^\s*\d+(\.\d+)?\s*-\s*\d+(\.\d+)?\s*$/)]],
+    // Derived, never typed — see recomputeEstimate().
+    tentativeRangeDays: [''],
     tentativeProjectSize: [null as ProjectSizeEnum | null],
   });
 
@@ -166,10 +164,11 @@ export class ProjectFormComponent {
    * ──────────────────────────────────────────────────────────────────
    */
   constructor() {
-    // Recompute the tentative project size tag every time the user edits the day range
-    this.form.get('tentativeRangeDays')?.valueChanges.subscribe((val) => {
-      this.form.get('tentativeProjectSize')?.setValue(estimateProjectSize(val), { emitEvent: false });
-    });
+    // Tentative range + size are fully derived from the fields below — never
+    // typed directly. Recomputed on every change; emitEvent:false on both
+    // targets means this can't loop back into itself.
+    this.form.valueChanges.subscribe(() => this.recomputeEstimate());
+    this.recomputeEstimate();
 
     // Regular users don't get to reassign their own project — lock the field to themselves.
     if (!this.isAdmin()) {
@@ -206,7 +205,6 @@ export class ProjectFormComponent {
         reportingAnalytics: p.reportingAnalytics ?? 'No',
         dataLayer: p.dataLayer ?? 10,
         uncertainties: p.uncertainties ?? 10,
-        tentativeRangeDays: p.tentativeRangeDays ?? '',
       });
     });
 
@@ -217,6 +215,35 @@ export class ProjectFormComponent {
       if (this.projectsStore.loading()) return;
       this.loadProjectByKey(this._routeKey);
     });
+  }
+
+  /*
+   * ──────────────────────────────────────────────────────────────────
+   !  Tentative range + size — no longer entered on an Estimation step;
+   *  the backend (Code.gs) computes the authoritative values on save,
+   *  this mirrors that formula so the Review step (and the optimistic
+   *  local update in ProjectsStoreService) can show it immediately.
+   * ──────────────────────────────────────────────────────────────────
+   */
+  private recomputeEstimate(): void {
+    const raw = this.form.getRawValue();
+    const range = estimateRangeDays({
+      masterDataInterfaces: raw.masterDataInterfaces ?? 0,
+      transactionalInterfaces: raw.transactionalInterfaces ?? 0,
+      customLogic: (raw.customLogic ?? 'No') as YesNo,
+      uiImpact: (raw.uiImpact ?? 'No') as YesNo,
+      newApiOrBusinessFlows: (raw.newApiOrBusinessFlows ?? 'No') as YesNo,
+      integrations: (raw.integrations ?? 'No') as YesNo,
+      clientDependency: (raw.clientDependency ?? 'No') as YesNo,
+      reportingAnalytics: (raw.reportingAnalytics ?? 'No') as YesNo,
+      dataLayer: raw.dataLayer ?? 0,
+      uncertainties: raw.uncertainties ?? 0,
+      existingErp: (raw.existingErp ?? 'No') as YesNo,
+      hyperCare: (raw.hyperCare ?? 'No') as YesNo,
+    });
+
+    this.form.get('tentativeRangeDays')?.setValue(range, { emitEvent: false });
+    this.form.get('tentativeProjectSize')?.setValue(estimateProjectSize(range), { emitEvent: false });
   }
 
   /*
@@ -379,9 +406,11 @@ export class ProjectFormComponent {
         this.submitSuccess.set(true);
         setTimeout(() => this.onBack(), 900);
       },
-      error: () => {
+      error: (err: unknown) => {
         this.isSubmitting.set(false);
-        this.submitError.set('Could not save to the shared Google Sheet. Please try again.');
+        this.submitError.set(
+          err instanceof Error ? err.message : 'Could not save to the shared Google Sheet. Please try again.',
+        );
       },
     });
   }

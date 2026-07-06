@@ -14,7 +14,25 @@
   border-radius: 14px;
   overflow: hidden;
 
-  & + & { margin-top: 0.875rem; }
+  & + & {
+    margin-top: 0.875rem;
+  }
+
+  &.rv-computed {
+    background: rgba(107, 78, 15, 0.04);
+    border-color: rgba(107, 78, 15, 0.18);
+
+    .rv-head {
+      background: rgba(107, 78, 15, 0.07);
+    }
+  }
+}
+
+.rv-computed-hint {
+  margin: 0;
+  padding: 0 1.25rem 0.9rem;
+  font-size: 0.75rem;
+  color: @color-error;
 }
 
 .rv-head {
@@ -60,7 +78,9 @@
   font-family: inherit;
   transition: background 0.15s;
 
-  &:hover { background: rgba(107, 78, 15, 0.09); }
+  &:hover {
+    background: rgba(107, 78, 15, 0.09);
+  }
 }
 
 .rv-rows {
@@ -187,5 +207,7 @@
 }
 
 @media (max-width: @breakpoint-sm) {
-  .rv-rows.rv-grid2 { grid-template-columns: 1fr; }
+  .rv-rows.rv-grid2 {
+    grid-template-columns: 1fr;
+  }
 }

@@ -3,6 +3,12 @@
   <header class="page-header">
     <div class="page-header-inner">
       <img src="/assets/images/company-logo.png" alt="Company logo" class="logo" />
+      @if (isAdmin()) {
+        <nav class="nav-tabs">
+          <a class="nav-tab is-active" routerLink="/admin/projects">Projects</a>
+          <a class="nav-tab" routerLink="/admin/users">Employees</a>
+        </nav>
+      }
       <div class="header-right">
         <span class="username">{{ username() }}</span>
         <span class="header-divider"></span>
@@ -16,21 +22,26 @@
     <!-- Title row -->
     <div class="page-title-row">
       <div>
-        <h1>My Projects</h1>
+        <h1>{{ isAdmin() ? 'All Projects' : 'My Projects' }}</h1>
         <p class="page-subtitle">
-          @if (hasActiveFilters()) {
+          @if (isAdmin()) {
+            {{ filteredProjects().length }} project{{ filteredProjects().length === 1 ? '' : 's' }}
+          } @else if (hasActiveFilters()) {
             {{ filteredProjects().length }} matching project{{ filteredProjects().length === 1 ? '' : 's' }}
           } @else {
             {{ filteredProjects().length }} project{{ filteredProjects().length === 1 ? '' : 's' }} assigned to you
           }
         </p>
       </div>
+      @if (isAdmin()) {
+        <app-button label="Add project" [fullWidth]="false" (clicked)="addProject()" />
+      }
     </div>
 
     <!-- Toolbar: search + filters -->
-    @if (filteredProjects().length > 0 || hasActiveFilters()) {
+    @if (isAdmin() || filteredProjects().length > 0 || hasActiveFilters()) {
       <app-project-filter-bar
-        searchPlaceholder="Search by project, ERP or supplier…"
+        [searchPlaceholder]="isAdmin() ? 'Search by project, ERP, supplier or assignee…' : 'Search by project, ERP or supplier…'"
         [searchQuery]="searchQuery()"
         (searchChange)="searchQuery.set($event)"
         [erpFilter]="erpFilter()"
@@ -75,14 +86,27 @@
         <div class="state-icon-wrap folder-icon-wrap">
           <span class="state-icon icon-folder-plus" aria-hidden="true"></span>
         </div>
-        <h3 class="state-title">No projects assigned yet</h3>
-        <p class="state-message">When an admin assigns you a project, it'll show up here.</p>
+        @if (isAdmin()) {
+          <h3 class="state-title">No projects yet</h3>
+          <p class="state-message">Get started by adding your first project to the spreadsheet.</p>
+          <div class="state-actions">
+            <app-button label="Add your first project" [fullWidth]="false" (clicked)="addProject()" />
+          </div>
+        } @else {
+          <h3 class="state-title">No projects assigned yet</h3>
+          <p class="state-message">When an admin assigns you a project, it'll show up here.</p>
+        }
       </div>
     } @else {
       <!-- Card grid — one card per project -->
       <div class="cards-grid">
         @for (group of filteredGroups(); track group.projectName) {
-          <app-project-card [entries]="group.entries" (edit)="editGroup(group)" />
+          <app-project-card
+            [entries]="group.entries"
+            [assignedToName]="isAdmin() ? assignedToNameForGroup(group) : null"
+            (edit)="editGroup(group)"
+            (delete)="requestDeleteGroup(group)"
+          />
         }
       </div>
     }
@@ -92,7 +116,32 @@
       <app-supplier-picker
         [group]="group"
         (pick)="editEntry($event)"
+        (delete)="requestDeleteEntry($event)"
         (closed)="pickerGroup.set(null)"
+      />
+    }
+
+    <!-- Delete confirmations -->
+    @if (projectDeleteTarget(); as group) {
+      <app-confirm-dialog
+        title="Delete project?"
+        [message]="projectDeleteMessage(group)"
+        confirmLabel="Delete project"
+        [confirming]="deleting()"
+        [errorMessage]="deleteError()"
+        (confirmed)="confirmDeleteProject()"
+        (cancelled)="cancelDelete()"
+      />
+    }
+    @if (entryDeleteTarget(); as entry) {
+      <app-confirm-dialog
+        title="Delete supplier?"
+        [message]="entryDeleteMessage(entry)"
+        confirmLabel="Delete supplier"
+        [confirming]="deleting()"
+        [errorMessage]="deleteError()"
+        (confirmed)="confirmDeleteEntry()"
+        (cancelled)="cancelDelete()"
       />
     }
   </main>

@@ -121,15 +121,8 @@
               </div>
             }
 
-            <!-- ── 5 · Estimation ─────────────────────────────────────────── -->
+            <!-- ── 5 · Review & Submit ───────────────────────────────────── -->
             @if (currentStep() === 4) {
-              <div class="step-body">
-                <app-estimation-step [form]="form" />
-              </div>
-            }
-
-            <!-- ── 6 · Review & Submit ───────────────────────────────────── -->
-            @if (currentStep() === 5) {
               <div class="step-body review-body">
                 <app-review-submit-step
                   [form]="form"

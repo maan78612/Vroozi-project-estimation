@@ -99,10 +99,12 @@
       <span class="field-label">
         Assigned To <span class="required-mark" aria-hidden="true">*</span>
       </span>
-      <app-employee-select
+      <app-search-dropdown
         formControlName="user"
-        [employees]="assignableUsers()"
+        [options]="employeeOptions()"
         [isError]="hasError('user')"
+        placeholder="Select an employee…"
+        searchPlaceholder="Search by name or username…"
       />
       @if (hasError('user')) {
         <span class="field-error" role="alert">Choose who this project is assigned to</span>
@@ -111,26 +113,28 @@
   }
 
   <div class="field-block">
-    <label class="field-label" for="f-erp">ERP System</label>
-    <input
-      id="f-erp"
-      type="text"
-      class="field-input"
+    <span class="field-label">
+      ERP System <span class="required-mark" aria-hidden="true">*</span>
+    </span>
+    <app-search-dropdown
       formControlName="erp"
-      placeholder="e.g. SAP S/4HANA, NetSuite"
-      autocomplete="off"
+      [options]="erpOptions"
+      [isError]="hasError('erp')"
+      placeholder="Select an ERP system…"
+      searchPlaceholder="Search ERP systems…"
     />
+    @if (hasError('erp')) {
+      <span class="field-error" role="alert">ERP system is required</span>
+    }
   </div>
 
   <div class="field-block">
-    <label class="field-label" for="f-supplier">Supplier</label>
-    <input
-      id="f-supplier"
-      type="text"
-      class="field-input"
+    <span class="field-label">Supplier</span>
+    <app-search-dropdown
       formControlName="supplier"
-      placeholder="e.g. Acme Supplies Ltd"
-      autocomplete="off"
+      [options]="supplierOptions"
+      placeholder="Select a supplier…"
+      searchPlaceholder="Search suppliers…"
     />
     <span class="field-hint">
       Each entry covers one supplier — add more suppliers as separate entries later.

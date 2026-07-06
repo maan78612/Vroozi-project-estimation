@@ -1,11 +1,8 @@
 import { Service, computed, inject, signal } from '@angular/core';
-import { Observable, delay, of, tap } from 'rxjs';
+import { Observable, tap, throwError } from 'rxjs';
 import { ProjectInterface } from '../../intefaces/form/project.interface';
 import { GoogleSheetsService } from '../google-sheets/google-sheets.service';
 import { STATIC_PROJECTS } from '../../data/static-projects.data';
-
-// Small delay so a local (unconfigured) save still feels like an action.
-const LOCAL_SAVE_DELAY_MS = 400;
 
 /*
  * ──────────────────────────────────────────────────────────────────
@@ -106,11 +103,55 @@ export class ProjectsStoreService {
     );
   }
 
-  // Sheet first, signal after — a failed save never shows up in the app.
+  // Removes an entire project — every supplier entry sharing this projectName.
+  deleteProject(projectName: string): Observable<void> {
+    return this.persist(
+      () => this.sheets.deleteProject(projectName),
+      () => this.projects.update((list) => list.filter((e) => e.projectName !== projectName)),
+    );
+  }
+
+  /*
+   * ──────────────────────────────────────────────────────────────────
+   !  Removes one supplier entry from a project. Deletes the whole
+   *  project instead if this was its last remaining entry.
+   * ──────────────────────────────────────────────────────────────────
+   */
+  deleteEntry(projectName: string, supplier: string): Observable<void> {
+    const remaining = this.entriesFor(projectName).filter((e) => e.supplier !== supplier);
+    const write = remaining.length
+      ? () => this.sheets.updateProject(projectName, remaining)
+      : () => this.sheets.deleteProject(projectName);
+
+    return this.persist(write, () =>
+      this.projects.update((list) =>
+        list.filter((e) => !(e.projectName === projectName && e.supplier === supplier)),
+      ),
+    );
+  }
+
+  /*
+   * ──────────────────────────────────────────────────────────────────
+   !  persist() = the one place every save/delete goes through
+   *
+   *  Flow:
+   *   1. No real sheet configured → error out, nothing is saved anywhere.
+   *   2. Real sheet configured → send `write()`, update the signal only on success.
+   *   3. If the real save fails, `tap(apply)` never runs — signal stays untouched.
+   *
+   *  Example — deleteProject('HEB') calls:
+   *    persist(
+   *      () => this.sheets.deleteProject('HEB'),   // write: the real save
+   *      () => this.projects.update(list =>        // apply: update the signal
+   *        list.filter(e => e.projectName !== 'HEB')),
+   *    )
+   * ──────────────────────────────────────────────────────────────────
+   */
   private persist(write: () => Observable<void>, apply: () => void): Observable<void> {
     if (!this.sheets.isConfigured) {
-      return of(undefined).pipe(delay(LOCAL_SAVE_DELAY_MS), tap(apply));
+      return throwError(() => new Error('Google Sheets is not configured — nothing was saved.'));
     }
+    // Real sheet — send the write, update the signal only once it succeeds.
     return write().pipe(tap(apply));
   }
 }
