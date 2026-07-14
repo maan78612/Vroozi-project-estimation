@@ -13,7 +13,10 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+    /* TS 6+ requires an explicit rootDir alongside outDir; inherited by
+       tsconfig.app.json and tsconfig.spec.json (all inputs live in src). */
+    "rootDir": "./src"
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

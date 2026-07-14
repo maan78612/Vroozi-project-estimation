@@ -15,6 +15,25 @@
   color: @color-text-primary;
 }
 
+// Label + "+ Add new" on one line (ERP / Supplier fields, admin only).
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.add-option-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: @color-primary;
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+}
+
 .project-name-heading {
   margin: 0;
   font-size: 1.2rem;

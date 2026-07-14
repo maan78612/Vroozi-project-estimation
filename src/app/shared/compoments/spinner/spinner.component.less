@@ -1,0 +1,100 @@
+@import (reference) 'styles.less';
+
+@spinner-gold-light: #c9a13d;
+
+.spinner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 3rem 1rem;
+  animation: spinner-appear 0.25s ease-out;
+}
+
+.spinner-orbit {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 0.85rem;
+}
+
+.spinner-ring {
+  position: absolute;
+  border-radius: 50%;
+  border-style: solid;
+  border-color: transparent;
+}
+
+// Outer arc — brand gold, clockwise.
+.spinner-ring-outer {
+  inset: 0;
+  border-width: 3px;
+  border-top-color: @color-primary;
+  border-right-color: fade(@color-primary, 35%);
+  animation: spinner-spin 0.9s linear infinite;
+}
+
+// Inner arc — lighter gold, counter-clockwise for the orbital feel.
+.spinner-ring-inner {
+  inset: 9px;
+  border-width: 2.5px;
+  border-bottom-color: @spinner-gold-light;
+  border-left-color: fade(@spinner-gold-light, 30%);
+  animation: spinner-spin 1.3s linear infinite reverse;
+}
+
+// Pulsing core.
+.spinner-core {
+  position: absolute;
+  inset: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, @spinner-gold-light, @color-primary);
+  animation: spinner-pulse 1.2s ease-in-out infinite;
+}
+
+.spinner-label {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: @color-text-primary;
+}
+
+.spinner-sublabel {
+  margin: 0;
+  font-size: 0.8rem;
+  color: @color-text-secondary;
+}
+
+// ── Compact variant (dialogs, tight blocks) ──────────────────────
+
+.spinner-wrap.is-sm {
+  padding: 1.25rem 0.75rem;
+
+  .spinner-orbit {
+    width: 34px;
+    height: 34px;
+    margin-bottom: 0.5rem;
+  }
+
+  .spinner-ring-outer { border-width: 2.5px; }
+  .spinner-ring-inner { inset: 6px; border-width: 2px; }
+  .spinner-core { inset: 13px; }
+
+  .spinner-label { font-size: 0.85rem; }
+  .spinner-sublabel { font-size: 0.75rem; }
+}
+
+@keyframes spinner-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spinner-pulse {
+  0%, 100% { transform: scale(0.75); opacity: 0.55; }
+  50% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes spinner-appear {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

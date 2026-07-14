@@ -1,25 +1,43 @@
-import { Service } from '@angular/core';
+import { Service, signal } from '@angular/core';
+import { UserInterface } from '../../intefaces/user-interface';
 
 /*
  * ──────────────────────────────────────────────────────────────────
- !  IMPORTANT — use @Service() (Angular v22+) instead of @Injectable
+ !  In-memory session — the single owner of the JWT + signed-in user.
  *
- *  Previous Implementation (Valid: v2.0 up to v21.x):
- *    @Injectable({ providedIn: 'root' })
- *    export class SessionService {
- *      constructor(private http: HttpClient) {}
- *    }
- *
- *  Why we transitioned away from @Injectable:
- *    1. It forced redundant boilerplate ({ providedIn: 'root' }) for singletons.
- *    2. It allowed legacy constructor DI, which conflicts with inject().
- *
- *  Constraints of @Service():
- *    - Automatically scoped to 'root' — no config required.
- *    - FORBIDS constructor injection — all deps MUST use inject().
- *      e.g.  private http = inject(HttpClient);
+ *  Nothing is persisted to the browser (no local/session storage):
+ *  a page refresh drops the session and the guards send the user
+ *  back to /login. AuthService writes through this service, and the
+ *  HTTP interceptor reads the token from here so it never has to
+ *  depend on AuthService itself.
  * ──────────────────────────────────────────────────────────────────
  */
-
 @Service()
-export class SessionService {}
+export class SessionService {
+  private token = signal<string | null>(null);
+  private user = signal<UserInterface | null>(null);
+
+  readonly currentUser = this.user.asReadonly();
+
+  getToken(): string | null {
+    return this.token();
+  }
+
+  getUser(): UserInterface | null {
+    return this.user();
+  }
+
+  store(token: string, user: UserInterface): void {
+    this.token.set(token);
+    this.user.set(user);
+  }
+
+  setUser(user: UserInterface): void {
+    this.user.set(user);
+  }
+
+  clear(): void {
+    this.token.set(null);
+    this.user.set(null);
+  }
+}

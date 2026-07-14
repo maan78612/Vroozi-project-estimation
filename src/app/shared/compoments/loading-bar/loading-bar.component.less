@@ -1,0 +1,44 @@
+@import (reference) 'styles.less';
+
+.loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 2000;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgba(107, 78, 15, 0.12);
+  opacity: 0;
+  // Fade in with a small delay so ultra-fast requests never flash the bar;
+  // fade out quickly the moment the last request settles.
+  transition: opacity 0.15s ease;
+
+  &.is-active {
+    opacity: 1;
+    transition-delay: 0.15s;
+  }
+}
+
+.loading-bar-sweep {
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    @color-primary 25%,
+    #c9a13d 50%,
+    @color-primary 75%,
+    transparent
+  );
+  box-shadow: 0 0 12px rgba(201, 161, 61, 0.55);
+  animation: loading-bar-sweep 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes loading-bar-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}

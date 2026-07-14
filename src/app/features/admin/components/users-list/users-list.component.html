@@ -35,13 +35,26 @@
           #searchRef
           type="text"
           (input)="searchQuery.set(searchRef.value)"
-          placeholder="Search by name or username…"
+          placeholder="Search by name or email…"
         />
       </div>
     </div>
 
     <!-- States -->
-    @if (filteredEmployees().length === 0) {
+    @if (isLoading()) {
+      <div class="list-state">
+        <app-spinner
+          label="Loading employees…"
+          sublabel="Fetching the team and their assigned projects."
+        />
+      </div>
+    } @else if (loadError()) {
+      <div class="list-state empty-state">
+        <h3 class="state-title">Couldn't load employees</h3>
+        <p class="state-message">{{ loadError() }}</p>
+        <app-button label="Try again" [fullWidth]="false" (clicked)="retryLoad()" />
+      </div>
+    } @else if (filteredEmployees().length === 0) {
       <div class="list-state empty-state">
         <div class="state-icon-wrap search-icon-wrap">
           <span class="state-icon icon-zoom-out" aria-hidden="true"></span>
@@ -56,10 +69,10 @@
           <div class="employee-card">
             <div class="card-top">
               <!-- initials pipe → "Sara Ahmed" becomes "SA" -->
-              <div class="avatar">{{ (employee.fullName || employee.username) | initials }}</div>
+              <div class="avatar">{{ employee.name | initials }}</div>
               <div class="identity">
-                <h3 class="employee-name">{{ employee.fullName || employee.username }}</h3>
-                <span class="employee-username">&#64;{{ employee.username }}</span>
+                <h3 class="employee-name">{{ employee.name }}</h3>
+                <span class="employee-username">{{ employee.email }}</span>
               </div>
               <span class="project-count-badge">
                 {{ projectsFor(employee).length }} project{{ projectsFor(employee).length === 1 ? '' : 's' }}

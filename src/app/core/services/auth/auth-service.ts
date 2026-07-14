@@ -1,79 +1,78 @@
-import { Service, signal } from '@angular/core';
+import { Service, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, catchError, map, throwError } from 'rxjs';
+import { API_BASE_URL } from '../../config/api.config';
+import { ApiAuthData, ApiResponse, ApiUser, toApiError } from '../../intefaces/api.interface';
 import { UserInterface } from '../../intefaces/user-interface';
-import { PasswordResetResultInterface } from '../../intefaces/auth-interface';
-import { STATIC_USERS } from '../../data/static-user.data';
-import {
-  STATIC_AUTH_MESSAGES,
-  STATIC_PASSWORD_RESET_HINTS,
-} from '../../data/static-auth.data';
 import { RoleEnum } from '../../enums/role-enum';
+import { SessionService } from '../session/session-service';
 
+/** Maps a backend user document to the app's UserInterface. */
+export function mapApiUser(user: ApiUser): UserInterface {
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  };
+}
+
+/*
+ * ──────────────────────────────────────────────────────────────────
+ !  Authentication against the backend API (POST /auth/login).
+ *
+ *  The JWT + user live in SessionService (in memory only — a page
+ *  refresh ends the session). The HTTP interceptor attaches the
+ *  token to every request and drops the session on 401.
+ * ──────────────────────────────────────────────────────────────────
+ */
 @Service()
 export class AuthService {
-  private currentUser = signal<UserInterface | null>(null);
+  private http = inject(HttpClient);
+  private session = inject(SessionService);
 
-  constructor() {
-    this.restoreSession();
+  login(email: string, password: string): Observable<UserInterface> {
+    return this.http
+      .post<ApiResponse<ApiAuthData>>(`${API_BASE_URL}/auth/login`, { email, password })
+      .pipe(
+        map((res) => {
+          const user = mapApiUser(res.data.user);
+          this.session.store(res.data.token, user);
+          return user;
+        }),
+        catchError((err: unknown) =>
+          throwError(() => toApiError(err, 'Login failed. Please try again.')),
+        ),
+      );
   }
 
-  login(username: string, password: string): boolean {
-    const match = STATIC_USERS.find((u) => u.username === username && u.password === password);
-    if (!match) return false;
-
-    sessionStorage.setItem('currentUser', JSON.stringify(match));
-    this.currentUser.set(match);
-    return true;
+  /** Re-fetches the signed-in user from GET /auth/me (fresh role/name). */
+  me(): Observable<UserInterface> {
+    return this.http.get<ApiResponse<{ user: ApiUser }>>(`${API_BASE_URL}/auth/me`).pipe(
+      map((res) => {
+        const user = mapApiUser(res.data.user);
+        this.session.setUser(user);
+        return user;
+      }),
+      catchError((err: unknown) =>
+        throwError(() => toApiError(err, 'Could not load your account.')),
+      ),
+    );
   }
 
   logout(): void {
-    sessionStorage.removeItem('currentUser');
-    this.currentUser.set(null);
-  }
-
-  requestPasswordReset(username: string): PasswordResetResultInterface {
-    const user = STATIC_USERS.find((u) => u.username === username.trim());
-
-    if (!user) {
-      return { success: false, message: STATIC_AUTH_MESSAGES.userNotFound };
-    }
-
-    return {
-      success: true,
-      message: STATIC_PASSWORD_RESET_HINTS[user.username],
-    };
+    this.session.clear();
   }
 
   isAuthenticated(): boolean {
-    return this.currentUser() !== null;
+    return this.session.getUser() !== null;
   }
 
   getRole(): RoleEnum | null {
-    return this.currentUser()?.role ?? null;
+    return this.session.getUser()?.role ?? null;
   }
 
   getCurrentUser(): UserInterface | null {
-    return this.currentUser();
-  }
-
-  // Employees a project can be assigned/reassigned to — everyone with the User role.
-  getAssignableUsers(): UserInterface[] {
-    return STATIC_USERS.filter((u) => u.role === RoleEnum.User);
-  }
-
-  private restoreSession(): void {
-    const stored = sessionStorage.getItem('currentUser');
-    if (!stored) return;
-
-    try {
-      const user = JSON.parse(stored) as UserInterface;
-      const isValid = STATIC_USERS.some((u) => u.id === user.id && u.username === user.username);
-      if (isValid) {
-        this.currentUser.set(user);
-      } else {
-        sessionStorage.removeItem('currentUser');
-      }
-    } catch {
-      sessionStorage.removeItem('currentUser');
-    }
+    return this.session.getUser();
   }
 }

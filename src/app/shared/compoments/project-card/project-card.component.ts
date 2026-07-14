@@ -28,6 +28,8 @@ const MAX_VISIBLE_SUPPLIERS = 2;
 export class ProjectCardComponent {
   entries = input.required<ProjectInterface[]>();
   assignedToName = input<string | null>(null);
+  // Deleting is an admin-only action on the backend — hide the button for others.
+  showDelete = input(true);
 
   edit = output<void>();
   delete = output<void>();

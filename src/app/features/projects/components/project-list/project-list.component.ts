@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth/auth-service';
+import { UsersService } from '../../../../core/services/users/users-service';
 import { ProjectsStoreService } from '../../../../core/services/projects/projects-store.service';
 import { ProjectInterface } from '../../../../core/intefaces/form/project.interface';
 import { ProjectSizeEnum } from '../../../../core/enums/project-size.enum';
@@ -12,6 +13,7 @@ import { ProjectCardComponent } from '../../../../shared/compoments/project-card
 import { ProjectFilterBarComponent } from '../../../../shared/compoments/project-filter-bar/project-filter-bar.component';
 import { SupplierPickerComponent } from '../../../../shared/compoments/supplier-picker/supplier-picker.component';
 import { ConfirmDialogComponent } from '../../../../shared/compoments/confirm-dialog/confirm-dialog.component';
+import { SpinnerComponent } from '../../../../shared/compoments/spinner/spinner.component';
 
 /*
  * ──────────────────────────────────────────────────────────────────
@@ -32,12 +34,14 @@ import { ConfirmDialogComponent } from '../../../../shared/compoments/confirm-di
     ProjectFilterBarComponent,
     SupplierPickerComponent,
     ConfirmDialogComponent,
+    SpinnerComponent,
   ],
   templateUrl: './project-list.component.html',
   styleUrl: './project-list.component.less',
 })
 export class ProjectListComponent {
   private authService = inject(AuthService);
+  private usersService = inject(UsersService);
   private projectsStore = inject(ProjectsStoreService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -51,16 +55,25 @@ export class ProjectListComponent {
   sortBy = signal<ProjectSortOption>('name');
 
   // Every employee a project can be assigned to — feeds the admin "assigned to" chip.
-  private readonly assignableUsers = this.authService.getAssignableUsers();
+  private readonly assignableUsers = this.usersService.assignableUsers;
 
-  readonly username = computed(() => this.authService.getCurrentUser()?.username ?? '');
+  readonly username = computed(() => this.authService.getCurrentUser()?.name ?? '');
+  private readonly currentUserId = computed(() => this.authService.getCurrentUser()?.id ?? '');
 
   // Load progress — drives the loading / retry states in the template.
   readonly projectsLoading = this.projectsStore.loading;
   readonly projectsLoadError = this.projectsStore.loadError;
 
+  constructor() {
+    // Always re-fetch on page entry so the list reflects the server
+    // (and the currently signed-in user, not a previous session).
+    this.projectsStore.load();
+    // The employee directory is an admin-only endpoint.
+    if (this.isAdmin()) this.usersService.load();
+  }
+
   private readonly myProjects = computed(() =>
-    this.projectsStore.all().filter((p) => p.user === this.username()),
+    this.projectsStore.all().filter((p) => p.user === this.currentUserId()),
   );
 
   private readonly baseProjects = computed(() =>
@@ -118,8 +131,9 @@ export class ProjectListComponent {
   deleteError = signal('');
 
   assignedToName(project: ProjectInterface): string {
-    const match = this.assignableUsers.find((u) => u.username === project.user);
-    return match ? match.fullName || match.username : project.user;
+    if (project.userName) return project.userName;
+    const match = this.assignableUsers().find((u) => u.id === project.user);
+    return match ? match.name : '—';
   }
 
   // Group chip: the shared owner's name, or "Multiple" when suppliers differ.

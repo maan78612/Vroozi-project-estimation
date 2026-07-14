@@ -58,9 +58,11 @@
 
     <!-- States -->
     @if (projectsLoading()) {
-      <div class="list-state empty-state">
-        <h3 class="state-title">Loading projects…</h3>
-        <p class="state-message">Fetching the latest data from the shared sheet.</p>
+      <div class="list-state">
+        <app-spinner
+          label="Loading projects…"
+          [sublabel]="isAdmin() ? 'Fetching every project from the server.' : 'Fetching your assigned projects.'"
+        />
       </div>
     } @else if (projectsLoadError()) {
       <div class="list-state empty-state">
@@ -104,6 +106,7 @@
           <app-project-card
             [entries]="group.entries"
             [assignedToName]="isAdmin() ? assignedToNameForGroup(group) : null"
+            [showDelete]="isAdmin()"
             (edit)="editGroup(group)"
             (delete)="requestDeleteGroup(group)"
           />
@@ -115,6 +118,7 @@
     @if (pickerGroup(); as group) {
       <app-supplier-picker
         [group]="group"
+        [showDelete]="isAdmin()"
         (pick)="editEntry($event)"
         (delete)="requestDeleteEntry($event)"
         (closed)="pickerGroup.set(null)"

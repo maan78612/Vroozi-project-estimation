@@ -85,7 +85,9 @@
       }
     </span>
     <div class="card-footer-actions">
-      <app-button variant="link" [danger]="true" label="Delete" [fullWidth]="false" (clicked)="delete.emit()" />
+      @if (showDelete()) {
+        <app-button variant="link" [danger]="true" label="Delete" [fullWidth]="false" (clicked)="delete.emit()" />
+      }
       <app-button variant="link" label="Edit" [fullWidth]="false" (clicked)="edit.emit()" />
     </div>
   </div>

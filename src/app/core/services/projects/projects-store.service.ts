@@ -1,19 +1,24 @@
-import { Service, computed, signal } from '@angular/core';
-import { Observable, of, tap } from 'rxjs';
+import { Service, computed, inject, signal } from '@angular/core';
+import { Observable, forkJoin, map, of, switchMap, tap, throwError } from 'rxjs';
 import { ProjectInterface } from '../../intefaces/form/project.interface';
-import { STATIC_PROJECTS } from '../../data/static-projects.data';
+import { ProjectsApiService } from './projects-api.service';
+import { AuthService } from '../auth/auth-service';
+import { RoleEnum } from '../../enums/role-enum';
 
 /*
  * ──────────────────────────────────────────────────────────────────
- !  Supplier-entry store backed by static JSON (temporary — see
- *  static-projects.data.ts). Holds one entry per supplier row;
- *  entries sharing a projectName form a project. This is an
- *  in-memory store: writes update the signal immediately and are
- *  not persisted anywhere yet — that arrives with the MongoDB backend.
+ !  Supplier-entry store backed by the /projects API. Holds one entry
+ *  per supplier row; entries sharing a projectName form a project.
+ *  Every mutation goes to the backend first, then the list is
+ *  re-fetched so the signal always mirrors the server (including
+ *  populated owner names after a reassign).
  * ──────────────────────────────────────────────────────────────────
  */
 @Service()
 export class ProjectsStoreService {
+  private api = inject(ProjectsApiService);
+  private authService = inject(AuthService);
+
   private readonly projects = signal<ProjectInterface[]>([]);
 
   readonly all = this.projects.asReadonly();
@@ -25,12 +30,28 @@ export class ProjectsStoreService {
     Array.from(new Set(this.projects().map((p) => p.projectName))).sort(),
   );
 
-  constructor() {
-    this.load();
-  }
-
+  /*
+   * Fetches the list (backend already scopes it: admins get every
+   * project, users only their own). Pages call this on entry so a
+   * returning visit — or a different signed-in user — sees fresh data.
+   */
   load(): void {
-    this.projects.set([...STATIC_PROJECTS]);
+    if (this.loading()) return;
+    this.loading.set(true);
+    this.loadError.set('');
+
+    this.api.list().subscribe({
+      next: (entries) => {
+        this.projects.set(entries);
+        this.loading.set(false);
+      },
+      error: (err: unknown) => {
+        this.loading.set(false);
+        this.loadError.set(
+          err instanceof Error ? err.message : 'Could not load projects.',
+        );
+      },
+    });
   }
 
   entriesFor(projectName: string): ProjectInterface[] {
@@ -43,14 +64,19 @@ export class ProjectsStoreService {
 
   // Adds a supplier entry — starts a new project or extends an existing one.
   add(entry: ProjectInterface): Observable<void> {
-    return this.persist(() => this.projects.update((list) => [...list, entry]));
+    return this.api.create(entry).pipe(
+      // The backend always makes the creator the owner; when an admin
+      // assigned someone else in the form, move ownership right after.
+      switchMap((created) => this.reassignIfNeeded(created, entry.user)),
+      switchMap(() => this.refresh$()),
+    );
   }
 
   /*
    * ──────────────────────────────────────────────────────────────────
    !  Replaces one supplier entry, found by its original name+supplier.
    *  If the project name was edited, the rename applies to the whole
-   *  project — every entry in the group moves with it.
+   *  project — every sibling document gets the new projectName too.
    * ──────────────────────────────────────────────────────────────────
    */
   updateEntry(
@@ -58,40 +84,66 @@ export class ProjectsStoreService {
     originalSupplier: string,
     entry: ProjectInterface,
   ): Observable<void> {
-    return this.persist(() =>
-      this.projects.update((list) =>
-        list.map((e) => {
-          if (e.projectName !== originalName) return e;
-          return e.supplier === originalSupplier ? entry : { ...e, projectName: entry.projectName };
-        }),
+    const existing = this.getByKey(originalName, originalSupplier);
+    if (!existing?.id) {
+      return throwError(() => new Error('This project entry no longer exists.'));
+    }
+
+    const siblings =
+      entry.projectName !== originalName
+        ? this.entriesFor(originalName).filter((e) => e.id && e.id !== existing.id)
+        : [];
+
+    return this.api.update(existing.id, entry).pipe(
+      switchMap((updated) => this.reassignIfNeeded(updated, entry.user)),
+      switchMap(() =>
+        siblings.length
+          ? forkJoin(siblings.map((s) => this.api.update(s.id!, { projectName: entry.projectName })))
+          : of(null),
       ),
+      switchMap(() => this.refresh$()),
     );
   }
 
   // Removes an entire project — every supplier entry sharing this projectName.
   deleteProject(projectName: string): Observable<void> {
-    return this.persist(() =>
-      this.projects.update((list) => list.filter((e) => e.projectName !== projectName)),
-    );
+    const ids = this.entriesFor(projectName)
+      .map((e) => e.id)
+      .filter((id): id is string => !!id);
+
+    if (!ids.length) return this.refresh$();
+    return forkJoin(ids.map((id) => this.api.delete(id))).pipe(switchMap(() => this.refresh$()));
+  }
+
+  // Removes one supplier entry from a project.
+  deleteEntry(projectName: string, supplier: string): Observable<void> {
+    const entry = this.getByKey(projectName, supplier);
+    if (!entry?.id) {
+      return throwError(() => new Error('This project entry no longer exists.'));
+    }
+    return this.api.delete(entry.id).pipe(switchMap(() => this.refresh$()));
   }
 
   /*
-   * ──────────────────────────────────────────────────────────────────
-   !  Removes one supplier entry from a project. Deletes the whole
-   *  project instead if this was its last remaining entry.
-   * ──────────────────────────────────────────────────────────────────
+   * Ownership follow-up after a save: only admins may reassign, and
+   * only when the form picked someone other than the current owner.
    */
-  deleteEntry(projectName: string, supplier: string): Observable<void> {
-    return this.persist(() =>
-      this.projects.update((list) =>
-        list.filter((e) => !(e.projectName === projectName && e.supplier === supplier)),
-      ),
-    );
+  private reassignIfNeeded(
+    saved: ProjectInterface,
+    targetUserId: string,
+  ): Observable<unknown> {
+    const isAdmin = this.authService.getRole() === RoleEnum.Admin;
+    if (!isAdmin || !saved.id || !targetUserId || targetUserId === saved.user) {
+      return of(null);
+    }
+    return this.api.reassign(saved.id, targetUserId);
   }
 
-  // Every save/delete goes through here — keeps the Observable-based
-  // contract callers already use, ready to swap for a real API call later.
-  private persist(apply: () => void): Observable<void> {
-    return of(undefined).pipe(tap(apply));
+  // Re-fetch after every mutation — one source of truth: the server.
+  private refresh$(): Observable<void> {
+    return this.api.list().pipe(
+      tap((entries) => this.projects.set(entries)),
+      map(() => undefined),
+    );
   }
 }

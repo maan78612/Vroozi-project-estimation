@@ -8,10 +8,11 @@
 
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { LoadingBarComponent } from './shared/compoments/loading-bar/loading-bar.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, LoadingBarComponent],
   templateUrl: './app.html',
   styleUrl: './app.less',
 })

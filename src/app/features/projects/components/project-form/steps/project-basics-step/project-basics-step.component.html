@@ -104,7 +104,7 @@
         [options]="employeeOptions()"
         [isError]="hasError('user')"
         placeholder="Select an employee…"
-        searchPlaceholder="Search by name or username…"
+        searchPlaceholder="Search by name or email…"
       />
       @if (hasError('user')) {
         <span class="field-error" role="alert">Choose who this project is assigned to</span>
@@ -113,12 +113,19 @@
   }
 
   <div class="field-block">
-    <span class="field-label">
-      ERP System <span class="required-mark" aria-hidden="true">*</span>
-    </span>
+    <div class="field-label-row">
+      <span class="field-label">
+        ERP System <span class="required-mark" aria-hidden="true">*</span>
+      </span>
+      @if (isAdmin()) {
+        <button type="button" class="add-option-link" (click)="addErpRequested.emit()">
+          + Add new
+        </button>
+      }
+    </div>
     <app-search-dropdown
       formControlName="erp"
-      [options]="erpOptions"
+      [options]="erpOptions()"
       [isError]="hasError('erp')"
       placeholder="Select an ERP system…"
       searchPlaceholder="Search ERP systems…"
@@ -129,10 +136,17 @@
   </div>
 
   <div class="field-block">
-    <span class="field-label">Supplier</span>
+    <div class="field-label-row">
+      <span class="field-label">Supplier</span>
+      @if (isAdmin()) {
+        <button type="button" class="add-option-link" (click)="addSupplierRequested.emit()">
+          + Add new
+        </button>
+      }
+    </div>
     <app-search-dropdown
       formControlName="supplier"
-      [options]="supplierOptions"
+      [options]="supplierOptions()"
       placeholder="Select a supplier…"
       searchPlaceholder="Search suppliers…"
     />

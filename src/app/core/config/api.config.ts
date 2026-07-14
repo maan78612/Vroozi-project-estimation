@@ -1,15 +1,7 @@
-import authJson from './auth.json';
-
 /*
  * ──────────────────────────────────────────────────────────────────
- !  Static auth copy
- *
- *  Demo password-reset hints and login error messages used until
- *  real auth (and real email delivery) is implemented.
+ !  Base URL of the project-management backend (Express + MongoDB).
+ *  All feature services build their endpoints from this constant.
  * ──────────────────────────────────────────────────────────────────
  */
-
-export const STATIC_PASSWORD_RESET_HINTS: Record<string, string> = authJson.passwordResetHints;
-
-export const STATIC_AUTH_MESSAGES: { userNotFound: string; loginFailed: string } =
-  authJson.messages;
+export const API_BASE_URL = 'http://localhost:8000/api/v1';

@@ -26,10 +26,16 @@ export class ReviewSubmitStepComponent {
     return (this.form().get(key)?.value as string) || '—';
   }
 
+  // Who the entry is assigned to. For non-admins the assignable list is
+  // empty (admin-only endpoint), so fall back to the signed-in user.
+  currentUser = input<UserInterface | null>(null);
+
   assignedToName(): string {
-    const username = this.form().get('user')?.value as string;
-    const match = this.assignableUsers().find((u) => u.username === username);
-    return match ? (match.fullName || match.username) : username || '—';
+    const userId = this.form().get('user')?.value as string;
+    const match = this.assignableUsers().find((u) => u.id === userId);
+    if (match) return match.name;
+    const me = this.currentUser();
+    return me && me.id === userId ? me.name : '—';
   }
 
   numVal(key: keyof ProjectInterface): number {

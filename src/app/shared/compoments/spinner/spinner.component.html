@@ -1,0 +1,14 @@
+<div class="spinner-wrap" [class.is-sm]="size() === 'sm'" role="status" [attr.aria-label]="label() || 'Loading'">
+  <div class="spinner-orbit">
+    <span class="spinner-ring spinner-ring-outer" aria-hidden="true"></span>
+    <span class="spinner-ring spinner-ring-inner" aria-hidden="true"></span>
+    <span class="spinner-core" aria-hidden="true"></span>
+  </div>
+
+  @if (label()) {
+    <p class="spinner-label">{{ label() }}</p>
+  }
+  @if (sublabel()) {
+    <p class="spinner-sublabel">{{ sublabel() }}</p>
+  }
+</div>

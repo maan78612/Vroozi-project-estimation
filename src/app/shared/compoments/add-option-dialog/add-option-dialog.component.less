@@ -1,0 +1,165 @@
+@import (reference) 'styles.less';
+
+.add-option-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(24, 18, 6, 0.45);
+  backdrop-filter: blur(4px);
+  animation: add-option-fade 0.18s ease-out;
+}
+
+.add-option-panel {
+  width: 100%;
+  max-width: 440px;
+  background: @color-bg-card;
+  border-radius: 18px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+  animation: add-option-pop 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+// ── Header — same band as the supplier picker dialog ─────────────
+
+.add-option-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.35rem 1.5rem 1.1rem;
+  border-bottom: 1px solid @color-border;
+  background: linear-gradient(135deg, rgba(107, 78, 15, 0.06), rgba(107, 78, 15, 0.015));
+}
+
+.add-option-head-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.add-option-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: @color-primary;
+}
+
+.add-option-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: @color-text-primary;
+}
+
+.add-option-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: @color-text-secondary;
+}
+
+.add-option-close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(107, 78, 15, 0.07);
+  color: @color-text-secondary;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: rgba(107, 78, 15, 0.15);
+    color: @color-text-primary;
+  }
+}
+
+// ── Body ─────────────────────────────────────────────────────────
+
+.add-option-body {
+  padding: 1.25rem 1.5rem 1.35rem;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.815rem;
+  font-weight: 600;
+  color: @color-text-primary;
+}
+
+.required-mark {
+  color: @color-error;
+  margin-left: 2px;
+}
+
+// Same treatment as the wizard's inputs (see project-basics-step).
+.field-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.8rem 1.05rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: @color-text-primary;
+  background: #f8f9fa;
+  border: 1.5px solid @color-border;
+  border-radius: 10px;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  outline: none;
+
+  &::placeholder { color: @color-text-muted; }
+
+  &:focus {
+    border-color: @color-primary;
+    background: @color-bg-card;
+    box-shadow: 0 0 0 3px rgba(107, 78, 15, 0.1);
+  }
+
+  &.is-error {
+    border-color: @color-error;
+
+    &:focus { box-shadow: 0 0 0 3px rgba(214, 69, 58, 0.1); }
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+.field-error {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  color: @color-error;
+}
+
+.add-option-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+@keyframes add-option-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes add-option-pop {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

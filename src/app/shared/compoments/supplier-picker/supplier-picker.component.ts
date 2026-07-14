@@ -22,6 +22,8 @@ import { InitialsPipe } from '../../pipes/initials.pipe';
 })
 export class SupplierPickerComponent {
   group = input.required<ProjectGroup>();
+  // Deleting is an admin-only action on the backend — hide the buttons for others.
+  showDelete = input(true);
 
   pick = output<ProjectInterface>();
   delete = output<ProjectInterface>();

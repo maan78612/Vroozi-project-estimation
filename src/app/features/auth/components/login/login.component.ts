@@ -2,7 +2,6 @@ import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth/auth-service';
 import { RoleEnum } from '../../../../core/enums/role-enum';
-import { STATIC_AUTH_MESSAGES } from '../../../../core/data/static-auth.data';
 import { FormComponent } from '../../../../shared/compoments/form/form.component';
 import { FormFieldInterface } from '../../../../core/intefaces/form/form-field.interface';
 import { FieldTypeEnum } from '../../../../core/enums/field-type.enum';
@@ -19,11 +18,12 @@ export class LoginComponent {
 
   readonly loginFields: FormFieldInterface[] = [
     {
-      key: 'username',
-      label: 'Username',
+      key: 'email',
+      label: 'Email',
       type: FieldTypeEnum.Text,
       required: true,
-      placeholder: 'Enter username',
+      inputType: 'email',
+      placeholder: 'Enter email',
     },
     {
       key: 'password',
@@ -42,21 +42,17 @@ export class LoginComponent {
     this.isSubmitting.set(true);
     this.submitError.set('');
 
-    setTimeout(() => {
-      const success = this.authService.login(
-        value['username'] as string,
-        value['password'] as string,
-      );
-
-      this.isSubmitting.set(false);
-
-      if (!success) {
-        this.submitError.set(STATIC_AUTH_MESSAGES.loginFailed);
-        return;
-      }
-
-      const role = this.authService.getRole();
-      this.router.navigateByUrl(role === RoleEnum.Admin ? '/admin/projects' : '/project');
-    }, 800);
+    this.authService.login(value['email'] as string, value['password'] as string).subscribe({
+      next: (user) => {
+        this.isSubmitting.set(false);
+        this.router.navigateByUrl(user.role === RoleEnum.Admin ? '/admin/projects' : '/project');
+      },
+      error: (err: unknown) => {
+        this.isSubmitting.set(false);
+        this.submitError.set(
+          err instanceof Error ? err.message : 'Invalid email or password.',
+        );
+      },
+    });
   }
 }

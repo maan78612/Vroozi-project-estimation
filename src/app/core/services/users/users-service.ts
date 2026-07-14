@@ -1,25 +1,46 @@
-import { Service } from '@angular/core';
+import { Service, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../../config/api.config';
+import { ApiResponse, ApiUser, toApiError } from '../../intefaces/api.interface';
+import { UserInterface } from '../../intefaces/user-interface';
+import { mapApiUser } from '../auth/auth-service';
 
 /*
  * ──────────────────────────────────────────────────────────────────
- !  IMPORTANT — use @Service() (Angular v22+) instead of @Injectable
+ !  Employee directory backed by GET /users (admin-only endpoint).
  *
- *  Previous Implementation (Valid: v2.0 up to v21.x):
- *    @Injectable({ providedIn: 'root' })
- *    export class UsersService {
- *      constructor(private http: HttpClient) {}
- *    }
- *
- *  Why we transitioned away from @Injectable:
- *    1. It forced redundant boilerplate ({ providedIn: 'root' }) for singletons.
- *    2. It allowed legacy constructor DI, which conflicts with inject().
- *
- *  Constraints of @Service():
- *    - Automatically scoped to 'root' — no config required.
- *    - FORBIDS constructor injection — all deps MUST use inject().
- *      e.g.  private http = inject(HttpClient);
+ *  Feeds the admin Employees page and every "assigned to" dropdown/
+ *  chip. Only load() from admin screens — the backend rejects the
+ *  call for regular users.
  * ──────────────────────────────────────────────────────────────────
  */
-
 @Service()
-export class UsersService {}
+export class UsersService {
+  private http = inject(HttpClient);
+
+  // Employees a project can be assigned/reassigned to — everyone with the User role.
+  readonly assignableUsers = signal<UserInterface[]>([]);
+  readonly loading = signal(false);
+  readonly loadError = signal('');
+
+  load(): void {
+    if (this.loading()) return;
+    this.loading.set(true);
+    this.loadError.set('');
+
+    this.http
+      .get<ApiResponse<{ users: ApiUser[] }>>(`${API_BASE_URL}/users`, {
+        params: { role: 'user', limit: 100 },
+      })
+      .subscribe({
+        next: (res) => {
+          this.assignableUsers.set(res.data.users.map(mapApiUser));
+          this.loading.set(false);
+        },
+        error: (err: unknown) => {
+          this.loading.set(false);
+          this.loadError.set(toApiError(err, 'Could not load employees.').message);
+        },
+      });
+  }
+}

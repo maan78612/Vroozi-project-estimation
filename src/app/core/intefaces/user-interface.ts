@@ -1,9 +1,12 @@
 import { RoleEnum } from '../enums/role-enum';
 
+/*
+ * Signed-in user / employee as the backend returns it (MongoDB `_id`
+ * is mapped to `id`; the password never leaves the server).
+ */
 export interface UserInterface {
   id: string;
-  fullName?: string; // contact/display name; not set for the built-in admin account
-  username: string;
-  password: string;
+  name: string;
+  email: string;
   role: RoleEnum;
 }

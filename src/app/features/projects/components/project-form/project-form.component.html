@@ -23,8 +23,14 @@
   </header>
 
   <div class="wizard-scroll">
-    <!-- ── Error state ────────────────────────────────────────────────────── -->
-    @if (loadError()) {
+    <!-- ── Loading state (edit mode fetches the entry first) ──────────────── -->
+    @if (isEditMode() && projectsLoading() && !editingProject()) {
+      <app-spinner
+        label="Loading project…"
+        sublabel="Fetching this entry so you can edit it."
+      />
+    } @else if (loadError()) {
+      <!-- ── Error state ──────────────────────────────────────────────────── -->
       <div class="wizard-state is-error">
         <span class="state-icon" aria-hidden="true"></span>
         <p>{{ loadError() }}</p>
@@ -85,11 +91,15 @@
                   [form]="form"
                   [isEditMode]="isEditMode()"
                   [isAdmin]="isAdmin()"
-                  [assignableUsers]="assignableUsers"
+                  [assignableUsers]="assignableUsers()"
+                  [erps]="erps()"
+                  [suppliers]="suppliers()"
                   [entryMode]="entryMode()"
                   [existingProjects]="existingProjects()"
                   (entryModeChange)="setEntryMode($event)"
                   (existingProjectPicked)="onExistingProjectPicked($event)"
+                  (addErpRequested)="openAddOption('erp')"
+                  (addSupplierRequested)="openAddOption('supplier')"
                 />
               </div>
             }
@@ -128,7 +138,8 @@
                   [form]="form"
                   [complexityFlags]="complexityFlags"
                   [riskFlags]="riskFlags"
-                  [assignableUsers]="assignableUsers"
+                  [assignableUsers]="assignableUsers()"
+                  [currentUser]="currentUser()"
                   [submitSuccess]="submitSuccess()"
                   [submitError]="submitError()"
                   (edit)="goToStep($event)"
@@ -167,6 +178,25 @@
           </div>
         </form>
       </main>
+    }
+
+    <!-- "+ Add new" ERP / Supplier dialog (admin only) -->
+    @if (addOptionTarget(); as target) {
+      <app-add-option-dialog
+        eyebrow="Pick-list option"
+        [title]="target === 'erp' ? 'Add ERP System' : 'Add Supplier'"
+        [subtitle]="
+          target === 'erp'
+            ? 'It becomes selectable in every project estimation.'
+            : 'It becomes selectable in every supplier entry.'
+        "
+        [label]="target === 'erp' ? 'ERP system name' : 'Supplier name'"
+        [placeholder]="target === 'erp' ? 'e.g. SAP S/4HANA' : 'e.g. Daymark Retail'"
+        [saving]="addOptionSaving()"
+        [errorMessage]="addOptionError()"
+        (save)="saveAddOption($event)"
+        (cancelled)="closeAddOption()"
+      />
     }
   </div>
 </div>

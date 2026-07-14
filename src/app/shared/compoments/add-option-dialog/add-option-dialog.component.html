@@ -1,0 +1,67 @@
+<div class="add-option-backdrop" (click)="onBackdropClick()">
+  <div
+    class="add-option-panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title()"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header — same band as the supplier picker dialog -->
+    <div class="add-option-head">
+      <div class="add-option-head-texts">
+        <span class="add-option-eyebrow">{{ eyebrow() }}</span>
+        <h3 class="add-option-title">{{ title() }}</h3>
+        @if (subtitle()) {
+          <p class="add-option-subtitle">{{ subtitle() }}</p>
+        }
+      </div>
+      <button type="button" class="add-option-close" aria-label="Close" (click)="onCancel()">
+        ×
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="add-option-body">
+      <label class="field-label" for="add-option-name">
+        {{ label() }} <span class="required-mark" aria-hidden="true">*</span>
+      </label>
+      <input
+        #nameRef
+        id="add-option-name"
+        type="text"
+        class="field-input"
+        [class.is-error]="!!errorMessage()"
+        appAutofocus
+        autocomplete="off"
+        [placeholder]="placeholder()"
+        [value]="name()"
+        [disabled]="saving()"
+        (input)="name.set(nameRef.value)"
+        (keydown.enter)="onSubmit()"
+      />
+
+      @if (errorMessage()) {
+        <p class="field-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <div class="add-option-actions">
+        <app-button
+          variant="link"
+          label="Cancel"
+          [fullWidth]="false"
+          [disabled]="saving()"
+          (clicked)="onCancel()"
+        />
+        <app-button
+          variant="primary"
+          label="Save"
+          loadingLabel="Saving…"
+          [loading]="saving()"
+          [disabled]="!name().trim()"
+          [fullWidth]="false"
+          (clicked)="onSubmit()"
+        />
+      </div>
+    </div>
+  </div>
+</div>

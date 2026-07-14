@@ -14,14 +14,19 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth/auth-service';
+import { UsersService } from '../../../../core/services/users/users-service';
+import { ErpsService } from '../../../../core/services/erps/erps-service';
+import { SuppliersService } from '../../../../core/services/suppliers/suppliers-service';
 import { ProjectsStoreService } from '../../../../core/services/projects/projects-store.service';
-import { COMPLEXITY_FLAGS, RISK_FLAGS } from '../../../../core/data/feature-flags.data';
+import { COMPLEXITY_FLAGS, RISK_FLAGS } from '../../../../core/config/feature-flags.config';
 import { ProjectInterface, YesNo } from '../../../../core/intefaces/form/project.interface';
 import { RoleEnum } from '../../../../core/enums/role-enum';
 import { ProjectSizeEnum } from '../../../../core/enums/project-size.enum';
 import { estimateProjectSize } from '../../../../core/utils/project-size.util';
 import { estimateRangeDays } from '../../../../core/utils/estimate.util';
 import { ButtonComponent } from '../../../../shared/compoments/button/button';
+import { SpinnerComponent } from '../../../../shared/compoments/spinner/spinner.component';
+import { AddOptionDialogComponent } from '../../../../shared/compoments/add-option-dialog/add-option-dialog.component';
 import { ProjectBasicsStepComponent } from './steps/project-basics-step/project-basics-step.component';
 import { IntegrationScopeStepComponent } from './steps/integration-scope-step/integration-scope-step.component';
 import { ComplexityFactorsStepComponent } from './steps/complexity-factors-step/complexity-factors-step.component';
@@ -34,6 +39,8 @@ import { ReviewSubmitStepComponent } from './steps/review-submit-step/review-sub
   imports: [
     ReactiveFormsModule,
     ButtonComponent,
+    SpinnerComponent,
+    AddOptionDialogComponent,
     ProjectBasicsStepComponent,
     IntegrationScopeStepComponent,
     ComplexityFactorsStepComponent,
@@ -47,6 +54,9 @@ export class ProjectFormComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private usersService = inject(UsersService);
+  private erpsService = inject(ErpsService);
+  private suppliersService = inject(SuppliersService);
   private projectsStore = inject(ProjectsStoreService);
   private fb = inject(FormBuilder);
 
@@ -136,6 +146,17 @@ export class ProjectFormComponent {
 
   /*
    * ──────────────────────────────────────────────────────────────────
+   !  "+ Add new" dialog for the ERP / Supplier pick-lists (admin only;
+   *  the API rejects the call for anyone else). Which list is being
+   *  added to (null = dialog closed), plus request progress/error.
+   * ──────────────────────────────────────────────────────────────────
+   */
+  addOptionTarget = signal<'erp' | 'supplier' | null>(null);
+  addOptionSaving = signal(false);
+  addOptionError = signal('');
+
+  /*
+   * ──────────────────────────────────────────────────────────────────
    ! Computed Signals: because these values are derived from other signals,
    * they are automatically updated when their dependencies change.
    * but we cannot change them directly, because they are computed
@@ -149,11 +170,20 @@ export class ProjectFormComponent {
   readonly isEditMode = computed(() => !!this._routeKey);
 
   readonly isAdmin = computed(() => this.authService.getRole() === RoleEnum.Admin);
-  readonly username = computed(() => this.authService.getCurrentUser()?.username ?? '');
+  readonly currentUser = computed(() => this.authService.getCurrentUser());
+  readonly username = computed(() => this.currentUser()?.name ?? '');
+  private readonly currentUserId = computed(() => this.currentUser()?.id ?? '');
   readonly isLastStep = computed(() => this.currentStep() === this.totalSteps - 1);
 
-  // Employees a project can be assigned/reassigned to — admin-only concern, static for the session.
-  readonly assignableUsers = this.authService.getAssignableUsers();
+  // Employees a project can be assigned/reassigned to — admin-only concern, loaded from the API.
+  readonly assignableUsers = this.usersService.assignableUsers;
+
+  // Dropdown pick-lists, loaded from the API (GET /erps, GET /suppliers).
+  readonly erps = this.erpsService.erps;
+  readonly suppliers = this.suppliersService.suppliers;
+
+  // Edit mode waits for the store before it can populate the form.
+  readonly projectsLoading = this.projectsStore.loading;
 
   // Project names for the "add supplier to existing project" dropdown.
   readonly existingProjects = this.projectsStore.projectNames;
@@ -170,9 +200,17 @@ export class ProjectFormComponent {
     this.form.valueChanges.subscribe(() => this.recomputeEstimate());
     this.recomputeEstimate();
 
+    // The store feeds edit-mode lookups and the "existing project" dropdown.
+    this.projectsStore.load();
+    // ERP + Supplier pick-lists for the basics step.
+    this.erpsService.load();
+    this.suppliersService.load();
+    // The assignee dropdown is fed by an admin-only endpoint.
+    if (this.isAdmin()) this.usersService.load();
+
     // Regular users don't get to reassign their own project — lock the field to themselves.
     if (!this.isAdmin()) {
-      this.form.get('user')?.setValue(this.username());
+      this.form.get('user')?.setValue(this.currentUserId());
     }
 
     effect(() => {
@@ -268,11 +306,53 @@ export class ProjectFormComponent {
       this.loadError.set('This project entry could not be found.');
       return;
     }
-    if (!this.isAdmin() && found.user !== this.username()) {
+    if (!this.isAdmin() && found.user !== this.currentUserId()) {
       this.loadError.set('This project is no longer assigned to you.');
       return;
     }
     this.editingProject.set(found);
+  }
+
+  /*
+   * ──────────────────────────────────────────────────────────────────
+   !  "+ Add new" ERP / Supplier — opened from the basics step.
+   *  On success the created name is selected in the matching field.
+   * ──────────────────────────────────────────────────────────────────
+   */
+  openAddOption(target: 'erp' | 'supplier'): void {
+    this.addOptionError.set('');
+    this.addOptionTarget.set(target);
+  }
+
+  closeAddOption(): void {
+    if (this.addOptionSaving()) return;
+    this.addOptionTarget.set(null);
+  }
+
+  saveAddOption(name: string): void {
+    const target = this.addOptionTarget();
+    if (!target) return;
+
+    this.addOptionSaving.set(true);
+    this.addOptionError.set('');
+
+    const create$ =
+      target === 'erp' ? this.erpsService.create(name) : this.suppliersService.create(name);
+
+    create$.subscribe({
+      next: (created) => {
+        this.addOptionSaving.set(false);
+        this.addOptionTarget.set(null);
+        // Convenience: what you just added is what you meant to pick.
+        this.form.get(target)?.setValue(created);
+      },
+      error: (err: unknown) => {
+        this.addOptionSaving.set(false);
+        this.addOptionError.set(
+          err instanceof Error ? err.message : 'Could not save. Please try again.',
+        );
+      },
+    });
   }
 
   /*

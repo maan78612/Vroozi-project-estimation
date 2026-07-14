@@ -7,6 +7,7 @@ export type YesNo = 'Yes' | 'No';
  * (e.g. "HEB") is simply every entry sharing the same projectName.
  */
 export interface ProjectInterface {
+  id?: string; // MongoDB _id — absent only before the first save
   projectName: string; // groups entries into a project
   erp: string;
   supplier: string; // this entry's supplier — may be empty
@@ -14,7 +15,8 @@ export interface ProjectInterface {
   transactionalInterfaces: number;
   customLogic: YesNo;
   uiImpact: YesNo;
-  user: string; // username of the employee this project is assigned to
+  user: string; // id of the employee (owner) this project is assigned to
+  userName?: string; // owner's display name, populated by the API
   newApiOrBusinessFlows: YesNo;
   integrations: YesNo;
   clientDependency: YesNo;
