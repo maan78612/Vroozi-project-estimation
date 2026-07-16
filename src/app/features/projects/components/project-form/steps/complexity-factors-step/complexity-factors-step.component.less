@@ -1,5 +1,4 @@
-@breakpoint-md: 860px;
-@breakpoint-sm: 580px;
+@import (reference) 'styles.less';
 
 .flag-grid {
   display: grid;
@@ -7,10 +6,10 @@
   gap: 0.875rem;
 }
 
-@media (max-width: @breakpoint-md) {
+@media (max-width: @breakpoint-tablet) {
   .flag-grid { grid-template-columns: 1fr 1fr; }
 }
 
-@media (max-width: @breakpoint-sm) {
+@media (max-width: @breakpoint-mobile) {
   .flag-grid { grid-template-columns: 1fr; }
 }

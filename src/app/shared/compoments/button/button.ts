@@ -1,7 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
 
 // Allowed visual styles for the button
-export type ButtonVariant = 'primary' | 'link';
+export type ButtonVariant = 'primary' | 'secondary' | 'link';
 
 // Allowed native button types
 export type ButtonType = 'button' | 'submit' | 'reset';
@@ -33,7 +33,10 @@ export class ButtonComponent {
 
   fullWidth = input(true);
 
-  showBackArrow = input(false);
+  showBackArrow = input(false); //Renders a leading "arrow_back" icon — kept as its own flag since it's the most common case.
+
+  icon = input(''); //Material Symbols icon name shown before the label.
+  trailingIcon = input(''); //Material Symbols icon name shown after the label.
 
   danger = input(false); //Renders the button in the error color. Combines with any variant.
 

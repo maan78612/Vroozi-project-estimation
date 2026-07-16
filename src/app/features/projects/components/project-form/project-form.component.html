@@ -1,105 +1,119 @@
-<div class="wizard-page">
-  <!-- ── Header ──────────────────────────────────────────────────────────── -->
-  <header class="wizard-header">
-    <div class="wizard-header-inner">
-      <img src="/assets/images/company-logo.png" alt="Company logo" class="logo" />
-
-      <div class="header-right">
-        <app-button
-          variant="link"
-          label="Back to projects"
-          [fullWidth]="false"
-          [showBackArrow]="true"
-          (clicked)="onBack()"
-        />
-        @if (!isAdmin()) {
-          <span class="header-divider"></span>
-          <span class="username">{{ username() }}</span>
-          <span class="header-divider"></span>
-          <app-button variant="link" label="Sign out" [fullWidth]="false" (clicked)="signOut()" />
-        }
-      </div>
-    </div>
-  </header>
-
-  <div class="wizard-scroll">
-    <!-- ── Loading state (edit mode fetches the entry first) ──────────────── -->
-    @if (isEditMode() && projectsLoading() && !editingProject()) {
-      <app-spinner
-        label="Loading project…"
-        sublabel="Fetching this entry so you can edit it."
-      />
-    } @else if (loadError()) {
-      <!-- ── Error state ──────────────────────────────────────────────────── -->
+@if (isEditMode()) {
+  <!-- ══════════════════════════════════════════════════════════════════
+     EDIT PAGE — delegated to the reusable EditProjectFormComponent.
+     Distinct from the Create wizard below: no stepper, no step-by-step
+     gating — every section renders together (per the reference design).
+  ═══════════════════════════════════════════════════════════════════ -->
+  @if (loadError()) {
+    <div class="edit-page">
       <div class="wizard-state is-error">
         <span class="state-icon" aria-hidden="true"></span>
         <p>{{ loadError() }}</p>
       </div>
-    } @else {
-      <!-- ── Step progress bar ───────────────────────────────────────────── -->
-      <nav class="wizard-progress" aria-label="Form progress">
-        @for (step of stepMeta; track step.title; let i = $index) {
-          <button
-            type="button"
-            class="progress-item"
-            [class.is-done]="currentStep() > i"
-            [class.is-active]="currentStep() === i"
-            [disabled]="i >= currentStep()"
-            (click)="goToStep(i)"
-            [attr.aria-current]="currentStep() === i ? 'step' : null"
-          >
-            <div class="progress-circle">
-              @if (currentStep() > i) {
-                <span class="progress-check-icon" aria-hidden="true"></span>
-              } @else {
-                {{ i + 1 }}
-              }
-            </div>
-            <span class="progress-label">{{ step.title }}</span>
-          </button>
+    </div>
+  } @else {
+    <app-edit-project-form
+      [form]="form"
+      [loading]="projectsLoading() && !editingProject()"
+      [isAdmin]="isAdmin()"
+      [assignableUsers]="assignableUsers()"
+      [erps]="erps()"
+      [suppliers]="suppliers()"
+      [clientCompanies]="clientCompanies()"
+      [complexityFlags]="complexityFlags"
+      [riskFlags]="riskFlags"
+      [estimateBreakdown]="estimateBreakdown()"
+      [estimateSize]="estimateSize()"
+      [isSubmitting]="isSubmitting()"
+      [submitError]="submitError()"
+      [submitSuccess]="submitSuccess()"
+      (back)="onBack()"
+      (save)="onSubmit()"
+      (addErpRequested)="openAddOption('erp')"
+      (addSupplierRequested)="openAddOption('supplier')"
+    />
+  }
+} @else {
+<div class="wizard-page">
+  <!-- ── Sidebar — project identity + step nav (replaces the old top progress bar) ── -->
+  <aside class="wizard-sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">
+        <span class="material-symbols-outlined">folder</span>
+      </div>
+      <div class="sidebar-brand-texts">
+        <p class="sidebar-brand-name">{{ form.get('projectName')?.value || 'New Project' }}</p>
+        <p class="sidebar-brand-sub">New estimation</p>
+      </div>
+    </div>
 
-          @if (i < stepMeta.length - 1) {
-            <div
-              class="progress-connector"
-              [class.is-filled]="currentStep() > i"
-              aria-hidden="true"
-            ></div>
+    <nav class="sidebar-steps" aria-label="Form progress">
+      @for (step of stepMeta; track step.title; let i = $index) {
+        <button
+          type="button"
+          class="sidebar-step"
+          [class.is-active]="currentStep() === i"
+          [class.is-done]="currentStep() > i"
+          [disabled]="i >= currentStep()"
+          (click)="goToStep(i)"
+          [attr.aria-current]="currentStep() === i ? 'step' : null"
+        >
+          <span class="material-symbols-outlined sidebar-step-icon">
+            {{ currentStep() > i ? 'check_circle' : step.icon }}
+          </span>
+          <span class="sidebar-step-label">{{ step.title }}</span>
+        </button>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <button type="button" class="sidebar-footer-link" (click)="onBack()">
+        <span class="material-symbols-outlined">arrow_back</span> Back to projects
+      </button>
+      @if (!isAdmin()) {
+        <button type="button" class="sidebar-footer-link" (click)="signOut()">
+          <span class="material-symbols-outlined">logout</span> Sign out
+        </button>
+      }
+    </div>
+  </aside>
+
+  <!-- ── Main content ─────────────────────────────────────────────────────── -->
+  <main class="wizard-main">
+      <form class="wizard-form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <!-- ── Step header ──────────────────────────────────────────────── -->
+        <header class="wizard-main-header">
+          <span class="step-eyebrow">Step {{ currentStep() + 1 }} of {{ totalSteps }}</span>
+          <h1 class="step-title">{{ stepMeta[currentStep()].title }}</h1>
+          <p class="step-subtitle">{{ stepMeta[currentStep()].subtitle }}</p>
+        </header>
+
+        <!-- ── Thin segmented progress bar ──────────────────────────────── -->
+        <div class="wizard-progress-bar" role="presentation">
+          @for (step of stepMeta; track step.title; let i = $index) {
+            <div class="progress-segment" [class.is-filled]="currentStep() >= i"></div>
           }
-        }
-      </nav>
+        </div>
 
-      <!-- ── Wizard body ──────────────────────────────────────────────────── -->
-      <main class="wizard-body">
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <!-- ── Scrollable step body ─────────────────────────────────────── -->
+        <div class="wizard-scroll-body">
           <div class="step-card">
-            <!-- Step header -->
-            <div class="step-header">
-              <div class="project-identity">
-                <span class="project-identity-dot" aria-hidden="true"></span>
-                <h2 class="project-identity-name">{{ form.get('projectName')?.value || 'Untitled Project' }}</h2>
-              </div>
-              <span class="step-eyebrow">Step {{ currentStep() + 1 }} of {{ totalSteps }}</span>
-              <h1 class="step-title">{{ stepMeta[currentStep()].title }}</h1>
-              <p class="step-subtitle">{{ stepMeta[currentStep()].subtitle }}</p>
-            </div>
-            <div class="step-rule"></div>
-
             <!-- ── 1 · Project Basics ────────────────────────────────────── -->
             @if (currentStep() === 0) {
               <div class="step-body">
                 <app-project-basics-step
                   [form]="form"
-                  [isEditMode]="isEditMode()"
                   [isAdmin]="isAdmin()"
                   [assignableUsers]="assignableUsers()"
                   [erps]="erps()"
                   [suppliers]="suppliers()"
+                  [clientCompanies]="clientCompanies()"
                   [entryMode]="entryMode()"
                   [existingProjects]="existingProjects()"
                   (entryModeChange)="setEntryMode($event)"
-                  (existingProjectPicked)="onExistingProjectPicked($event)"
                   (addErpRequested)="openAddOption('erp')"
                   (addSupplierRequested)="openAddOption('supplier')"
+                  (addClientCompanyRequested)="openAddOption('clientCompany')"
                 />
               </div>
             }
@@ -148,55 +162,50 @@
             }
           </div>
           <!-- /step-card -->
+        </div>
 
-          <!-- ── Navigation ────────────────────────────────────────────────── -->
-          <div class="wizard-nav">
-            @if (currentStep() > 0) {
-              <button type="button" class="nav-btn btn-ghost" (click)="prevStep()">
-                <span class="nav-icon-back" aria-hidden="true"></span>
-                Back
-              </button>
-            } @else {
-              <span></span>
-            }
+        <!-- ── Sticky footer navigation ─────────────────────────────────── -->
+        <footer class="wizard-footer">
+          @if (currentStep() > 0) {
+            <button type="button" class="nav-btn btn-ghost" (click)="prevStep()">
+              <span class="material-symbols-outlined">arrow_back</span>
+              Back
+            </button>
+          } @else {
+            <span></span>
+          }
 
-            @if (!isLastStep()) {
-              <button type="button" class="nav-btn btn-primary" (click)="nextStep()">
-                Continue
-                <span class="nav-icon-continue" aria-hidden="true"></span>
-              </button>
-            } @else {
-              <button type="submit" class="nav-btn btn-primary" [disabled]="isSubmitting()">
-                @if (isSubmitting()) {
-                  <span class="btn-spinner"></span> Saving…
-                } @else {
-                  {{ isEditMode() ? 'Update Project' : 'Save Project' }}
-                  <span class="nav-icon-save" aria-hidden="true"></span>
-                }
-              </button>
-            }
-          </div>
-        </form>
-      </main>
-    }
-
-    <!-- "+ Add new" ERP / Supplier dialog (admin only) -->
-    @if (addOptionTarget(); as target) {
-      <app-add-option-dialog
-        eyebrow="Pick-list option"
-        [title]="target === 'erp' ? 'Add ERP System' : 'Add Supplier'"
-        [subtitle]="
-          target === 'erp'
-            ? 'It becomes selectable in every project estimation.'
-            : 'It becomes selectable in every supplier entry.'
-        "
-        [label]="target === 'erp' ? 'ERP system name' : 'Supplier name'"
-        [placeholder]="target === 'erp' ? 'e.g. SAP S/4HANA' : 'e.g. Daymark Retail'"
-        [saving]="addOptionSaving()"
-        [errorMessage]="addOptionError()"
-        (save)="saveAddOption($event)"
-        (cancelled)="closeAddOption()"
-      />
-    }
-  </div>
+          @if (!isLastStep()) {
+            <button type="button" class="nav-btn btn-primary" (click)="nextStep()">
+              Continue
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+          } @else {
+            <button type="submit" class="nav-btn btn-primary" [disabled]="isSubmitting()">
+              @if (isSubmitting()) {
+                <span class="btn-spinner"></span> Saving…
+              } @else {
+                Save Project
+                <span class="material-symbols-outlined">check</span>
+              }
+            </button>
+          }
+        </footer>
+      </form>
+  </main>
 </div>
+}
+
+<!-- "+ Add new" ERP / Supplier / Client Company dialog (admin only) — shared by both layouts above -->
+@if (addOptionCopy(); as copy) {
+  <app-add-option-dialog
+    eyebrow="Pick-list option"
+    [title]="copy.title"
+    [subtitle]="copy.subtitle"
+    [fields]="copy.fields"
+    [saving]="addOptionSaving()"
+    [errorMessage]="addOptionError()"
+    (save)="saveAddOption($event)"
+    (cancelled)="closeAddOption()"
+  />
+}

@@ -1,0 +1,282 @@
+<div class="view-page">
+  <!-- ── Header — brand/nav/sign-out now live in the app shell ─────────────── -->
+  <header class="view-header">
+    <app-button
+      variant="link"
+      label="Back to projects"
+      [fullWidth]="false"
+      [showBackArrow]="true"
+      (clicked)="onBack()"
+    />
+  </header>
+
+  <!-- ── Detail field sections, reused for both the solo and split layouts ── -->
+  <ng-template #detailContent let-entry let-showBack="showBack">
+    <div class="detail-scroll">
+      @if (showBack) {
+        <button type="button" class="detail-back-mobile" (click)="backToList()">
+          <span class="back-icon" aria-hidden="true"></span> Suppliers
+        </button>
+      }
+      <div class="detail-header">
+        <h2 class="detail-name">{{ entry.supplier || 'No supplier' }}</h2>
+        @if (!isClient()) {
+          <div class="detail-actions">
+            <app-button icon="edit" label="Edit" [fullWidth]="false" (clicked)="editSelected()" />
+            <app-button icon="delete" [danger]="true" label="Delete" [fullWidth]="false" (clicked)="requestDeleteSelected()" />
+          </div>
+        }
+      </div>
+
+      <section class="detail-section">
+        <h3 class="section-label">Overview</h3>
+        <div class="rv-rows rv-grid2">
+          <div class="rv-row">
+            <span class="rk">ERP System</span><span class="r-val">{{ entry.erp || '—' }}</span>
+          </div>
+          <div class="rv-row">
+            <span class="rk">Primary Lead</span>
+            <span class="r-val r-val-lead">
+              <span class="lead-avatar">{{ assignedToName(entry) | initials }}</span>
+              {{ assignedToName(entry) }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <h3 class="section-label">Integration Volume</h3>
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <span class="stat-value">{{ entry.masterDataInterfaces }}</span>
+            <span class="stat-label">Master Data</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{{ entry.transactionalInterfaces }}</span>
+            <span class="stat-label">Transactional</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{{ entry.inbound }}</span>
+            <span class="stat-label">Inbound</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{{ entry.outbound }}</span>
+            <span class="stat-label">Outbound</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <h3 class="section-label">Complexity Analysis</h3>
+        <div class="rv-rows rv-grid2">
+          @for (flag of complexityFlags; track flag.key) {
+            <div class="rv-row">
+              <span class="rk">{{ flag.label }}</span>
+              <span
+                class="r-badge"
+                [class.b-yes]="flagValue(entry, flag.key) === 'Yes'"
+                [class.b-no]="flagValue(entry, flag.key) === 'No'"
+                >{{ flagValue(entry, flag.key) }}</span
+              >
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <h3 class="section-label">Risk &amp; Progress</h3>
+
+        <div class="risk-progress-grid">
+          <div class="detail-metrics">
+            <div class="metric">
+              <div class="metric-head">
+                <span>Data Layer Readiness</span><strong>{{ entry.dataLayer }}%</strong>
+              </div>
+              <div class="metric-track">
+                <div class="metric-fill fill-data" [style.width.%]="entry.dataLayer"></div>
+              </div>
+            </div>
+            <div class="metric">
+              <div class="metric-head">
+                <span>Estimated Uncertainty</span><strong>{{ entry.uncertainties }}%</strong>
+              </div>
+              <div class="metric-track">
+                <div class="metric-fill fill-uncertainty" [style.width.%]="entry.uncertainties"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ro-toggle-col">
+            @for (flag of riskFlags; track flag.key) {
+              <div class="ro-toggle-row">
+                <span class="ro-toggle-label">{{ flag.label }}</span>
+                <span class="ro-toggle" [class.is-on]="flagValue(entry, flag.key) === 'Yes'">
+                  <span class="ro-toggle-knob"></span>
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="estimate-callout">
+          <div class="callout-text">
+            <span class="callout-label">Tentative Range</span>
+            <span class="callout-value">{{ entry.tentativeRangeDays || '—' }} days</span>
+          </div>
+          @if (entry.tentativeProjectSize) {
+            <span class="size-badge size-{{ entry.tentativeProjectSize.toLowerCase() }}">{{
+              entry.tentativeProjectSize
+            }}</span>
+          }
+        </div>
+      </section>
+    </div>
+  </ng-template>
+
+  <div class="view-shell">
+    <!-- ── Loading state ────────────────────────────────────────────────── -->
+    @if (loading() && entries().length === 0) {
+      <div class="view-state">
+        <app-spinner variant="light" label="Loading project…" sublabel="Fetching the full project detail." />
+      </div>
+    } @else if (loadError()) {
+      <!-- ── Load error ──────────────────────────────────────────────────── -->
+      <div class="view-state is-error">
+        <span class="state-icon" aria-hidden="true"></span>
+        <p>{{ loadError() }}</p>
+        <app-button label="Try again" [fullWidth]="false" (clicked)="retryLoad()" />
+      </div>
+    } @else if (notFound()) {
+      <!-- ── Not found ────────────────────────────────────────────────────── -->
+      <div class="view-state is-error">
+        <span class="state-icon" aria-hidden="true"></span>
+        <p>This project could not be found.</p>
+        <app-button label="Back to projects" [fullWidth]="false" (clicked)="onBack()" />
+      </div>
+    } @else {
+      <!-- ── Hero bar: compact, non-scrolling project summary ────────────── -->
+      <section class="hero-bar">
+        <div class="hero-identity">
+          <h1 class="hero-name">{{ projectName() }}</h1>
+          @if (size()) {
+            <span class="size-badge size-{{ size()!.toLowerCase() }}">{{ size() }}</span>
+          }
+        </div>
+
+        <div class="hero-chips">
+          @if (erp()) {
+            <span class="chip"><span class="chip-label">ERP</span><span class="chip-value">{{ erp() }}</span></span>
+          }
+          @if (supplierSummary()) {
+            <span class="chip">
+              <span class="chip-label">{{ entries().length > 1 ? 'Suppliers' : 'Supplier' }}</span>
+              <span class="chip-value">{{ supplierSummary() }}</span>
+            </span>
+          }
+        </div>
+
+        <span class="hero-meta-text">
+          {{ interfacesTotal() }} interfaces
+          &nbsp;·&nbsp; ↓{{ inboundTotal() }} ↑{{ outboundTotal() }}
+          @if (rangeLabel()) {
+            &nbsp;·&nbsp; {{ rangeLabel() }} days
+          }
+          @if (entries().length > 1) {
+            &nbsp;·&nbsp; {{ entries().length }} suppliers
+          }
+        </span>
+      </section>
+
+      <!-- ── Master-detail split (multi-supplier) or solo detail pane ─────── -->
+      @if (entries().length > 1) {
+        <div class="view-split">
+          <aside class="supplier-list-pane" [class.is-active-mobile]="!mobileDetailOpen()">
+            <div class="supplier-search">
+              <span class="search-icon" aria-hidden="true"></span>
+              <input
+                #searchRef
+                type="text"
+                placeholder="Search suppliers…"
+                (input)="supplierQuery.set(searchRef.value)"
+              />
+            </div>
+            <div class="supplier-list">
+              @for (entry of filteredEntries(); track entry.id) {
+                <button
+                  type="button"
+                  class="supplier-row"
+                  [class.is-active]="isSelected(entry)"
+                  (click)="selectEntry(entry)"
+                >
+                  <span class="row-avatar">{{ (entry.supplier | initials) || '—' }}</span>
+                  <span class="row-main">
+                    <span class="row-name">{{ entry.supplier || 'No supplier' }}</span>
+                    <span class="row-meta">
+                      {{ interfacesOf(entry) }} interfaces
+                      @if (entry.tentativeRangeDays) {
+                        &nbsp;·&nbsp; {{ entry.tentativeRangeDays }} days
+                      }
+                    </span>
+                  </span>
+                  @if (entry.tentativeProjectSize) {
+                    <span class="row-size size-{{ entry.tentativeProjectSize.toLowerCase() }}">{{
+                      entry.tentativeProjectSize
+                    }}</span>
+                  }
+                </button>
+              } @empty {
+                <p class="list-empty">No suppliers match.</p>
+              }
+            </div>
+            @if (isAdmin()) {
+              <button type="button" class="add-supplier-btn" (click)="addSupplier()">
+                <span class="add-supplier-icon" aria-hidden="true">+</span> Add New Supplier
+              </button>
+            }
+          </aside>
+
+          <section class="supplier-detail-pane" [class.is-active-mobile]="mobileDetailOpen()">
+            @for (entry of selectedEntryList(); track entry.id) {
+              <ng-container *ngTemplateOutlet="detailContent; context: { $implicit: entry, showBack: true }" />
+            }
+          </section>
+        </div>
+      } @else {
+        <section class="supplier-detail-pane detail-solo">
+          @if (selectedEntry(); as entry) {
+            <ng-container *ngTemplateOutlet="detailContent; context: { $implicit: entry, showBack: false }" />
+          }
+        </section>
+      }
+
+      <!-- ── Project-level closing summary (rolled up across all suppliers) ── -->
+      @if (rangeLabel() || size()) {
+        <section class="delivery-band">
+          <div class="delivery-band-text">
+            <span class="delivery-band-label">Tentative Delivery Range</span>
+            <span class="delivery-band-value">{{ rangeLabel() || '—' }} days</span>
+          </div>
+          @if (size()) {
+            <div class="delivery-band-scale">
+              <span class="delivery-band-scale-label">Project Scale</span>
+              <span class="size-badge size-{{ size()!.toLowerCase() }}">{{ size() }}</span>
+            </div>
+          }
+        </section>
+      }
+    }
+
+    <!-- Delete confirmation (selected supplier) -->
+    @if (entryDeleteTarget(); as entry) {
+      <app-confirm-dialog
+        title="Delete supplier?"
+        [message]="entryDeleteMessage(entry)"
+        confirmLabel="Delete supplier"
+        [confirming]="deleting()"
+        [errorMessage]="deleteError()"
+        (confirmed)="confirmDeleteEntry()"
+        (cancelled)="cancelDelete()"
+      />
+    }
+  </div>
+</div>

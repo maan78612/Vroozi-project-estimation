@@ -27,15 +27,20 @@ export class ReviewSubmitStepComponent {
   }
 
   // Who the entry is assigned to. For non-admins the assignable list is
-  // empty (admin-only endpoint), so fall back to the signed-in user.
+  // empty (admin-only endpoint), so fall back to the signed-in user, then
+  // to the owner name the API already populated onto the loaded entry —
+  // needed for a client-user, who is reviewing someone else's project and
+  // has no access to the employee directory to resolve the id otherwise.
   currentUser = input<UserInterface | null>(null);
+  ownerName = input<string | null>(null);
 
   assignedToName(): string {
     const userId = this.form().get('user')?.value as string;
     const match = this.assignableUsers().find((u) => u.id === userId);
     if (match) return match.name;
     const me = this.currentUser();
-    return me && me.id === userId ? me.name : '—';
+    if (me && me.id === userId) return me.name;
+    return this.ownerName() ?? '—';
   }
 
   numVal(key: keyof ProjectInterface): number {

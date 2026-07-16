@@ -11,6 +11,10 @@ export interface ProjectInterface {
   projectName: string; // groups entries into a project
   erp: string;
   supplier: string; // this entry's supplier — may be empty
+  // Which client company this project is for. Admin-editable only — the
+  // client role's project access is scoped by this (see the backend's
+  // project.service.ts), so a client account can never change it.
+  clientCompany?: string;
   masterDataInterfaces: number;
   transactionalInterfaces: number;
   customLogic: YesNo;

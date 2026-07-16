@@ -17,16 +17,19 @@ import { AuthService } from '../../../../core/services/auth/auth-service';
 import { UsersService } from '../../../../core/services/users/users-service';
 import { ErpsService } from '../../../../core/services/erps/erps-service';
 import { SuppliersService } from '../../../../core/services/suppliers/suppliers-service';
+import { ClientCompaniesService } from '../../../../core/services/client-companies/client-companies-service';
 import { ProjectsStoreService } from '../../../../core/services/projects/projects-store.service';
+import { RoleService } from '../../../../core/services/role/role-service';
 import { COMPLEXITY_FLAGS, RISK_FLAGS } from '../../../../core/config/feature-flags.config';
+import { CLIENT_COMPANY_FIELDS } from '../../../../core/config/client-fields.config';
 import { ProjectInterface, YesNo } from '../../../../core/intefaces/form/project.interface';
-import { RoleEnum } from '../../../../core/enums/role-enum';
+import { FormFieldInterface } from '../../../../core/intefaces/form/form-field.interface';
+import { FieldTypeEnum } from '../../../../core/enums/field-type.enum';
 import { ProjectSizeEnum } from '../../../../core/enums/project-size.enum';
 import { estimateProjectSize } from '../../../../core/utils/project-size.util';
-import { estimateRangeDays } from '../../../../core/utils/estimate.util';
-import { ButtonComponent } from '../../../../shared/compoments/button/button';
-import { SpinnerComponent } from '../../../../shared/compoments/spinner/spinner.component';
+import { EstimateBreakdown, estimateRangeDays } from '../../../../core/utils/estimate.util';
 import { AddOptionDialogComponent } from '../../../../shared/compoments/add-option-dialog/add-option-dialog.component';
+import { EditProjectFormComponent } from '../edit-project-form/edit-project-form.component';
 import { ProjectBasicsStepComponent } from './steps/project-basics-step/project-basics-step.component';
 import { IntegrationScopeStepComponent } from './steps/integration-scope-step/integration-scope-step.component';
 import { ComplexityFactorsStepComponent } from './steps/complexity-factors-step/complexity-factors-step.component';
@@ -38,9 +41,8 @@ import { ReviewSubmitStepComponent } from './steps/review-submit-step/review-sub
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    ButtonComponent,
-    SpinnerComponent,
     AddOptionDialogComponent,
+    EditProjectFormComponent,
     ProjectBasicsStepComponent,
     IntegrationScopeStepComponent,
     ComplexityFactorsStepComponent,
@@ -57,7 +59,9 @@ export class ProjectFormComponent {
   private usersService = inject(UsersService);
   private erpsService = inject(ErpsService);
   private suppliersService = inject(SuppliersService);
+  private clientCompaniesService = inject(ClientCompaniesService);
   private projectsStore = inject(ProjectsStoreService);
+  private roleService = inject(RoleService);
   private fb = inject(FormBuilder);
 
   /*
@@ -66,11 +70,11 @@ export class ProjectFormComponent {
    * ──────────────────────────────────────────────────────────────────
    */
   readonly stepMeta = [
-    { title: 'Project Basics', subtitle: 'Name the project and identify the ERP system' },
-    { title: 'Integration Scope', subtitle: 'Count the interfaces and connection directions' },
-    { title: 'Complexity Factors', subtitle: 'Flag the technical complexity drivers' },
-    { title: 'Risk & Dependencies', subtitle: 'Quantify uncertainty and external dependencies' },
-    { title: 'Review & Submit', subtitle: 'Confirm everything looks right before saving' },
+    { title: 'Project Basics', subtitle: 'Name the project and identify the ERP system', icon: 'info' },
+    { title: 'Integration Scope', subtitle: 'Count the interfaces and connection directions', icon: 'hub' },
+    { title: 'Complexity Factors', subtitle: 'Flag the technical complexity drivers', icon: 'psychology' },
+    { title: 'Risk & Dependencies', subtitle: 'Quantify uncertainty and external dependencies', icon: 'warning' },
+    { title: 'Review & Submit', subtitle: 'Confirm everything looks right before saving', icon: 'fact_check' },
   ];
 
   readonly totalSteps = this.stepMeta.length;
@@ -105,6 +109,8 @@ export class ProjectFormComponent {
     projectName: ['', [Validators.required, Validators.minLength(2)]],
     erp: ['', [Validators.required]],
     supplier: [''],
+    // Admin-editable only — see addOptionTarget / the basics step template.
+    clientCompany: [''],
     user: ['', [Validators.required]],
     masterDataInterfaces: [0, [Validators.required, Validators.min(0)]],
     transactionalInterfaces: [0, [Validators.required, Validators.min(0)]],
@@ -144,6 +150,13 @@ export class ProjectFormComponent {
   // Create mode: brand-new project, or another supplier for an existing one.
   entryMode = signal<'new' | 'existing'>('new');
 
+  // Live estimate breakdown — the Review step and the Edit page's sticky
+  // sidebar both read this; recomputed on every form change (see constructor).
+  readonly estimateBreakdown = signal<EstimateBreakdown | null>(null);
+  readonly estimateSize = computed(() =>
+    estimateProjectSize(this.estimateBreakdown()?.range ?? ''),
+  );
+
   /*
    * ──────────────────────────────────────────────────────────────────
    !  "+ Add new" dialog for the ERP / Supplier pick-lists (admin only;
@@ -151,7 +164,7 @@ export class ProjectFormComponent {
    *  added to (null = dialog closed), plus request progress/error.
    * ──────────────────────────────────────────────────────────────────
    */
-  addOptionTarget = signal<'erp' | 'supplier' | null>(null);
+  addOptionTarget = signal<'erp' | 'supplier' | 'clientCompany' | null>(null);
   addOptionSaving = signal(false);
   addOptionError = signal('');
 
@@ -169,7 +182,8 @@ export class ProjectFormComponent {
 
   readonly isEditMode = computed(() => !!this._routeKey);
 
-  readonly isAdmin = computed(() => this.authService.getRole() === RoleEnum.Admin);
+  readonly isAdmin = this.roleService.isAdmin;
+  readonly isClient = this.roleService.isClient;
   readonly currentUser = computed(() => this.authService.getCurrentUser());
   readonly username = computed(() => this.currentUser()?.name ?? '');
   private readonly currentUserId = computed(() => this.currentUser()?.id ?? '');
@@ -178,9 +192,10 @@ export class ProjectFormComponent {
   // Employees a project can be assigned/reassigned to — admin-only concern, loaded from the API.
   readonly assignableUsers = this.usersService.assignableUsers;
 
-  // Dropdown pick-lists, loaded from the API (GET /erps, GET /suppliers).
+  // Dropdown pick-lists, loaded from the API (GET /erps, GET /suppliers, GET /client-companies).
   readonly erps = this.erpsService.erps;
   readonly suppliers = this.suppliersService.suppliers;
+  readonly clientCompanies = this.clientCompaniesService.names;
 
   // Edit mode waits for the store before it can populate the form.
   readonly projectsLoading = this.projectsStore.loading;
@@ -200,17 +215,49 @@ export class ProjectFormComponent {
     this.form.valueChanges.subscribe(() => this.recomputeEstimate());
     this.recomputeEstimate();
 
+    // "Existing project" mode: picking a project auto-fills its ERP as a
+    // convenience (still editable). Re-fires on every distinct pick, and
+    // is a no-op in 'new' mode or when the field is cleared.
+    this.form.get('projectName')?.valueChanges.subscribe((name) => {
+      if (this.entryMode() !== 'existing' || !name) return;
+      const first = this.projectsStore.entriesFor(name)[0];
+      if (first) this.form.get('erp')?.setValue(first.erp);
+    });
+
     // The store feeds edit-mode lookups and the "existing project" dropdown.
     this.projectsStore.load();
-    // ERP + Supplier pick-lists for the basics step.
+    // ERP + Supplier + Client Company pick-lists for the basics step.
     this.erpsService.load();
     this.suppliersService.load();
+    this.clientCompaniesService.load();
     // The assignee dropdown is fed by an admin-only endpoint.
     if (this.isAdmin()) this.usersService.load();
 
-    // Regular users don't get to reassign their own project — lock the field to themselves.
-    if (!this.isAdmin()) {
+    /*
+     * Employees don't get to reassign their own project — lock the field
+     * to themselves. Client-users must NOT be locked here: they aren't
+     * the project's owner (an employee is), so forcing `user` to their
+     * own id would silently steal ownership away from the real employee
+     * on save. The "Assigned To" control isn't even rendered for either
+     * role (admin-only in the basics step), so for a client the form
+     * simply keeps whatever `user` was patched in from the loaded entry.
+     */
+    if (this.roleService.isUser()) {
       this.form.get('user')?.setValue(this.currentUserId());
+    }
+
+    /*
+     * "Add New Supplier" from the project view page arrives here as
+     * ?project=<name> (create mode only — edit mode already has its own
+     * key). Preselects "existing project" mode with that project chosen,
+     * same as picking it manually from the dropdown.
+     */
+    if (!this.isEditMode()) {
+      const projectParam = this.route.snapshot.queryParamMap.get('project');
+      if (projectParam) {
+        this.setEntryMode('existing');
+        this.form.get('projectName')?.setValue(projectParam);
+      }
     }
 
     effect(() => {
@@ -228,6 +275,7 @@ export class ProjectFormComponent {
         projectName: p.projectName ?? '',
         erp: p.erp ?? '',
         supplier: p.supplier ?? '',
+        clientCompany: p.clientCompany ?? '',
         user: p.user ?? '',
         masterDataInterfaces: p.masterDataInterfaces ?? 0,
         transactionalInterfaces: p.transactionalInterfaces ?? 0,
@@ -263,7 +311,7 @@ export class ProjectFormComponent {
    */
   private recomputeEstimate(): void {
     const raw = this.form.getRawValue();
-    const range = estimateRangeDays({
+    const breakdown = estimateRangeDays({
       masterDataInterfaces: raw.masterDataInterfaces ?? 0,
       transactionalInterfaces: raw.transactionalInterfaces ?? 0,
       customLogic: (raw.customLogic ?? 'No') as YesNo,
@@ -278,8 +326,11 @@ export class ProjectFormComponent {
       hyperCare: (raw.hyperCare ?? 'No') as YesNo,
     });
 
-    this.form.get('tentativeRangeDays')?.setValue(range, { emitEvent: false });
-    this.form.get('tentativeProjectSize')?.setValue(estimateProjectSize(range), { emitEvent: false });
+    this.estimateBreakdown.set(breakdown);
+    this.form.get('tentativeRangeDays')?.setValue(breakdown.range, { emitEvent: false });
+    this.form
+      .get('tentativeProjectSize')
+      ?.setValue(estimateProjectSize(breakdown.range), { emitEvent: false });
   }
 
   /*
@@ -306,7 +357,18 @@ export class ProjectFormComponent {
       this.loadError.set('This project entry could not be found.');
       return;
     }
-    if (!this.isAdmin() && found.user !== this.currentUserId()) {
+    /*
+     * Defense-in-depth re-check in case the in-memory store is stale
+     * (e.g. reassigned after it loaded, but before this click) — the
+     * actual authorization already happened on the server. Each role
+     * is scoped by a different field, so each gets its own check.
+     */
+    if (this.isClient()) {
+      if (found.clientCompany !== this.currentUser()?.clientCompany) {
+        this.loadError.set('This project is no longer available to your company.');
+        return;
+      }
+    } else if (!this.isAdmin() && found.user !== this.currentUserId()) {
       this.loadError.set('This project is no longer assigned to you.');
       return;
     }
@@ -319,7 +381,7 @@ export class ProjectFormComponent {
    *  On success the created name is selected in the matching field.
    * ──────────────────────────────────────────────────────────────────
    */
-  openAddOption(target: 'erp' | 'supplier'): void {
+  openAddOption(target: 'erp' | 'supplier' | 'clientCompany'): void {
     this.addOptionError.set('');
     this.addOptionTarget.set(target);
   }
@@ -329,15 +391,74 @@ export class ProjectFormComponent {
     this.addOptionTarget.set(null);
   }
 
-  saveAddOption(name: string): void {
+  // Copy for the "+ Add new" dialog — one small lookup instead of a
+  // three-way ternary repeated across the template for every field.
+  // `fields` is a single-element FormFieldInterface[] — <app-form>
+  // (via the generalized AddOptionDialogComponent) renders it the
+  // same way it renders any other form.
+  private static readonly ADD_OPTION_COPY: Record<
+    'erp' | 'supplier' | 'clientCompany',
+    { title: string; subtitle: string; fields: FormFieldInterface[] }
+  > = {
+    erp: {
+      title: 'Add ERP System',
+      subtitle: 'It becomes selectable in every project estimation.',
+      fields: [
+        {
+          key: 'name',
+          label: 'ERP system name',
+          type: FieldTypeEnum.Text,
+          required: true,
+          placeholder: 'e.g. SAP S/4HANA',
+          autofocus: true,
+        },
+      ],
+    },
+    supplier: {
+      title: 'Add Supplier',
+      subtitle: 'It becomes selectable in every supplier entry.',
+      fields: [
+        {
+          key: 'name',
+          label: 'Supplier name',
+          type: FieldTypeEnum.Text,
+          required: true,
+          placeholder: 'e.g. Daymark Retail',
+          autofocus: true,
+        },
+      ],
+    },
+    clientCompany: {
+      title: 'Add Client Company',
+      // Same copy as the Clients Directory's own add dialog — same fields too (see below).
+      subtitle: 'Shown on the Clients Directory and selectable in every project.',
+      fields: CLIENT_COMPANY_FIELDS,
+    },
+  };
+
+  readonly addOptionCopy = computed(() => {
     const target = this.addOptionTarget();
-    if (!target) return;
+    return target ? ProjectFormComponent.ADD_OPTION_COPY[target] : null;
+  });
+
+  saveAddOption(value: Record<string, string | number>): void {
+    const target = this.addOptionTarget();
+    const name = (value['name'] as string)?.trim();
+    if (!target || !name) return;
 
     this.addOptionSaving.set(true);
     this.addOptionError.set('');
 
     const create$ =
-      target === 'erp' ? this.erpsService.create(name) : this.suppliersService.create(name);
+      target === 'erp'
+        ? this.erpsService.create(name)
+        : target === 'supplier'
+          ? this.suppliersService.create(name)
+          : this.clientCompaniesService.create(
+              name,
+              (value['email'] as string)?.trim() || undefined,
+              (value['primaryContact'] as string)?.trim() || undefined,
+            );
 
     create$.subscribe({
       next: (created) => {
@@ -365,13 +486,6 @@ export class ProjectFormComponent {
     this.entryMode.set(mode);
     // The name field switches between free text and the project dropdown.
     this.form.get('projectName')?.setValue('');
-  }
-
-  onExistingProjectPicked(name: string): void {
-    this.form.get('projectName')?.setValue(name);
-    // Start from the project's ERP as a convenience — still editable per supplier.
-    const first = this.projectsStore.entriesFor(name)[0];
-    if (first) this.form.get('erp')?.setValue(first.erp);
   }
 
   /*
@@ -435,6 +549,7 @@ export class ProjectFormComponent {
       projectName: (raw.projectName ?? '').trim(),
       erp: raw.erp ?? '',
       supplier: (raw.supplier ?? '').trim(),
+      clientCompany: raw.clientCompany ?? '',
       user: raw.user ?? '',
       masterDataInterfaces: raw.masterDataInterfaces ?? 0,
       transactionalInterfaces: raw.transactionalInterfaces ?? 0,

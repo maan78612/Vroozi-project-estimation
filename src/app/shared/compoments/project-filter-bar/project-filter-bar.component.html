@@ -1,6 +1,6 @@
-<div class="toolbar">
-  <div class="search-wrapper">
-    <span class="search-icon" aria-hidden="true"></span>
+<div class="filter-bar-card">
+  <div class="search-field">
+    <span class="material-symbols-outlined search-icon">search</span>
     <input
       #searchRef
       type="text"
@@ -22,21 +22,31 @@
     <option value="size">Sort: Largest first</option>
     <option value="range">Sort: Longest range first</option>
   </select>
-</div>
 
-<div class="size-filter-row">
-  <span class="size-filter-label">Size</span>
-  @for (size of sizeOrder; track size) {
-    <button
-      type="button"
-      class="size-chip"
-      [class.is-active]="sizeFilter() === size"
-      (click)="sizeToggle.emit(size)"
-    >
-      {{ size }}
-    </button>
-  }
+  <div class="bar-divider" aria-hidden="true"></div>
+
+  <div class="size-filter-group">
+    <span class="size-filter-label">Size</span>
+    <div class="size-square-row">
+      @for (size of sizeOrder; track size) {
+        <button
+          type="button"
+          class="size-square"
+          [class]="'size-square-' + size.toLowerCase()"
+          [class.is-active]="sizeFilter() === size"
+          [attr.aria-pressed]="sizeFilter() === size"
+          (click)="sizeToggle.emit(size)"
+        >
+          {{ size }}
+        </button>
+      }
+    </div>
+  </div>
+
   @if (hasActiveFilters()) {
-    <button type="button" class="clear-filters-btn" (click)="clear.emit()">Clear filters</button>
+    <button type="button" class="clear-filters-btn" (click)="clear.emit()">
+      <span class="material-symbols-outlined">close</span>
+      Clear filters
+    </button>
   }
 </div>

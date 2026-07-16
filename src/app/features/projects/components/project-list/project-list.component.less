@@ -1,105 +1,17 @@
 @import (reference) 'styles.less';
 
-@breakpoint-tablet: 900px;
-@breakpoint-mobile: 580px;
-
+// Normal document flow now — the sticky header/scroll region live in
+// AppShellComponent (see app-shell.component.less), this page no
+// longer owns its own 100vh + internal scroll.
 .list-page {
-  height: 100vh;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
-
-// ── Header ──────────────────────────────────────────────────────────────────
-
-.page-header {
-  flex: 0 0 auto;
-  background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-
-  .page-header-inner {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 2.5rem;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .logo {
-    height: 28px;
-    width: auto;
-    opacity: 0.9;
-  }
-
-  .nav-tabs {
-    display: flex;
-    gap: 0.3rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 999px;
-    padding: 0.2rem;
-  }
-
-  .nav-tab {
-    padding: 0.4rem 1rem;
-    border-radius: 999px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
-    text-decoration: none;
-    transition: all 0.15s ease;
-
-    &:hover { color: rgba(255, 255, 255, 0.85); }
-
-    &.is-active {
-      background: @color-primary;
-      color: @color-white;
-    }
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-  }
-
-  .username {
-    font-size: 0.83rem;
-    color: rgba(255, 255, 255, 0.45);
-  }
-
-  .header-divider {
-    width: 1px;
-    height: 14px;
-    background: rgba(255, 255, 255, 0.15);
-  }
-
-  ::ng-deep .btn-link {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.83rem;
-
-    &:hover:not(:disabled) {
-      color: rgba(255, 255, 255, 0.95);
-    }
-  }
-}
-
-// ── Page body ────────────────────────────────────────────────────────────────
 
 .page-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  max-width: 1280px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 2.5rem 2.5rem 5rem;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: @spacing-gutter;
 }
 
 // ── Title row ────────────────────────────────────────────────────────────────
@@ -109,55 +21,52 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.75rem;
 
   h1 {
     margin: 0 0 0.25rem;
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: @color-white;
-    letter-spacing: -0.025em;
-    line-height: 1.2;
+    .typography-headline-lg();
+    color: @color-on-surface;
   }
 
   .page-subtitle {
     margin: 0;
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.45);
+    .typography-body-md();
+    color: @color-outline;
   }
 }
 
 // ── States ───────────────────────────────────────────────────────────────────
 
 .list-state {
-  background: @color-bg-card;
-  border-radius: 16px;
+  .glass-surface();
+  border-radius: @radius-xl;
   padding: 4.5rem 2.5rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: inset 0 1px 0 fade(@color-on-surface, 4%);
 }
 
 .state-icon-wrap {
   width: 72px;
   height: 72px;
-  border-radius: 50%;
+  border-radius: @radius-full;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1.25rem;
 
   &.folder-icon-wrap {
-    background: rgba(107, 78, 15, 0.07);
-    border: 1.5px solid rgba(107, 78, 15, 0.14);
-    color: @color-primary;
+    background: fade(@color-primary-container, 12%);
+    border: 1.5px solid fade(@color-primary-container, 28%);
+    color: @color-primary-container;
   }
 
   &.search-icon-wrap {
-    background: rgba(154, 154, 154, 0.08);
-    border: 1.5px solid rgba(154, 154, 154, 0.18);
-    color: @color-text-muted;
+    background: fade(@color-outline-variant, 35%);
+    border: 1.5px solid @color-outline-variant;
+    color: @color-outline;
   }
 }
 
@@ -181,14 +90,14 @@
   margin: 0 0 0.4rem;
   font-size: 1.15rem;
   font-weight: 700;
-  color: @color-text-primary;
+  color: @color-on-surface;
   letter-spacing: -0.015em;
 }
 
 .state-message {
   margin: 0 0 1.75rem;
   font-size: 0.875rem;
-  color: @color-text-secondary;
+  color: @color-outline;
   max-width: 360px;
   line-height: 1.6;
 }
@@ -199,43 +108,73 @@
   justify-content: center;
 }
 
-// ── Cards grid ───────────────────────────────────────────────────────────────
+// ── Project table ────────────────────────────────────────────────────────────
 
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.25rem;
+.project-row {
+  cursor: pointer;
+}
+
+.project-name {
+  .typography-body-md();
+  color: @color-on-surface;
+  font-weight: 600;
+}
+
+.project-subtitle {
+  .typography-label-sm();
+  text-transform: none;
+  letter-spacing: normal;
+  color: @color-on-surface-variant;
+  margin-top: 0.15rem;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.row-action {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: @radius-md;
+  color: @color-on-surface-variant;
+  display: inline-flex;
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  &:hover {
+    color: @color-primary;
+    background: fade(@color-primary, 10%);
+  }
+}
+
+.row-action-delete:hover {
+  color: @color-error;
+  background: fade(@color-error, 10%);
 }
 
 // ── Responsive ───────────────────────────────────────────────────────────────
 
-@media (max-width: @breakpoint-tablet) {
-  .page-header .page-header-inner,
+.respond-tablet({
   .page-body {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-top: 2rem;
   }
+});
 
-  .page-body { padding-top: 2rem; }
-}
-
-@media (max-width: @breakpoint-mobile) {
-  .page-header .page-header-inner {
-    padding: 0 1rem;
-    height: 52px;
-  }
-
-  .nav-tab { padding: 0.35rem 0.7rem; font-size: 0.75rem; }
-
-  .page-body { padding: 1.5rem 1rem 3rem; }
-
+.respond-mobile({
   .page-title-row {
     align-items: flex-start;
     flex-direction: column;
     gap: 0.875rem;
 
-    h1 { font-size: 1.4rem; }
+    h1 {
+      font-size: 1.4rem;
+    }
   }
-
-  .cards-grid { grid-template-columns: 1fr; }
-}
+});

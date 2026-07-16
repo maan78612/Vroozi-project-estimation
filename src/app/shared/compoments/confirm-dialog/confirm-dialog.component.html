@@ -10,7 +10,10 @@
     <p class="confirm-message">{{ message() }}</p>
 
     @if (errorMessage()) {
-      <p class="confirm-error">{{ errorMessage() }}</p>
+      <div class="banner banner-error confirm-error">
+        <span class="material-symbols-outlined banner-icon">error</span>
+        <p class="banner-message">{{ errorMessage() }}</p>
+      </div>
     }
 
     <div class="confirm-actions">

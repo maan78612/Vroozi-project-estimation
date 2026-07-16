@@ -1,0 +1,337 @@
+<div class="edit-page">
+  @if (loading()) {
+    <div class="wizard-state">
+      <app-spinner
+        variant="light"
+        label="Loading project…"
+        sublabel="Fetching this entry so you can edit it."
+      />
+    </div>
+  } @else {
+    <form class="edit-form" [formGroup]="form()" (ngSubmit)="onSubmit()" novalidate>
+      <header class="edit-header">
+        <button type="button" class="edit-back-btn" (click)="back.emit()">
+          <span class="material-symbols-outlined">arrow_back</span> Back to projects
+        </button>
+        <div class="edit-header-row">
+          <div class="edit-header-texts">
+            <h1 class="edit-title">{{ form().get('projectName')?.value || 'Edit Project' }}</h1>
+            <p class="edit-subtitle">
+              Editing {{ form().get('supplier')?.value || 'this' }} supplier estimation
+            </p>
+          </div>
+          <div class="edit-header-actions">
+            <button
+              type="button"
+              class="nav-btn btn-ghost"
+              [disabled]="isSubmitting()"
+              (click)="back.emit()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="nav-btn btn-primary" [disabled]="isSubmitting()">
+              @if (isSubmitting()) {
+                <span class="btn-spinner"></span> Saving…
+              } @else {
+                Save Changes
+                <span class="material-symbols-outlined">check</span>
+              }
+            </button>
+          </div>
+        </div>
+      </header>
+
+      @if (submitError()) {
+        <div class="banner banner-error edit-banner">
+          <span class="material-symbols-outlined banner-icon">error</span>
+          <p class="banner-message">{{ submitError() }}</p>
+        </div>
+      }
+      @if (submitSuccess()) {
+        <div class="banner banner-success edit-banner">
+          <span class="material-symbols-outlined banner-icon">check_circle</span>
+          <p class="banner-message">Changes saved.</p>
+        </div>
+      }
+
+      <div class="edit-body">
+        <div class="edit-main">
+          <!-- ── Project Basics ─────────────────────────────────────────── -->
+          <section class="edit-section-card">
+            <header class="edit-section-header">
+              <span class="edit-section-icon material-symbols-outlined">info</span>
+              <div>
+                <h2>Project Basics</h2>
+                <p>Name the project and identify the ERP system</p>
+              </div>
+            </header>
+
+            <div class="basics-grid">
+              <div class="field-block">
+                <label class="field-label" for="ef-name">Name</label>
+                <input
+                  id="ef-name"
+                  type="text"
+                  class="field-input"
+                  [class.is-error]="hasError('projectName')"
+                  formControlName="projectName"
+                  autocomplete="off"
+                />
+                @if (hasError('projectName')) {
+                  <span class="field-error" role="alert">Project name is required (min. 2 characters)</span>
+                }
+              </div>
+
+              @if (isAdmin()) {
+                <div class="field-block">
+                  <span class="field-label">Assigned To</span>
+                  <app-search-dropdown
+                    formControlName="user"
+                    [options]="employeeOptions()"
+                    [isError]="hasError('user')"
+                    placeholder="Select an employee…"
+                    searchPlaceholder="Search by name or email…"
+                  />
+                </div>
+              }
+
+              <div class="field-block">
+                <div class="field-label-row">
+                  <span class="field-label">ERP System</span>
+                  @if (isAdmin()) {
+                    <button type="button" class="add-option-link" (click)="addErpRequested.emit()">
+                      + Add new
+                    </button>
+                  }
+                </div>
+                <app-search-dropdown
+                  formControlName="erp"
+                  [options]="erpOptions()"
+                  [isError]="hasError('erp')"
+                  placeholder="Select an ERP system…"
+                  searchPlaceholder="Search ERP systems…"
+                />
+              </div>
+
+              <div class="field-block">
+                <div class="field-label-row">
+                  <span class="field-label">Supplier</span>
+                  @if (isAdmin()) {
+                    <button type="button" class="add-option-link" (click)="addSupplierRequested.emit()">
+                      + Add new
+                    </button>
+                  }
+                </div>
+                <app-search-dropdown
+                  formControlName="supplier"
+                  [options]="supplierOptions()"
+                  placeholder="Select a supplier…"
+                  searchPlaceholder="Search suppliers…"
+                />
+              </div>
+            </div>
+
+            @if (isAdmin()) {
+              <div class="field-block client-company-row">
+                <span class="field-label">Client Company</span>
+                <app-search-dropdown
+                  formControlName="clientCompany"
+                  [options]="clientCompanyOptions()"
+                  placeholder="Select a client company…"
+                  searchPlaceholder="Search client companies…"
+                />
+                <span class="field-hint">
+                  Which client this project is for — controls which client-user accounts can see it.
+                </span>
+              </div>
+            }
+          </section>
+
+          <!-- ── Integration Scope ──────────────────────────────────────── -->
+          <section class="edit-section-card">
+            <header class="edit-section-header">
+              <span class="edit-section-icon material-symbols-outlined">hub</span>
+              <div>
+                <h2>Integration Scope</h2>
+                <p>Count the interfaces and connection directions</p>
+              </div>
+            </header>
+
+            <div class="scope-strip">
+              <div class="scope-card">
+                <p class="scope-label">Master Data</p>
+                <div class="scope-control">
+                  <button type="button" class="scope-btn" (click)="decrement('masterDataInterfaces')" [disabled]="numVal('masterDataInterfaces') <= 0" aria-label="Decrease">−</button>
+                  <span class="scope-value">{{ numVal('masterDataInterfaces') }}</span>
+                  <button type="button" class="scope-btn" (click)="increment('masterDataInterfaces')" aria-label="Increase">+</button>
+                </div>
+              </div>
+              <div class="scope-card">
+                <p class="scope-label">Transactional</p>
+                <div class="scope-control">
+                  <button type="button" class="scope-btn" (click)="decrement('transactionalInterfaces')" [disabled]="numVal('transactionalInterfaces') <= 0" aria-label="Decrease">−</button>
+                  <span class="scope-value">{{ numVal('transactionalInterfaces') }}</span>
+                  <button type="button" class="scope-btn" (click)="increment('transactionalInterfaces')" aria-label="Increase">+</button>
+                </div>
+              </div>
+              <div class="scope-card">
+                <p class="scope-label">Inbound</p>
+                <div class="scope-control">
+                  <button type="button" class="scope-btn" (click)="decrement('inbound')" [disabled]="numVal('inbound') <= 0" aria-label="Decrease">−</button>
+                  <span class="scope-value">{{ numVal('inbound') }}</span>
+                  <button type="button" class="scope-btn" (click)="increment('inbound')" aria-label="Increase">+</button>
+                </div>
+              </div>
+              <div class="scope-card">
+                <p class="scope-label">Outbound</p>
+                <div class="scope-control">
+                  <button type="button" class="scope-btn" (click)="decrement('outbound')" [disabled]="numVal('outbound') <= 0" aria-label="Decrease">−</button>
+                  <span class="scope-value">{{ numVal('outbound') }}</span>
+                  <button type="button" class="scope-btn" (click)="increment('outbound')" aria-label="Increase">+</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ── Complexity Factors ─────────────────────────────────────── -->
+          <section class="edit-section-card">
+            <header class="edit-section-header">
+              <span class="edit-section-icon material-symbols-outlined">psychology</span>
+              <div>
+                <h2>Complexity Factors</h2>
+                <p>Flag the technical complexity drivers</p>
+              </div>
+            </header>
+
+            <div class="mini-flag-grid">
+              @for (flag of complexityFlags(); track flag.key) {
+                <div class="mini-flag-row">
+                  <span class="mini-flag-label">{{ flag.label }}</span>
+                  <div class="mini-toggle" role="radiogroup" [attr.aria-label]="flag.label">
+                    <button
+                      type="button"
+                      [class.is-active]="yn(flag.key) === 'Yes'"
+                      (click)="setFlag(flag.key, 'Yes')"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      [class.is-active]="yn(flag.key) === 'No'"
+                      (click)="setFlag(flag.key, 'No')"
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </section>
+
+          <!-- ── Risk & Dependencies ────────────────────────────────────── -->
+          <section class="edit-section-card">
+            <header class="edit-section-header">
+              <span class="edit-section-icon material-symbols-outlined">warning</span>
+              <div>
+                <h2>Risk &amp; Dependencies</h2>
+                <p>Toggle dependencies, then set the risk sliders</p>
+              </div>
+            </header>
+
+            <div class="risk-grid">
+              <div class="risk-deps-col">
+                <p class="risk-col-label">Dependencies</p>
+                @for (flag of riskFlags(); track flag.key) {
+                  <div class="mini-flag-row">
+                    <span class="mini-flag-label">{{ flag.label }}</span>
+                    <div class="mini-toggle" role="radiogroup" [attr.aria-label]="flag.label">
+                      <button
+                        type="button"
+                        [class.is-active]="yn(flag.key) === 'Yes'"
+                        (click)="setFlag(flag.key, 'Yes')"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        [class.is-active]="yn(flag.key) === 'No'"
+                        (click)="setFlag(flag.key, 'No')"
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <div class="risk-sliders-col" [formGroup]="form()">
+                <div class="range-wrap">
+                  <div class="range-header">
+                    <span class="range-name">Data Layer Complexity</span>
+                    <span class="range-pct">{{ tenthsVal('dataLayer') }}<sup>/10</sup></span>
+                  </div>
+                  <input
+                    type="range"
+                    class="range-input"
+                    formControlName="dataLayer"
+                    min="0" max="100"
+                    [style.background]="sliderTrack('dataLayer')"
+                  />
+                </div>
+
+                <div class="range-wrap">
+                  <div class="range-header">
+                    <span class="range-name">Project Uncertainties</span>
+                    <span class="range-pct">{{ tenthsVal('uncertainties') }}<sup>/10</sup></span>
+                  </div>
+                  <input
+                    type="range"
+                    class="range-input"
+                    formControlName="uncertainties"
+                    min="0" max="100"
+                    [style.background]="sliderTrack('uncertainties')"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ── Sticky live effort sidebar ─────────────────────────────── -->
+        <aside class="edit-sidebar">
+          <div class="effort-card">
+            <h3 class="effort-card-title">
+              <span class="material-symbols-outlined">bolt</span> Estimated Effort
+            </h3>
+
+            @if (estimateBreakdown(); as est) {
+              <div class="effort-range-row">
+                <span class="effort-range">{{ est.range }} days</span>
+                @if (estimateSize(); as size) {
+                  <span class="size-badge size-{{ size.toLowerCase() }}">{{ size }}</span>
+                }
+              </div>
+
+              <dl class="effort-breakdown">
+                <div class="effort-row">
+                  <dt>Base Effort</dt>
+                  <dd>{{ est.baseEffortDays }} days</dd>
+                </div>
+                <div class="effort-row">
+                  <dt>Risk Buffer</dt>
+                  <dd>+{{ est.riskBufferDays }} days</dd>
+                </div>
+                <div class="effort-row">
+                  <dt>Complexity Mult.</dt>
+                  <dd>×{{ est.complexityMultiplier }}</dd>
+                </div>
+              </dl>
+            }
+
+            <p class="effort-card-hint">Recalculates automatically as you edit the fields.</p>
+          </div>
+        </aside>
+      </div>
+    </form>
+  }
+</div>

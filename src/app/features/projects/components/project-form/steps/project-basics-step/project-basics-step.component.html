@@ -54,21 +54,16 @@
 
     @if (entryMode() === 'existing') {
       <div class="field-block">
-        <label class="field-label" for="f-existingProject">
+        <span class="field-label">
           Project <span class="required-mark" aria-hidden="true">*</span>
-        </label>
-        <select
-          id="f-existingProject"
-          class="field-input"
-          [class.is-error]="hasError('projectName')"
-          [value]="form().get('projectName')?.value || ''"
-          (change)="onProjectPicked($event)"
-        >
-          <option value="" disabled>Choose a project…</option>
-          @for (name of existingProjects(); track name) {
-            <option [value]="name">{{ name }}</option>
-          }
-        </select>
+        </span>
+        <app-search-dropdown
+          formControlName="projectName"
+          [options]="existingProjectOptions()"
+          [isError]="hasError('projectName')"
+          placeholder="Choose a project…"
+          searchPlaceholder="Search projects…"
+        />
         @if (hasError('projectName')) {
           <span class="field-error" role="alert">Choose which project this supplier belongs to</span>
         }
@@ -154,5 +149,25 @@
       Each entry covers one supplier — add more suppliers as separate entries later.
     </span>
   </div>
+
+  @if (isAdmin()) {
+    <div class="field-block">
+      <div class="field-label-row">
+        <span class="field-label">Client Company</span>
+        <button type="button" class="add-option-link" (click)="addClientCompanyRequested.emit()">
+          + Add new
+        </button>
+      </div>
+      <app-search-dropdown
+        formControlName="clientCompany"
+        [options]="clientCompanyOptions()"
+        placeholder="Select a client company…"
+        searchPlaceholder="Search client companies…"
+      />
+      <span class="field-hint">
+        Which client this project is for — controls which client-user accounts can see it.
+      </span>
+    </div>
+  }
 
 </div>

@@ -14,6 +14,9 @@ export function mapApiUser(user: ApiUser): UserInterface {
     name: user.name,
     email: user.email,
     role: user.role,
+    clientCompany: user.clientCompany,
+    jobTitle: user.jobTitle,
+    department: user.department,
   };
 }
 

@@ -1,7 +1,5 @@
 @import (reference) 'styles.less';
 
-@breakpoint-sm: 580px;
-
 .stepper-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -9,9 +7,9 @@
 }
 
 .stepper-card {
-  background: #f8f9fa;
-  border: 1.5px solid @color-border;
-  border-radius: 16px;
+  background: @color-surface-container-high;
+  border: 1.5px solid @color-outline-variant;
+  border-radius: @radius-xl;
   padding: 1.5rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -19,7 +17,7 @@
   text-align: center;
   transition: border-color 0.2s;
 
-  &:hover { border-color: rgba(107, 78, 15, 0.3); }
+  &:hover { border-color: fade(@color-primary, 30%); }
 }
 
 .stepper-card-label {
@@ -27,7 +25,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: @color-text-secondary;
+  color: @color-on-surface-variant;
   margin: 0 0 0.875rem;
   line-height: 1.4;
 }
@@ -42,10 +40,10 @@
 .stepper-btn {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  border: 1.5px solid @color-border;
-  background: @color-bg-card;
-  color: @color-text-primary;
+  border-radius: @radius-full;
+  border: 1.5px solid @color-outline-variant;
+  background: @color-surface-container-highest;
+  color: @color-on-surface;
   font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
@@ -57,7 +55,7 @@
 
   &:hover:not(:disabled) {
     border-color: @color-primary;
-    background: rgba(107, 78, 15, 0.06);
+    background: fade(@color-primary, 6%);
     color: @color-primary;
   }
 
@@ -67,7 +65,7 @@
 .stepper-value {
   font-size: 2.75rem;
   font-weight: 800;
-  color: @color-text-primary;
+  color: @color-on-surface;
   min-width: 56px;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -75,12 +73,12 @@
 
 .stepper-hint {
   font-size: 0.72rem;
-  color: @color-text-muted;
+  color: @color-outline;
   line-height: 1.45;
   margin: 0;
 }
 
-@media (max-width: @breakpoint-sm) {
+@media (max-width: @breakpoint-mobile) {
   .stepper-grid  { grid-template-columns: 1fr; gap: 0.875rem; }
   .stepper-value { font-size: 2.25rem; }
 }

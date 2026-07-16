@@ -1,76 +1,159 @@
 @import (reference) 'styles.less';
 
-@breakpoint-md: 860px;
-@breakpoint-sm: 580px;
-
 // ╔══════════════════════════════════════════════════════════════════════════╗
-// ║  PAGE SHELL                                                             ║
+// ║  PAGE SHELL — sidebar + main, full viewport (dedicated, focused wizard)  ║
 // ╚══════════════════════════════════════════════════════════════════════════╝
 
 .wizard-page {
   height: 100vh;
   display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
-// Everything below the header — scrolls independently so the header
-// stays pinned in view while a step's content is long.
-.wizard-scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+
+.wizard-sidebar {
+  width: 280px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  background: @color-surface-container;
+  border-right: 1px solid @color-outline-variant;
+  overflow-y: auto;
 }
 
-// ── Header ───────────────────────────────────────────────────────────────────
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+}
 
-.wizard-header {
-  flex: 0 0 auto;
-  background: rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  z-index: 10;
+.sidebar-brand-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: @radius-lg;
+  background: fade(@color-primary, 15%);
+  color: @color-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  .wizard-header-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 2rem;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.sidebar-brand-texts {
+  min-width: 0;
+}
+
+.sidebar-brand-name {
+  margin: 0;
+  .typography-body-md();
+  font-weight: 700;
+  color: @color-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-brand-sub {
+  margin: 0.1rem 0 0;
+  .typography-label-sm();
+  text-transform: none;
+  letter-spacing: normal;
+  color: @color-on-surface-variant;
+}
+
+.sidebar-steps {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.sidebar-step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: @radius-lg;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: @color-on-surface-variant;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  .sidebar-step-icon {
+    font-size: 20px;
+    flex-shrink: 0;
   }
 
-  .logo {
-    height: 28px;
-    width: auto;
-    opacity: 0.9;
+  .sidebar-step-label {
+    .typography-body-md();
   }
 
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
+  &:not(:disabled):hover {
+    background: @color-surface-container-high;
+    color: @color-on-surface;
   }
 
-  .username {
-    font-size: 0.83rem;
-    color: rgba(255, 255, 255, 0.45);
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
   }
 
-  .header-divider {
-    width: 1px;
-    height: 14px;
-    background: rgba(255, 255, 255, 0.15);
+  &.is-done {
+    color: @color-on-surface-variant;
+    opacity: 1;
+
+    .sidebar-step-icon {
+      color: @color-success;
+    }
   }
 
-  ::ng-deep .btn-link {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.83rem;
-    &:hover:not(:disabled) { color: rgba(255, 255, 255, 0.95); }
+  &.is-active {
+    background: @color-primary-container;
+    color: @color-on-primary-container;
+
+    .sidebar-step-label {
+      font-weight: 700;
+    }
+  }
+}
+
+.sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-top: 1px solid @color-outline-variant;
+}
+
+.sidebar-footer-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: @radius-lg;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: @color-on-surface-variant;
+  .typography-body-md();
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  &:hover {
+    background: @color-surface-container-high;
+    color: @color-on-surface;
   }
 }
 
@@ -83,7 +166,7 @@
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: @color-on-surface-variant;
   font-size: 0.9rem;
 
   p { margin: 0; }
@@ -100,145 +183,28 @@
 }
 
 // ╔══════════════════════════════════════════════════════════════════════════╗
-// ║  STEP PROGRESS INDICATOR                                                ║
+// ║  MAIN CONTENT                                                            ║
 // ╚══════════════════════════════════════════════════════════════════════════╝
 
-.wizard-progress {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 1.75rem 2rem 0;
-}
-
-.progress-item {
+.wizard-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.45rem;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: default;
-  outline: none;
-
-  &:not(:disabled) {
-    cursor: pointer;
-    &:hover .progress-circle { border-color: rgba(255, 255, 255, 0.38); }
-  }
-}
-
-.progress-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  font-weight: 700;
-  transition: background 0.25s, border-color 0.25s, color 0.25s;
+  overflow: hidden;
   position: relative;
-  z-index: 1;
-
-  .progress-item.is-done & {
-    background: @color-success;
-    border-color: @color-success;
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(28, 110, 86, 0.45);
-  }
-
-  .progress-item.is-active & {
-    background: @color-primary;
-    border-color: @color-primary;
-    color: #fff;
-    box-shadow: 0 2px 10px rgba(107, 78, 15, 0.5);
-  }
 }
 
-.progress-check-icon {
-  width: 13px;
-  height: 13px;
-  background-color: currentColor;
-  mask: url('/assets/icons/check.svg') no-repeat center / contain;
-  -webkit-mask: url('/assets/icons/check.svg') no-repeat center / contain;
-}
-
-.progress-label {
-  font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.3);
-  white-space: nowrap;
-  font-weight: 500;
-  transition: color 0.25s;
-
-  .progress-item.is-active & {
-    color: rgba(255, 255, 255, 0.88);
-    font-weight: 700;
-  }
-
-  .progress-item.is-done & { color: rgba(255, 255, 255, 0.55); }
-}
-
-.progress-connector {
-  flex: 1;
-  max-width: 72px;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.1);
-  margin-top: 18px;
-  transition: background 0.35s;
-
-  &.is-filled { background: @color-primary; }
-}
-
-// ╔══════════════════════════════════════════════════════════════════════════╗
-// ║  WIZARD BODY & STEP CARD                                                ║
-// ╚══════════════════════════════════════════════════════════════════════════╝
-
-.wizard-body {
-  flex: 1;
-  padding: 1.75rem 2rem 5rem;
-  max-width: 780px;
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
-
-.step-card {
-  background: @color-bg-card;
-  border-radius: 20px;
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.06),
-    0 16px 48px rgba(0, 0, 0, 0.22),
-    0 48px 80px rgba(0, 0, 0, 0.1);
-}
-
-.step-header {
-  padding: 2rem 2.5rem 1.625rem;
-}
-
-.project-identity {
+.wizard-form {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.85rem;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
-.project-identity-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: @color-primary;
-  flex-shrink: 0;
-}
-
-.project-identity-name {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: @color-primary;
-  letter-spacing: -0.005em;
+.wizard-main-header {
+  flex: 0 0 auto;
+  padding: 2rem 2.5rem 1.25rem;
 }
 
 .step-eyebrow {
@@ -253,34 +219,80 @@
 
 .step-title {
   margin: 0 0 0.35rem;
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: @color-text-primary;
-  letter-spacing: -0.03em;
-  line-height: 1.2;
+  .typography-headline-md();
+  color: @color-on-surface;
 }
 
 .step-subtitle {
   margin: 0;
-  font-size: 0.875rem;
-  color: @color-text-secondary;
-  line-height: 1.5;
+  .typography-body-md();
+  color: @color-on-surface-variant;
 }
 
-.step-rule {
-  height: 1px;
-  background: @color-border;
-  margin: 0 2.5rem;
+.wizard-progress-bar {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 2.5rem 1.75rem;
+}
+
+.progress-segment {
+  flex: 1;
+  height: 4px;
+  border-radius: @radius-full;
+  background: @color-surface-container-highest;
+  transition: background 0.3s ease;
+
+  &.is-filled {
+    background: @color-primary;
+    box-shadow: 0 0 8px fade(@color-primary, 50%);
+  }
+}
+
+.wizard-scroll-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 2.5rem 2rem;
+}
+
+.step-card {
+  .glass-surface();
+  border-radius: @radius-xl;
+  max-width: 780px;
+  margin: 0 auto;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 16px 48px rgba(0, 0, 0, 0.22),
+    0 48px 80px rgba(0, 0, 0, 0.1);
+  // Opacity + translate only — a box-shadow this heavy repaints every frame
+  // if it's also scaled, which is what read as "flickering". Transform +
+  // opacity alone stay on the compositor, so this one is actually smooth.
+  animation: step-card-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes step-card-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .step-body {
   padding: 2rem 2.5rem 2.25rem;
+  // Starts slightly after the card so the two motions don't fight —
+  // the card settles into place first, then the content resolves into it.
+  animation: step-body-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.08s;
+}
+
+@keyframes step-body-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .step-hint {
   margin: 0 0 1.5rem;
   font-size: 0.85rem;
-  color: @color-text-secondary;
+  color: @color-on-surface-variant;
   line-height: 1.5;
 }
 
@@ -291,14 +303,20 @@
 }
 
 // ╔══════════════════════════════════════════════════════════════════════════╗
-// ║  NAVIGATION (below card, on dark bg)                                    ║
+// ║  STICKY FOOTER NAVIGATION                                                ║
 // ╚══════════════════════════════════════════════════════════════════════════╝
 
-.wizard-nav {
+.wizard-footer {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 0.25rem 0;
+  gap: 1rem;
+  padding: 1.25rem 2.5rem;
+  border-top: 1px solid @color-outline-variant;
+  background: fade(@color-surface-container-lowest, 85%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .nav-btn {
@@ -306,7 +324,7 @@
   align-items: center;
   gap: 0.45rem;
   padding: 0.775rem 1.75rem;
-  border-radius: 12px;
+  border-radius: @radius-xl;
   font-size: 0.9rem;
   font-weight: 600;
   font-family: inherit;
@@ -315,27 +333,31 @@
   transition: all 0.2s;
   white-space: nowrap;
 
+  .material-symbols-outlined {
+    font-size: 18px;
+  }
+
   &.btn-ghost {
-    background: rgba(255, 255, 255, 0.07);
-    border: 1.5px solid rgba(255, 255, 255, 0.14);
-    color: rgba(255, 255, 255, 0.65);
+    background: fade(@color-on-surface, 7%);
+    border: 1.5px solid fade(@color-on-surface, 14%);
+    color: @color-on-surface-variant;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.95);
-      border-color: rgba(255, 255, 255, 0.25);
+      background: fade(@color-on-surface, 12%);
+      color: @color-on-surface;
+      border-color: fade(@color-on-surface, 25%);
     }
   }
 
   &.btn-primary {
     background: @color-primary;
-    color: @color-white;
-    box-shadow: 0 4px 16px rgba(107, 78, 15, 0.35);
+    color: @color-on-primary;
+    box-shadow: 0 4px 16px fade(@color-primary, 35%);
 
     &:hover:not(:disabled) {
-      background: darken(@color-primary, 8%);
+      background: @color-primary-container;
       transform: translateY(-1px);
-      box-shadow: 0 6px 22px rgba(107, 78, 15, 0.45);
+      box-shadow: 0 6px 22px fade(@color-primary, 45%);
     }
 
     &:active:not(:disabled) { transform: translateY(0); }
@@ -349,66 +371,138 @@
   }
 }
 
-.nav-icon-back,
-.nav-icon-continue,
-.nav-icon-save {
-  width: 15px;
-  height: 15px;
-  background-color: currentColor;
-}
-
-.nav-icon-back {
-  mask: url('/assets/icons/chevron-left.svg') no-repeat center / contain;
-  -webkit-mask: url('/assets/icons/chevron-left.svg') no-repeat center / contain;
-}
-
-.nav-icon-continue {
-  mask: url('/assets/icons/chevron-right.svg') no-repeat center / contain;
-  -webkit-mask: url('/assets/icons/chevron-right.svg') no-repeat center / contain;
-}
-
-.nav-icon-save {
-  mask: url('/assets/icons/check.svg') no-repeat center / contain;
-  -webkit-mask: url('/assets/icons/check.svg') no-repeat center / contain;
-}
-
 .btn-spinner {
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
-  border-radius: 50%;
+  border: 2px solid fade(@color-on-primary, 35%);
+  border-top-color: @color-on-primary;
+  border-radius: @radius-full;
   animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-// ╔══════════════════════════════════════════════════════════════════════════╗
-// ║  RESPONSIVE                                                             ║
-// ╚══════════════════════════════════════════════════════════════════════════╝
-
-@media (max-width: @breakpoint-md) {
-  .wizard-progress   { padding: 1.5rem 1.25rem 0; }
-  .progress-connector { max-width: 48px; }
-  .wizard-body       { padding: 1.5rem 1.25rem 4rem; }
-  .step-header       { padding: 1.75rem 1.75rem 1.375rem; }
-  .step-rule         { margin: 0 1.75rem; }
-  .step-body         { padding: 1.75rem; }
+@media (prefers-reduced-motion: reduce) {
+  .step-body,
+  .step-card {
+    animation: none;
+  }
 }
 
-@media (max-width: @breakpoint-sm) {
-  .wizard-header .wizard-header-inner { padding: 0 1rem; height: 54px; }
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║  RESPONSIVE — sidebar becomes a horizontal step strip below tablet       ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
 
-  .wizard-progress   { padding: 1.25rem 0.75rem 0; }
-  .progress-label    { display: none; }
-  .progress-connector { max-width: 28px; }
+.respond-tablet({
+  .wizard-page {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
 
-  .wizard-body       { padding: 1.25rem 1rem 3.5rem; }
-  .step-header       { padding: 1.375rem 1.25rem 1.125rem; }
-  .step-rule         { margin: 0 1.25rem; }
-  .step-body         { padding: 1.375rem 1.25rem; }
-  .step-title        { font-size: 1.2rem; }
+  .wizard-sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    border-right: none;
+    border-bottom: 1px solid @color-outline-variant;
+    overflow-x: auto;
+    overflow-y: visible;
+  }
 
-  .nav-btn { padding: 0.7rem 1.25rem; font-size: 0.85rem; }
+  .sidebar-brand {
+    flex-shrink: 0;
+  }
+
+  .sidebar-steps {
+    flex-direction: row;
+    padding: 0.5rem;
+  }
+
+  .sidebar-step {
+    flex-shrink: 0;
+
+    .sidebar-step-label {
+      display: none;
+    }
+  }
+
+  .sidebar-footer {
+    flex-direction: row;
+    border-top: none;
+    border-left: 1px solid @color-outline-variant;
+  }
+
+  .sidebar-footer-link span:last-child {
+    display: none;
+  }
+
+  .wizard-main {
+    overflow: visible;
+  }
+
+  .wizard-scroll-body {
+    overflow-y: visible;
+    padding: 0 1.5rem 1.5rem;
+  }
+
+  .wizard-main-header {
+    padding: 1.5rem 1.5rem 1rem;
+  }
+
+  .wizard-progress-bar {
+    padding: 0 1.5rem 1.25rem;
+  }
+
+  .step-body {
+    padding: 1.5rem;
+  }
+
+  .wizard-footer {
+    padding: 1rem 1.5rem;
+    position: sticky;
+    bottom: 0;
+  }
+});
+
+.respond-mobile({
+  .wizard-main-header {
+    padding: 1.25rem 1rem 0.875rem;
+  }
+
+  .wizard-progress-bar {
+    padding: 0 1rem 1rem;
+  }
+
+  .wizard-scroll-body {
+    padding: 0 1rem 1rem;
+  }
+
+  .step-title {
+    font-size: 1.2rem;
+  }
+
+  .step-body {
+    padding: 1.25rem;
+  }
+
+  .wizard-footer {
+    padding: 0.875rem 1rem;
+  }
+
+  .nav-btn {
+    padding: 0.7rem 1.25rem;
+    font-size: 0.85rem;
+  }
+});
+
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║  EDIT PAGE — wrapper only; the form itself lives in                      ║
+// ║  EditProjectFormComponent. This just backs the loadError() state.       ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
+
+.edit-page {
+  min-height: 100vh;
 }

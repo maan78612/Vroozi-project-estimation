@@ -1,7 +1,7 @@
 @import (reference) 'styles.less';
 
-@flag-yes-border: rgba(28, 110, 86, 0.45);
-@flag-yes-bg:     rgba(28, 110, 86, 0.05);
+@flag-yes-border: fade(@color-success-container, 45%);
+@flag-yes-bg:     fade(@color-success-container, 5%);
 
 :host {
   display: block;
@@ -15,9 +15,8 @@
   justify-content: space-between;
   gap: 0.875rem;
   padding: 1.125rem;
-  background: @color-bg-card;
-  border: 1.5px solid @color-border;
-  border-radius: 14px;
+  .glass-surface();
+  border-radius: @radius-xl;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -28,23 +27,23 @@
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 
   &:hover {
-    border-color: rgba(107, 78, 15, 0.35);
-    background: rgba(107, 78, 15, 0.02);
+    border-color: fade(@color-primary, 35%);
+    background: fade(@color-primary, 2%);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 3px rgba(107, 78, 15, 0.2);
+    box-shadow: 0 0 0 3px fade(@color-primary, 20%);
   }
 
   &.is-yes {
     border-color: @flag-yes-border;
     background: @flag-yes-bg;
-    box-shadow: 0 2px 12px rgba(28, 110, 86, 0.08);
+    box-shadow: 0 2px 12px fade(@color-success-container, 8%);
 
     &:hover {
-      border-color: rgba(28, 110, 86, 0.6);
-      background: rgba(28, 110, 86, 0.08);
+      border-color: fade(@color-success-container, 60%);
+      background: fade(@color-success-container, 8%);
     }
   }
 }
@@ -58,8 +57,8 @@
 .flag-dot {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
-  background: @color-border;
+  border-radius: @radius-full;
+  background: @color-outline-variant;
   flex-shrink: 0;
   margin-top: 3px;
   transition: background 0.2s;
@@ -71,7 +70,7 @@
   display: block;
   font-size: 0.84rem;
   font-weight: 600;
-  color: @color-text-primary;
+  color: @color-on-surface;
   line-height: 1.3;
   margin-bottom: 0.18rem;
 }
@@ -79,7 +78,7 @@
 .flag-hint {
   display: block;
   font-size: 0.71rem;
-  color: @color-text-muted;
+  color: @color-outline;
   line-height: 1.45;
 }
 
@@ -90,17 +89,17 @@
   font-size: 0.72rem;
   font-weight: 700;
   padding: 0.22rem 0.6rem;
-  border-radius: 20px;
+  border-radius: @radius-full;
   align-self: flex-start;
 
   &.b-yes {
-    background: rgba(28, 110, 86, 0.12);
+    background: fade(@color-success-container, 12%);
     color: @color-success;
   }
 
   &.b-no {
-    background: #f3f4f6;
-    color: @color-text-muted;
+    background: @color-surface-container-high;
+    color: @color-outline;
   }
 }
 

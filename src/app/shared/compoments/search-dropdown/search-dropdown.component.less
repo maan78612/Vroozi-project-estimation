@@ -22,10 +22,10 @@
   font-size: 0.9rem;
   font-family: inherit;
   text-align: left;
-  color: @color-text-primary;
-  background: #f8f9fa;
-  border: 1.5px solid @color-border;
-  border-radius: 10px;
+  color: @color-on-surface;
+  background: @color-surface-container-low;
+  border: 1.5px solid @color-outline-variant;
+  border-radius: @radius-lg;
   cursor: pointer;
   outline: none;
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
@@ -33,14 +33,14 @@
   &:focus-visible,
   &.is-open {
     border-color: @color-primary;
-    background: @color-bg-card;
-    box-shadow: 0 0 0 3px rgba(107, 78, 15, 0.1);
+    background: @color-surface-container-high;
+    box-shadow: 0 0 0 3px fade(@color-primary, 10%);
   }
 
   &.is-error {
     border-color: @color-error;
 
-    &:focus-visible { box-shadow: 0 0 0 3px rgba(214, 69, 58, 0.12); }
+    &:focus-visible { box-shadow: 0 0 0 3px fade(@color-error, 12%); }
   }
 
   &:disabled {
@@ -50,7 +50,7 @@
 }
 
 .sd-placeholder {
-  color: @color-text-muted;
+  color: @color-outline;
   padding-left: 0.35rem;
 }
 
@@ -70,7 +70,7 @@
 
 .sd-trigger-sublabel {
   font-size: 0.78rem;
-  color: @color-text-muted;
+  color: @color-outline;
 }
 
 .sd-chevron {
@@ -79,7 +79,7 @@
   top: calc(50% - 5.5px);
   width: 11px;
   height: 11px;
-  background-color: @color-text-secondary;
+  background-color: @color-on-surface-variant;
   mask: url('/assets/icons/chevron-right.svg') no-repeat center / contain;
   -webkit-mask: url('/assets/icons/chevron-right.svg') no-repeat center / contain;
   rotate: 90deg;
@@ -101,9 +101,9 @@
   justify-content: center;
   padding: 0;
   border: none;
-  border-radius: 50%;
+  border-radius: @radius-full;
   background: transparent;
-  color: @color-text-muted;
+  color: @color-outline;
   line-height: 1;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -114,8 +114,8 @@
   }
 
   &:hover {
-    background: rgba(0, 0, 0, 0.06);
-    color: @color-text-primary;
+    background: fade(@color-on-surface, 8%);
+    color: @color-on-surface;
   }
 }
 
@@ -128,8 +128,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: rgba(107, 78, 15, 0.12);
+  border-radius: @radius-full;
+  background: fade(@color-primary, 12%);
   color: @color-primary;
   font-size: 0.68rem;
   font-weight: 700;
@@ -144,9 +144,8 @@
   left: 0;
   right: 0;
   z-index: 40;
-  background: @color-bg-card;
-  border: 1.5px solid @color-border;
-  border-radius: 12px;
+  .glass-surface();
+  border-radius: @radius-xl;
   box-shadow:
     0 4px 8px rgba(0, 0, 0, 0.06),
     0 16px 40px rgba(0, 0, 0, 0.16);
@@ -161,7 +160,7 @@
 
 .sd-search {
   position: relative;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid @color-outline-variant;
 }
 
 .sd-search-icon {
@@ -170,7 +169,7 @@
   top: calc(50% - 7px);
   width: 14px;
   height: 14px;
-  background-color: @color-text-muted;
+  background-color: @color-outline;
   mask: url('/assets/icons/search.svg') no-repeat center / contain;
   -webkit-mask: url('/assets/icons/search.svg') no-repeat center / contain;
 }
@@ -183,10 +182,10 @@
   padding: 0.75rem 1rem 0.75rem 2.35rem;
   font-size: 0.85rem;
   font-family: inherit;
-  color: @color-text-primary;
+  color: @color-on-surface;
   background: transparent;
 
-  &::placeholder { color: @color-text-muted; }
+  &::placeholder { color: @color-outline; }
 }
 
 // ── Options list ─────────────────────────────────────────────────────────────
@@ -210,17 +209,17 @@
   gap: 0.65rem;
   padding: 0.5rem 0.6rem;
   border: none;
-  border-radius: 8px;
+  border-radius: @radius-lg;
   background: transparent;
   font-family: inherit;
   font-size: 0.875rem;
-  color: @color-text-primary;
+  color: @color-on-surface;
   text-align: left;
   cursor: pointer;
 
-  &.is-active { background: rgba(107, 78, 15, 0.07); }
+  &.is-active { background: fade(@color-primary, 7%); }
 
-  &.is-selected .sd-option-name { color: @color-primary-dark; }
+  &.is-selected .sd-option-name { color: @color-primary-container; }
 }
 
 .sd-option-text {
@@ -240,7 +239,7 @@
 
 .sd-option-sublabel {
   font-size: 0.75rem;
-  color: @color-text-muted;
+  color: @color-outline;
 }
 
 .sd-check {
@@ -255,6 +254,6 @@
 .sd-empty {
   padding: 0.9rem 1rem;
   font-size: 0.83rem;
-  color: @color-text-muted;
+  color: @color-outline;
   text-align: center;
 }

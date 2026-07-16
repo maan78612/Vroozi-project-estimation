@@ -25,6 +25,18 @@ export type EstimateInput = Pick<
   | 'hyperCare'
 >;
 
+// The Review step (and the Edit page's live sidebar) show the range plus
+// the intermediate numbers it's built from — all derived from the same
+// `effort`/`buffer` calculation, just not thrown away this time.
+export interface EstimateBreakdown {
+  range: string;
+  min: number;
+  max: number;
+  baseEffortDays: number;
+  riskBufferDays: number;
+  complexityMultiplier: number;
+}
+
 function isYes(v: YesNo): boolean {
   return v === 'Yes';
 }
@@ -35,7 +47,7 @@ function toFraction(v: number): number {
   return v > 1 ? v / 100 : v;
 }
 
-export function estimateRangeDays(input: EstimateInput): string {
+export function estimateRangeDays(input: EstimateInput): EstimateBreakdown {
   const base = 5;
   const interfaces = (input.masterDataInterfaces || 0) + (input.transactionalInterfaces || 0);
 
@@ -51,13 +63,20 @@ export function estimateRangeDays(input: EstimateInput): string {
   const erpMultiplier = isYes(input.existingErp) ? 0.7 : 1.4;
   const dataLayer = toFraction(input.dataLayer);
   const uncertainties = toFraction(input.uncertainties);
+  const complexityMultiplier = erpMultiplier * (1 + dataLayer) * (1 + uncertainties);
 
-  const effort =
-    (base + 1.5 * interfaces + yesEffort) * erpMultiplier * (1 + dataLayer) * (1 + uncertainties);
+  const effort = (base + 1.5 * interfaces + yesEffort) * complexityMultiplier;
   const buffer = (effort <= 20 ? 5 : 10) + effort * 0.25;
 
   const min = Math.ceil(effort / 5) * 5;
   const max = Math.ceil((effort + buffer) / 5) * 5;
 
-  return `${min}-${max}`;
+  return {
+    range: `${min}-${max}`,
+    min,
+    max,
+    baseEffortDays: min,
+    riskBufferDays: max - min,
+    complexityMultiplier: Math.round(complexityMultiplier * 100) / 100,
+  };
 }

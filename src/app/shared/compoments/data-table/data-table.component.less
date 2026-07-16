@@ -1,0 +1,62 @@
+@import (reference) 'styles.less';
+
+.data-table-shell {
+  .glass-surface();
+  border-radius: @radius-xl;
+  overflow: hidden;
+
+  &.is-bare {
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    border-radius: 0;
+  }
+}
+
+.data-table-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: @color-outline-variant transparent;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: @color-outline-variant;
+    border-radius: @radius-full;
+  }
+}
+
+.data-table-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: @spacing-section-gap @spacing-container-padding;
+  text-align: center;
+}
+
+.data-table-empty-icon {
+  font-size: 40px;
+  color: @color-outline;
+}
+
+.data-table-empty-title {
+  .typography-body-lg();
+  color: @color-on-surface;
+  margin: 0;
+}
+
+.data-table-empty-message {
+  .typography-body-md();
+  color: @color-on-surface-variant;
+  margin: 0;
+  max-width: 360px;
+}

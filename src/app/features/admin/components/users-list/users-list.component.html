@@ -1,19 +1,5 @@
 <div class="list-page">
-  <!-- ── Header ─────────────────────────────────────────────────────── -->
-  <header class="page-header">
-    <div class="page-header-inner">
-      <img src="/assets/images/company-logo.png" alt="Company logo" class="logo" />
-      <nav class="nav-tabs">
-        <a class="nav-tab" routerLink="/admin/projects">Projects</a>
-        <a class="nav-tab is-active" routerLink="/admin/users">Employees</a>
-      </nav>
-      <div class="header-right">
-        <span class="username">{{ username() }}</span>
-        <span class="header-divider"></span>
-        <app-button variant="link" label="Sign out" [fullWidth]="false" (clicked)="logout()" />
-      </div>
-    </div>
-  </header>
+  <!-- ── Header — brand/nav/sign-out now live in the app shell ─────────── -->
 
   <!-- ── Page body ──────────────────────────────────────────────────── -->
   <main class="page-body">
@@ -25,84 +11,127 @@
           {{ filteredEmployees().length }} employee{{ filteredEmployees().length === 1 ? '' : 's' }} can be assigned projects
         </p>
       </div>
+      <app-button label="Add member" icon="person_add" [fullWidth]="false" (clicked)="openAdd()" />
     </div>
 
-    <!-- Toolbar: search -->
-    <div class="toolbar">
-      <div class="search-wrapper">
-        <span class="search-icon" aria-hidden="true"></span>
-        <input
-          #searchRef
-          type="text"
-          (input)="searchQuery.set(searchRef.value)"
-          placeholder="Search by name or email…"
-        />
-      </div>
-    </div>
-
-    <!-- States -->
-    @if (isLoading()) {
-      <div class="list-state">
-        <app-spinner
-          label="Loading employees…"
-          sublabel="Fetching the team and their assigned projects."
-        />
-      </div>
-    } @else if (loadError()) {
+    @if (loadError()) {
       <div class="list-state empty-state">
         <h3 class="state-title">Couldn't load employees</h3>
         <p class="state-message">{{ loadError() }}</p>
         <app-button label="Try again" [fullWidth]="false" (clicked)="retryLoad()" />
       </div>
-    } @else if (filteredEmployees().length === 0) {
-      <div class="list-state empty-state">
-        <div class="state-icon-wrap search-icon-wrap">
-          <span class="state-icon icon-zoom-out" aria-hidden="true"></span>
-        </div>
-        <h3 class="state-title">No employees found</h3>
-        <p class="state-message">Nothing matched "{{ searchQuery() }}".</p>
-      </div>
     } @else {
-      <!-- Card grid -->
-      <div class="cards-grid">
-        @for (employee of filteredEmployees(); track employee.id) {
-          <div class="employee-card">
-            <div class="card-top">
-              <!-- initials pipe → "Sara Ahmed" becomes "SA" -->
-              <div class="avatar">{{ employee.name | initials }}</div>
-              <div class="identity">
-                <h3 class="employee-name">{{ employee.name }}</h3>
-                <span class="employee-username">{{ employee.email }}</span>
-              </div>
-              <span class="project-count-badge">
-                {{ projectsFor(employee).length }} project{{ projectsFor(employee).length === 1 ? '' : 's' }}
-              </span>
-            </div>
+      <div class="table-card">
+        <div class="table-controls">
+          <div class="search-field">
+            <span class="material-symbols-outlined search-icon">search</span>
+            <input
+              #searchRef
+              type="text"
+              (input)="onSearchChange(searchRef.value)"
+              placeholder="Search by name or email…"
+            />
+          </div>
+          <div class="controls-right">
+            <select
+              class="sort-select"
+              [value]="sortBy()"
+              (change)="setSortBy($any($event.target).value)"
+            >
+              <option value="name">Sort: Name (A–Z)</option>
+              <option value="projects">Sort: Most projects</option>
+            </select>
+            <span class="results-count">
+              Showing {{ rangeStart() }}–{{ rangeEnd() }} of {{ filteredEmployees().length }} employees
+            </span>
+          </div>
+        </div>
 
-            <div class="card-projects">
-              @if (projectsFor(employee).length === 0) {
-                <span class="no-projects">No projects assigned yet</span>
-              } @else {
-                @for (name of visibleProjectsFor(employee); track name) {
-                  <span class="project-chip">{{ name }}</span>
-                }
-                @if (remainingProjectsCountFor(employee) > 0) {
-                  <span class="project-chip project-chip-more">+{{ remainingProjectsCountFor(employee) }} more</span>
-                }
+        <app-data-table
+          [bare]="true"
+          [loading]="isLoading()"
+          [empty]="filteredEmployees().length === 0"
+          emptyIcon="group_off"
+          [emptyTitle]="searchQuery() ? 'No employees found' : 'No employees yet'"
+          [emptyMessage]="searchQuery() ? 'Nothing matched \'' + searchQuery() + '\'.' : ''"
+        >
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Designation</th>
+                <th>Department</th>
+                <th>Active Projects</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (employee of pagedEmployees(); track employee.id) {
+                <tr>
+                  <td>
+                    <div class="employee-identity">
+                      <div class="avatar">{{ employee.name | initials }}</div>
+                      <div>
+                        <div class="employee-name">{{ employee.name }}</div>
+                        <div class="employee-email">{{ employee.email }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    @if (employee.jobTitle) {
+                      <span class="designation-badge">{{ employee.jobTitle }}</span>
+                    } @else {
+                      <span class="cell-empty">—</span>
+                    }
+                  </td>
+                  <td>{{ employee.department || '—' }}</td>
+                  <td>
+                    <div class="project-chips">
+                      @if (projectsFor(employee).length === 0) {
+                        <span class="no-projects">No projects assigned yet</span>
+                      } @else {
+                        @for (name of visibleProjectsFor(employee); track name) {
+                          <span class="project-chip">{{ name }}</span>
+                        }
+                        @if (remainingProjectsCountFor(employee) > 0) {
+                          <span class="project-chip project-chip-more">+{{ remainingProjectsCountFor(employee) }} more</span>
+                        }
+                      }
+                    </div>
+                  </td>
+                  <td class="app-table-align-right">
+                    <app-button
+                      variant="link"
+                      label="View projects"
+                      [fullWidth]="false"
+                      (clicked)="viewProjects(employee)"
+                    />
+                  </td>
+                </tr>
               }
-            </div>
+            </tbody>
+          </table>
+        </app-data-table>
 
-            <div class="card-footer">
-              <app-button
-                variant="link"
-                label="View projects"
-                [fullWidth]="false"
-                (clicked)="viewProjects(employee)"
-              />
-            </div>
+        @if (totalPages() > 1) {
+          <div class="table-pagination">
+            <app-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="page.set($event)" />
           </div>
         }
       </div>
     }
   </main>
+
+  @if (dialogOpen()) {
+    <app-add-option-dialog
+      title="Add Employee"
+      subtitle="Creates a sign-in account with the User role."
+      [fields]="fields"
+      submitLabel="Add member"
+      [saving]="saving()"
+      [errorMessage]="saveError()"
+      (save)="saveDialog($event)"
+      (cancelled)="closeDialog()"
+    />
+  }
 </div>

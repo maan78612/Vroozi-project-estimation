@@ -25,6 +25,7 @@ function fromDoc(doc: ApiProject): ProjectInterface {
     projectName: doc.projectName,
     erp: doc.erp,
     supplier: doc.supplier ?? '',
+    clientCompany: doc.clientCompany,
     user: owner ? owner._id : ((doc.owner as string) ?? ''),
     userName: owner?.name,
     masterDataInterfaces: doc.masterDataInterfaces,
@@ -61,6 +62,7 @@ function toBody(entry: Partial<ProjectInterface>): Record<string, unknown> {
     [
       'projectName',
       'erp',
+      'clientCompany',
       'masterDataInterfaces',
       'transactionalInterfaces',
       'customLogic',
@@ -95,9 +97,7 @@ export class ProjectsApiService {
       .get<ApiResponse<{ projects: ApiProject[] }>>(BASE, { params: { limit: 100 } })
       .pipe(
         map((res) => res.data.projects.map(fromDoc)),
-        catchError((err: unknown) =>
-          throwError(() => toApiError(err, 'Could not load projects.')),
-        ),
+        catchError((err: unknown) => throwError(() => toApiError(err, 'Could not load projects.'))),
       );
   }
 
@@ -135,10 +135,12 @@ export class ProjectsApiService {
 
   /** Admin only. */
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${BASE}/${id}`).pipe(
-      catchError((err: unknown) =>
-        throwError(() => toApiError(err, 'Could not delete the project.')),
-      ),
-    );
+    return this.http
+      .delete<void>(`${BASE}/${id}`)
+      .pipe(
+        catchError((err: unknown) =>
+          throwError(() => toApiError(err, 'Could not delete the project.')),
+        ),
+      );
   }
 }

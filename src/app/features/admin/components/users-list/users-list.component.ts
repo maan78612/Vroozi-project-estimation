@@ -1,12 +1,15 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../../core/services/auth/auth-service';
+import { Router } from '@angular/router';
 import { UsersService } from '../../../../core/services/users/users-service';
 import { ProjectsStoreService } from '../../../../core/services/projects/projects-store.service';
 import { UserInterface } from '../../../../core/intefaces/user-interface';
 import { ButtonComponent } from '../../../../shared/compoments/button/button';
+import { DataTableComponent } from '../../../../shared/compoments/data-table/data-table.component';
+import { PaginationComponent } from '../../../../shared/compoments/pagination/pagination.component';
+import { AddOptionDialogComponent } from '../../../../shared/compoments/add-option-dialog/add-option-dialog.component';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
-import { SpinnerComponent } from '../../../../shared/compoments/spinner/spinner.component';
+import { FormFieldInterface } from '../../../../core/intefaces/form/form-field.interface';
+import { FieldTypeEnum } from '../../../../core/enums/field-type.enum';
 
 /*
  * ──────────────────────────────────────────────────────────────────
@@ -15,27 +18,87 @@ import { SpinnerComponent } from '../../../../shared/compoments/spinner/spinner.
  *  Shows every employee a project can be assigned to, alongside how
  *  many (and which) projects they currently own — so an admin can
  *  see workload at a glance and jump into that employee's projects.
+ *
+ *  No "Role" column: `assignableUsers` is already server-filtered to
+ *  role=user (see users-service.ts), so every row would show the
+ *  identical value — not a real column, just noise.
  * ──────────────────────────────────────────────────────────────────
  */
 
-// Cards show at most this many project chips before collapsing the rest into "+N more".
+// Rows show at most this many project chips before collapsing the rest into "+N more".
 const MAX_VISIBLE_PROJECTS = 4;
+const PAGE_SIZE = 10;
+
+type EmployeeSortOption = 'name' | 'projects';
+
+const EMPLOYEE_FIELDS: FormFieldInterface[] = [
+  {
+    key: 'name',
+    label: 'Full name',
+    type: FieldTypeEnum.Text,
+    required: true,
+    placeholder: 'e.g. Priya Nandakumar',
+    icon: 'person',
+    autofocus: true,
+  },
+  {
+    key: 'email',
+    label: 'Email',
+    type: FieldTypeEnum.Text,
+    required: true,
+    inputType: 'email',
+    placeholder: 'priya@company.com',
+    icon: 'mail',
+  },
+  {
+    key: 'password',
+    label: 'Password',
+    type: FieldTypeEnum.Text,
+    required: true,
+    inputType: 'password',
+    placeholder: 'Minimum 8 characters',
+    icon: 'lock',
+  },
+  {
+    key: 'jobTitle',
+    label: 'Job title',
+    type: FieldTypeEnum.Text,
+    required: false,
+    placeholder: 'e.g. Solutions Architect',
+    icon: 'badge',
+  },
+  {
+    key: 'department',
+    label: 'Department',
+    type: FieldTypeEnum.Text,
+    required: false,
+    placeholder: 'e.g. Integrations',
+    icon: 'apartment',
+  },
+];
 
 @Component({
   selector: 'app-users-list',
-  imports: [ButtonComponent, RouterLink, InitialsPipe, SpinnerComponent],
+  imports: [
+    ButtonComponent,
+    DataTableComponent,
+    PaginationComponent,
+    AddOptionDialogComponent,
+    InitialsPipe,
+  ],
   templateUrl: './users-list.component.html',
   styleUrl: './users-list.component.less',
 })
 export class UsersListComponent {
-  private authService = inject(AuthService);
   private usersService = inject(UsersService);
   private projectsStore = inject(ProjectsStoreService);
   private router = inject(Router);
 
-  searchQuery = signal('');
+  readonly fields = EMPLOYEE_FIELDS;
 
-  readonly username = computed(() => this.authService.getCurrentUser()?.name ?? '');
+  searchQuery = signal('');
+  sortBy = signal<EmployeeSortOption>('name');
+  page = signal(1);
 
   private readonly employees = this.usersService.assignableUsers;
 
@@ -58,14 +121,47 @@ export class UsersListComponent {
 
   readonly filteredEmployees = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
-    if (!query) return this.employees();
+    let result = this.employees();
+    if (query) {
+      result = result.filter(
+        (u) => u.name.toLowerCase().includes(query) || u.email.toLowerCase().includes(query),
+      );
+    }
 
-    return this.employees().filter(
-      (u) =>
-        u.name.toLowerCase().includes(query) ||
-        u.email.toLowerCase().includes(query),
-    );
+    const sorted = [...result];
+    if (this.sortBy() === 'projects') {
+      sorted.sort((a, b) => this.projectsFor(b).length - this.projectsFor(a).length);
+    } else {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return sorted;
   });
+
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filteredEmployees().length / PAGE_SIZE)),
+  );
+
+  readonly rangeStart = computed(() =>
+    this.filteredEmployees().length === 0 ? 0 : (this.page() - 1) * PAGE_SIZE + 1,
+  );
+  readonly rangeEnd = computed(() =>
+    Math.min(this.page() * PAGE_SIZE, this.filteredEmployees().length),
+  );
+
+  readonly pagedEmployees = computed(() => {
+    const start = (this.page() - 1) * PAGE_SIZE;
+    return this.filteredEmployees().slice(start, start + PAGE_SIZE);
+  });
+
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+    this.page.set(1);
+  }
+
+  setSortBy(value: EmployeeSortOption): void {
+    this.sortBy.set(value);
+    this.page.set(1);
+  }
 
   // Distinct project names — an employee may own several supplier entries of one project.
   projectsFor(user: UserInterface): string[] {
@@ -92,8 +188,41 @@ export class UsersListComponent {
     });
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigateByUrl('/login');
+  // ── Add member ─────────────────────────────────────────────────────
+  dialogOpen = signal(false);
+  saving = signal(false);
+  saveError = signal('');
+
+  openAdd(): void {
+    this.saveError.set('');
+    this.dialogOpen.set(true);
+  }
+
+  closeDialog(): void {
+    if (this.saving()) return;
+    this.dialogOpen.set(false);
+  }
+
+  saveDialog(value: Record<string, string | number>): void {
+    const name = (value['name'] as string)?.trim();
+    const email = (value['email'] as string)?.trim();
+    const password = (value['password'] as string) ?? '';
+    const jobTitle = (value['jobTitle'] as string)?.trim() || undefined;
+    const department = (value['department'] as string)?.trim() || undefined;
+    if (!name || !email || !password) return;
+
+    this.saving.set(true);
+    this.saveError.set('');
+
+    this.usersService.create({ name, email, password, jobTitle, department }).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.dialogOpen.set(false);
+      },
+      error: (err: unknown) => {
+        this.saving.set(false);
+        this.saveError.set(err instanceof Error ? err.message : 'Could not add the employee.');
+      },
+    });
   }
 }

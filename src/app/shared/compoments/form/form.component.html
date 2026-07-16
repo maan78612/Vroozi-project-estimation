@@ -1,14 +1,39 @@
 <!--  ──────────────────────────────────────────────────────────────────
-  * [class.grid-layout] → dynamically adds "grid-layout" class 
-  * to form element; in LESS, use the element name 
+  * [class.grid-layout] → dynamically adds "grid-layout" class
+  * to form element; in LESS, use the element name
   *(e.g. form.grid-layout) to target it
  ─────────────────────────────────────────────────────────────────────-->
 
 <form [formGroup]="formGroup" (ngSubmit)="onSubmit()"  [class.grid-layout]="gridLayout()">
+  @if (submitError()) {
+    <div class="banner banner-error">
+      <span class="material-symbols-outlined banner-icon">error</span>
+      <p class="banner-message">{{ submitError() }}</p>
+    </div>
+  }
+  @if (submitSuccess()) {
+    <div class="banner banner-success">
+      <span class="material-symbols-outlined banner-icon">check_circle</span>
+      <p class="banner-message">{{ successMessage() }}</p>
+    </div>
+  }
+
   <div class="form-fields">
     @for (field of fields(); track field.key) {
       <div class="field">
-        <label [for]="field.key">{{ field.label }}</label>
+        <div class="field-label-row">
+          <label [for]="field.key">
+            {{ field.label }}
+            @if (field.required) {
+              <span class="required-mark">*</span>
+            }
+          </label>
+          @if (field.trailingLink) {
+            <a class="field-trailing-link" [routerLink]="field.trailingLink.route">{{
+              field.trailingLink.label
+            }}</a>
+          }
+        </div>
 
         @if (field.type === FieldTypeEnum.Dropdown) {
           <select
@@ -22,24 +47,41 @@
             }
           </select>
         } @else {
-          <!-- ───────────────────────────────────────────────────────────
-            * [attr.min] & [attr.max] → only applied when 
-            * Percentage; enforces 0–100 range
-           ────────────────────────────────────────────────────────────-->
-          <input
-            [id]="field.key"
-            [type]="
-              field.inputType ??
-              (field.type === FieldTypeEnum.Number || field.type === FieldTypeEnum.Percentage
-                ? 'number'
-                : 'text')
-            "
-            [attr.min]="field.type === FieldTypeEnum.Percentage ? 0 : null"
-            [attr.max]="field.type === FieldTypeEnum.Percentage ? 100 : null"
-            [placeholder]="field.placeholder ?? ''"
-            [formControlName]="field.key"
-            [class.invalid]="isInvalid(field.key)"
-          />
+          <div
+            class="field-input-wrap"
+            [class.has-icon]="!!field.icon"
+            [class.has-trailing]="field.inputType === 'password'"
+          >
+            @if (field.icon) {
+              <span class="material-symbols-outlined field-icon">{{ field.icon }}</span>
+            }
+            <!-- ───────────────────────────────────────────────────────────
+              * [attr.min] & [attr.max] → only applied when
+              * Percentage; enforces 0–100 range
+             ────────────────────────────────────────────────────────────-->
+            <input
+              [id]="field.key"
+              [type]="effectiveInputType(field)"
+              [attr.min]="field.type === FieldTypeEnum.Percentage ? 0 : null"
+              [attr.max]="field.type === FieldTypeEnum.Percentage ? 100 : null"
+              [placeholder]="field.placeholder ?? ''"
+              [formControlName]="field.key"
+              [class.invalid]="isInvalid(field.key)"
+              [appAutofocus]="!!field.autofocus"
+            />
+            @if (field.inputType === 'password') {
+              <button
+                type="button"
+                class="field-trailing-btn"
+                [attr.aria-label]="isRevealed(field.key) ? 'Hide password' : 'Show password'"
+                (click)="togglePasswordVisibility(field.key)"
+              >
+                <span class="material-symbols-outlined">{{
+                  isRevealed(field.key) ? 'visibility_off' : 'visibility'
+                }}</span>
+              </button>
+            }
+          </div>
         }
 
         @if (isInvalid(field.key)) {
@@ -57,14 +99,7 @@
       [loading]="isSubmitting()"
       [disabled]="isSubmitting()"
       [fullWidth]="!gridLayout()"
+      trailingIcon="arrow_forward"
     />
-
-    @if (submitSuccess()) {
-      <p class="success-text">{{ successMessage() }}</p>
-    }
-
-    @if (submitError()) {
-      <p class="error-banner">{{ submitError() }}</p>
-    }
   </div>
 </form>

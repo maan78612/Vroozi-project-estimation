@@ -1,5 +1,12 @@
-<div class="spinner-wrap" [class.is-sm]="size() === 'sm'" role="status" [attr.aria-label]="label() || 'Loading'">
+<div
+  class="spinner-wrap"
+  [class.is-sm]="size() === 'sm'"
+  [class.is-light]="variant() === 'light'"
+  role="status"
+  [attr.aria-label]="label() || 'Loading'"
+>
   <div class="spinner-orbit">
+    <span class="spinner-glow" aria-hidden="true"></span>
     <span class="spinner-ring spinner-ring-outer" aria-hidden="true"></span>
     <span class="spinner-ring spinner-ring-inner" aria-hidden="true"></span>
     <span class="spinner-core" aria-hidden="true"></span>

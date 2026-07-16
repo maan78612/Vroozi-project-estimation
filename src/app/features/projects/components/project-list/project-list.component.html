@@ -1,40 +1,26 @@
 <div class="list-page">
-  <!-- ── Header ─────────────────────────────────────────────────────── -->
-  <header class="page-header">
-    <div class="page-header-inner">
-      <img src="/assets/images/company-logo.png" alt="Company logo" class="logo" />
-      @if (isAdmin()) {
-        <nav class="nav-tabs">
-          <a class="nav-tab is-active" routerLink="/admin/projects">Projects</a>
-          <a class="nav-tab" routerLink="/admin/users">Employees</a>
-        </nav>
-      }
-      <div class="header-right">
-        <span class="username">{{ username() }}</span>
-        <span class="header-divider"></span>
-        <app-button variant="link" label="Sign out" [fullWidth]="false" (clicked)="logout()" />
-      </div>
-    </div>
-  </header>
+  <!-- ── Header — brand/nav/sign-out now live in the app shell ─────────── -->
 
   <!-- ── Page body ──────────────────────────────────────────────────── -->
   <main class="page-body">
     <!-- Title row -->
     <div class="page-title-row">
       <div>
-        <h1>{{ isAdmin() ? 'All Projects' : 'My Projects' }}</h1>
+        <h1>{{ isAdmin() ? 'All Projects' : isClient() ? 'Company Projects' : 'My Projects' }}</h1>
         <p class="page-subtitle">
           @if (isAdmin()) {
             {{ filteredProjects().length }} project{{ filteredProjects().length === 1 ? '' : 's' }}
           } @else if (hasActiveFilters()) {
             {{ filteredProjects().length }} matching project{{ filteredProjects().length === 1 ? '' : 's' }}
+          } @else if (isClient()) {
+            {{ filteredProjects().length }} project{{ filteredProjects().length === 1 ? '' : 's' }} for your company
           } @else {
             {{ filteredProjects().length }} project{{ filteredProjects().length === 1 ? '' : 's' }} assigned to you
           }
         </p>
       </div>
       @if (isAdmin()) {
-        <app-button label="Add project" [fullWidth]="false" (clicked)="addProject()" />
+        <app-button label="Add project" icon="add" [fullWidth]="false" (clicked)="addProject()" />
       }
     </div>
 
@@ -60,6 +46,7 @@
     @if (projectsLoading()) {
       <div class="list-state">
         <app-spinner
+          variant="light"
           label="Loading projects…"
           [sublabel]="isAdmin() ? 'Fetching every project from the server.' : 'Fetching your assigned projects.'"
         />
@@ -92,40 +79,73 @@
           <h3 class="state-title">No projects yet</h3>
           <p class="state-message">Get started by adding your first project to the spreadsheet.</p>
           <div class="state-actions">
-            <app-button label="Add your first project" [fullWidth]="false" (clicked)="addProject()" />
+            <app-button label="Add your first project" icon="add" [fullWidth]="false" (clicked)="addProject()" />
           </div>
+        } @else if (isClient()) {
+          <h3 class="state-title">No projects yet</h3>
+          <p class="state-message">When your account manager sets up a project for your company, it'll show up here.</p>
         } @else {
           <h3 class="state-title">No projects assigned yet</h3>
           <p class="state-message">When an admin assigns you a project, it'll show up here.</p>
         }
       </div>
     } @else {
-      <!-- Card grid — one card per project -->
-      <div class="cards-grid">
-        @for (group of filteredGroups(); track group.projectName) {
-          <app-project-card
-            [entries]="group.entries"
-            [assignedToName]="isAdmin() ? assignedToNameForGroup(group) : null"
-            [showDelete]="isAdmin()"
-            (edit)="editGroup(group)"
-            (delete)="requestDeleteGroup(group)"
-          />
-        }
-      </div>
+      <!-- Project table — one row per project, suppliers rolled up -->
+      <app-data-table>
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Size</th>
+              <th>ERP System</th>
+              <th>Effort</th>
+              @if (isAdmin()) {
+                <th>Member</th>
+              }
+              <th>Client</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (group of filteredGroups(); track group.projectName) {
+              <tr class="project-row" (click)="viewGroup(group)">
+                <td>
+                  <div class="project-name">{{ group.projectName }}</div>
+                  @if (group.entries.length > 1) {
+                    <div class="project-subtitle">{{ group.entries.length }} suppliers</div>
+                  }
+                </td>
+                <td>
+                  @if (sizeForGroup(group); as size) {
+                    <span class="size-badge size-{{ size.toLowerCase() }}">{{ size }}</span>
+                  }
+                </td>
+                <td>{{ erpForGroup(group) }}</td>
+                <td>{{ rangeForGroup(group) }}</td>
+                @if (isAdmin()) {
+                  <td>{{ assignedToNameForGroup(group) }}</td>
+                }
+                <td>{{ clientForGroup(group) }}</td>
+                <td class="app-table-align-right">
+                  <div class="row-actions" (click)="$event.stopPropagation()">
+                    <button type="button" class="row-action" aria-label="View project" (click)="viewGroup(group)">
+                      <span class="material-symbols-outlined">visibility</span>
+                    </button>
+                    @if (isAdmin()) {
+                      <button type="button" class="row-action row-action-delete" aria-label="Delete project" (click)="requestDeleteGroup(group)">
+                        <span class="material-symbols-outlined">delete</span>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </app-data-table>
     }
 
-    <!-- Supplier picker dialog (projects with several suppliers) -->
-    @if (pickerGroup(); as group) {
-      <app-supplier-picker
-        [group]="group"
-        [showDelete]="isAdmin()"
-        (pick)="editEntry($event)"
-        (delete)="requestDeleteEntry($event)"
-        (closed)="pickerGroup.set(null)"
-      />
-    }
-
-    <!-- Delete confirmations -->
+    <!-- Delete confirmation -->
     @if (projectDeleteTarget(); as group) {
       <app-confirm-dialog
         title="Delete project?"
@@ -134,17 +154,6 @@
         [confirming]="deleting()"
         [errorMessage]="deleteError()"
         (confirmed)="confirmDeleteProject()"
-        (cancelled)="cancelDelete()"
-      />
-    }
-    @if (entryDeleteTarget(); as entry) {
-      <app-confirm-dialog
-        title="Delete supplier?"
-        [message]="entryDeleteMessage(entry)"
-        confirmLabel="Delete supplier"
-        [confirming]="deleting()"
-        [errorMessage]="deleteError()"
-        (confirmed)="confirmDeleteEntry()"
         (cancelled)="cancelDelete()"
       />
     }

@@ -1,0 +1,19 @@
+<div class="data-table-shell" [class.is-bare]="bare()">
+  @if (loading()) {
+    <div class="data-table-state">
+      <app-spinner size="sm" variant="light" label="Loading…" />
+    </div>
+  } @else if (empty()) {
+    <div class="data-table-state">
+      <span class="material-symbols-outlined data-table-empty-icon">{{ emptyIcon() }}</span>
+      <p class="data-table-empty-title">{{ emptyTitle() }}</p>
+      @if (emptyMessage()) {
+        <p class="data-table-empty-message">{{ emptyMessage() }}</p>
+      }
+    </div>
+  } @else {
+    <div class="data-table-scroll">
+      <ng-content></ng-content>
+    </div>
+  }
+</div>

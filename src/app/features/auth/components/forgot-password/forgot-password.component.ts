@@ -29,6 +29,7 @@ export class ForgotPasswordComponent {
       required: true,
       inputType: 'email',
       placeholder: 'Enter email',
+      icon: 'mail',
     },
   ];
 

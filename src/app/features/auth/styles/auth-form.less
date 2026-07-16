@@ -1,7 +1,5 @@
 @import (reference) 'styles.less';
 
-@breakpoint-mobile: 768px;
-
 // ── Page wrapper ──────────────────────────────────────────────────────────────
 .auth-page {
   display: flex;
@@ -22,17 +20,16 @@
   max-width: 860px;
   // Locks both login and forgot-password to the same height — prevents jerk on route change
   min-height: 460px;
-  border-radius: 20px;
+  .glass-surface();
+  border-radius: @radius-xl;
   overflow: hidden;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 24px 64px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
 
-  @media (max-width: @breakpoint-mobile) {
+  @media (max-width: @breakpoint-tablet) {
     flex-direction: column;
     max-width: 420px;
     min-height: unset;
-    border-radius: 16px;
+    border-radius: @radius-xl;
   }
 }
 
@@ -47,10 +44,10 @@
   padding: 3.5rem 2.5rem;
   position: relative;
   // Glass morphism: lets the bg gradient show through but reads as a distinct pane
-  background: rgba(255, 255, 255, 0.04);
+  background: fade(@color-on-surface, 4%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid fade(@color-primary, 10%);
 
   // Soft inner ambient glow
   &::before {
@@ -59,7 +56,7 @@
     inset: 0;
     background: radial-gradient(
       ellipse 120% 80% at 60% 110%,
-      rgba(107, 78, 15, 0.18) 0%,
+      fade(@color-primary, 18%) 0%,
       transparent 70%
     );
     pointer-events: none;
@@ -76,7 +73,7 @@
 
   .brand-tagline {
     font-size: 0.82rem;
-    color: rgba(255, 255, 255, 0.38);
+    color: @color-outline;
     text-align: center;
     letter-spacing: 0.06em;
     line-height: 1.7;
@@ -95,24 +92,24 @@
       display: block;
       width: 6px;
       height: 6px;
-      border-radius: 50%;
-      background: rgba(107, 78, 15, 0.4);
+      border-radius: @radius-full;
+      background: fade(@color-primary, 40%);
 
       &:first-child {
         background: @color-primary;
-        box-shadow: 0 0 8px rgba(107, 78, 15, 0.7);
+        box-shadow: 0 0 8px fade(@color-primary, 70%);
       }
     }
   }
 
-  @media (max-width: @breakpoint-mobile) {
+  @media (max-width: @breakpoint-tablet) {
     flex: none;
     padding: 1.75rem 2rem;
     flex-direction: row;
     gap: 1rem;
     justify-content: center;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid fade(@color-primary, 10%);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 
@@ -127,26 +124,26 @@
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  background: @color-bg-card;
+  background: @color-surface-container-high;
   min-width: 0;
   box-sizing: border-box;
 
   .auth-header {
     padding: 2.25rem 2.5rem 1.25rem;
-    border-bottom: 1px solid @color-border;
+    border-bottom: 1px solid @color-outline-variant;
 
     h2 {
       margin: 0 0 0.3rem;
       font-size: 1.45rem;
       font-weight: 700;
-      color: @color-text-primary;
+      color: @color-on-surface;
       letter-spacing: -0.01em;
     }
 
     .auth-subtitle {
       margin: 0;
       font-size: 0.85rem;
-      color: @color-text-secondary;
+      color: @color-on-surface-variant;
       line-height: 1.55;
     }
   }
@@ -155,20 +152,14 @@
     padding: 0.75rem 2.5rem 1.75rem;
     text-align: center;
 
-    .auth-link {
+    .auth-footer-text {
+      margin: 0;
       font-size: 0.85rem;
-      color: @color-text-secondary;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      transition: color 0.2s;
-
-      &:hover {
-        color: @color-text-secondary-focus;
-      }
+      color: @color-on-surface-variant;
     }
   }
 
-  @media (max-width: @breakpoint-mobile) {
+  @media (max-width: @breakpoint-tablet) {
     .auth-header {
       padding: 1.5rem 1.5rem 1rem;
     }

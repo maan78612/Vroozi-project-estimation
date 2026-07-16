@@ -1,0 +1,245 @@
+@import (reference) 'styles.less';
+
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: @color-surface;
+}
+
+.shell-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  .glass-surface();
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.shell-header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  height: 64px;
+  padding: 0 @spacing-container-padding;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: @spacing-gutter;
+}
+
+.shell-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.shell-brand {
+  .typography-headline-sm();
+  color: @color-primary;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.shell-nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  height: 100%;
+}
+
+.shell-nav-link {
+  .typography-body-md();
+  color: @color-on-surface-variant;
+  text-decoration: none;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 0.1rem;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+}
+
+.shell-nav-link:hover {
+  color: @color-on-surface;
+}
+
+.shell-nav-link-active {
+  color: @color-primary;
+  font-weight: 700;
+  border-bottom-color: @color-primary;
+}
+
+.shell-actions {
+  display: flex;
+  align-items: center;
+  gap: @spacing-gutter;
+  flex-shrink: 0;
+}
+
+.shell-user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.shell-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: @radius-full;
+  background: fade(@color-primary, 20%);
+  color: @color-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .typography-label-sm();
+  font-weight: 700;
+  border: 1px solid fade(@color-primary, 30%);
+}
+
+.shell-user-name {
+  .typography-body-md();
+  color: @color-on-surface;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-signout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: @color-on-surface-variant;
+  .typography-label-md();
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 0.4rem 0.5rem;
+  border-radius: @radius-md;
+  transition: color 0.15s ease;
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  &:hover {
+    color: @color-error;
+  }
+}
+
+.shell-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: @color-on-surface;
+  padding: 0.4rem;
+  border-radius: @radius-md;
+
+  &:hover {
+    background: @color-surface-container-high;
+  }
+}
+
+.shell-mobile-nav {
+  display: none;
+  flex-direction: column;
+  padding: @spacing-gutter @spacing-container-padding @spacing-container-padding;
+  border-top: 1px solid @color-outline-variant;
+  gap: 0.25rem;
+}
+
+.shell-mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: @radius-lg;
+  color: @color-on-surface-variant;
+  text-decoration: none;
+  .typography-body-md();
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
+
+.shell-mobile-nav-link:hover {
+  background: @color-surface-container-high;
+  color: @color-on-surface;
+}
+
+.shell-mobile-nav-link-active {
+  background: fade(@color-primary, 12%);
+  color: @color-primary;
+  font-weight: 700;
+}
+
+.shell-mobile-signout {
+  color: @color-error;
+  margin-top: 0.25rem;
+  border-top: 1px solid @color-outline-variant;
+  padding-top: 1rem;
+}
+
+.shell-content {
+  flex: 1;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: @spacing-section-gap @spacing-container-padding;
+}
+
+.respond-laptop({
+  .shell-nav {
+    gap: 20px;
+  }
+
+  .shell-brand-row {
+    gap: 24px;
+  }
+});
+
+.respond-tablet({
+  .shell-nav,
+  .shell-user-name,
+  .shell-signout {
+    display: none;
+  }
+
+  .shell-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .shell-mobile-nav {
+    display: flex;
+  }
+
+  .shell-content {
+    padding: @spacing-gutter;
+  }
+});
+
+.respond-mobile({
+  .shell-header-inner {
+    padding: 0 @spacing-gutter;
+  }
+
+  .shell-user {
+    display: none;
+  }
+});

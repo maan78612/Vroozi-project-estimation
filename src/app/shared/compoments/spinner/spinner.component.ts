@@ -23,4 +23,6 @@ export class SpinnerComponent {
   sublabel = input('');
   // 'lg' fills a page section; 'sm' fits inside dialogs / tight blocks.
   size = input<'sm' | 'lg'>('lg');
+  // 'dark' text suits white card surfaces; 'light' suits the dark gradient page background.
+  variant = input<'dark' | 'light'>('dark');
 }

@@ -16,50 +16,29 @@
         }
       </div>
       <button type="button" class="add-option-close" aria-label="Close" (click)="onCancel()">
-        ×
+        <span class="material-symbols-outlined">close</span>
       </button>
     </div>
 
     <!-- Body -->
     <div class="add-option-body">
-      <label class="field-label" for="add-option-name">
-        {{ label() }} <span class="required-mark" aria-hidden="true">*</span>
-      </label>
-      <input
-        #nameRef
-        id="add-option-name"
-        type="text"
-        class="field-input"
-        [class.is-error]="!!errorMessage()"
-        appAutofocus
-        autocomplete="off"
-        [placeholder]="placeholder()"
-        [value]="name()"
-        [disabled]="saving()"
-        (input)="name.set(nameRef.value)"
-        (keydown.enter)="onSubmit()"
+      <app-form
+        [fields]="fields()"
+        [initialValue]="initialValue()"
+        [submitLabel]="submitLabel()"
+        loadingLabel="Saving…"
+        [isSubmitting]="saving()"
+        [submitError]="errorMessage()"
+        (formSubmit)="save.emit($event)"
       />
 
-      @if (errorMessage()) {
-        <p class="field-error" role="alert">{{ errorMessage() }}</p>
-      }
-
-      <div class="add-option-actions">
+      <div class="add-option-cancel-row">
         <app-button
           variant="link"
           label="Cancel"
           [fullWidth]="false"
           [disabled]="saving()"
           (clicked)="onCancel()"
-        />
-        <app-button
-          variant="primary"
-          label="Save"
-          loadingLabel="Saving…"
-          [loading]="saving()"
-          [disabled]="!name().trim()"
-          [fullWidth]="false"
-          (clicked)="onSubmit()"
         />
       </div>
     </div>

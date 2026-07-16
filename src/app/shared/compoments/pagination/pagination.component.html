@@ -1,0 +1,35 @@
+@if (totalPages() > 1) {
+  <nav class="pagination" aria-label="Pagination">
+    <button
+      type="button"
+      class="pagination-nav"
+      [disabled]="!canGoPrevious()"
+      (click)="previous()"
+    >
+      <span class="material-symbols-outlined">chevron_left</span>
+      <span class="pagination-nav-label">Previous</span>
+    </button>
+
+    <div class="pagination-pages">
+      @for (p of visiblePages(); track $index) {
+        @if (p === -1) {
+          <span class="pagination-ellipsis">…</span>
+        } @else {
+          <button
+            type="button"
+            class="pagination-page"
+            [class.pagination-page-active]="p === page()"
+            (click)="goTo(p)"
+          >
+            {{ p }}
+          </button>
+        }
+      }
+    </div>
+
+    <button type="button" class="pagination-nav" [disabled]="!canGoNext()" (click)="next()">
+      <span class="pagination-nav-label">Next</span>
+      <span class="material-symbols-outlined">chevron_right</span>
+    </button>
+  </nav>
+}

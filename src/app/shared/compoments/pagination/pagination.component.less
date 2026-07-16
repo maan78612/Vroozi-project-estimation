@@ -1,0 +1,88 @@
+@import (reference) 'styles.less';
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: @spacing-gutter;
+  flex-wrap: wrap;
+}
+
+.pagination-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  border-radius: @radius-md;
+  .typography-label-md();
+  text-transform: none;
+  letter-spacing: normal;
+  color: @color-on-surface-variant;
+  transition: color 0.15s ease;
+
+  .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  &:hover:not(:disabled) {
+    color: @color-primary;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pagination-page {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.4rem;
+  border-radius: @radius-md;
+  border: none;
+  background: transparent;
+  color: @color-on-surface-variant;
+  cursor: pointer;
+  .typography-label-sm();
+  text-transform: none;
+  letter-spacing: normal;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background: @color-surface-container-high;
+    color: @color-on-surface;
+  }
+}
+
+.pagination-page-active {
+  background: @color-primary;
+  color: @color-on-primary;
+  font-weight: 700;
+
+  &:hover {
+    background: @color-primary;
+    color: @color-on-primary;
+  }
+}
+
+.pagination-ellipsis {
+  color: @color-outline;
+  padding: 0 0.25rem;
+}
+
+.respond-mobile({
+  .pagination-nav-label {
+    display: none;
+  }
+});

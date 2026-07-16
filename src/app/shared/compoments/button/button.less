@@ -1,7 +1,7 @@
 @import (reference) 'styles.less';
 
-@btn-active-scale: 0.99;
-@btn-disabled-opacity: 0.65;
+@btn-active-scale: 0.98;
+@btn-disabled-opacity: 0.55;
 
 .btn {
   border: none;
@@ -16,18 +16,21 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.8rem 1.5rem;
-  background: @color-success;
-  color: @color-white;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  background: @color-primary;
+  color: @color-on-primary;
+  border-radius: @radius-lg;
+  .typography-label-md();
+  text-transform: none;
+  letter-spacing: normal;
   transition:
     background 0.15s ease,
     transform 0.1s ease,
-    opacity 0.15s ease;
+    opacity 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 2px 12px fade(@color-primary, 15%);
 
   &:hover:not(:disabled):not(.btn-disabled) {
-    background: @color-success-hover;
+    background: @color-secondary;
   }
 
   &:active:not(:disabled):not(.btn-disabled) {
@@ -39,11 +42,48 @@
     opacity: @btn-disabled-opacity;
     cursor: not-allowed;
     pointer-events: none;
-    background: fade(@color-success, 75%);
+    box-shadow: none;
   }
 
   &.btn-loading {
-    background: @color-success-hover;
+    background: @color-secondary;
+  }
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.8rem 1.5rem;
+  background: transparent;
+  color: @color-on-surface;
+  border: 1px solid @color-outline-variant;
+  border-radius: @radius-lg;
+  .typography-label-md();
+  text-transform: none;
+  letter-spacing: normal;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease,
+    opacity 0.15s ease;
+
+  &:hover:not(:disabled):not(.btn-disabled) {
+    border-color: @color-primary;
+    color: @color-primary;
+  }
+
+  &:active:not(:disabled):not(.btn-disabled) {
+    transform: scale(@btn-active-scale);
+  }
+
+  &.btn-disabled,
+  &:disabled {
+    opacity: @btn-disabled-opacity;
+    cursor: not-allowed;
+    pointer-events: none;
   }
 }
 
@@ -53,8 +93,11 @@
   gap: 0.35rem;
   background: none;
   padding: 0;
-  font-size: 0.85rem;
-  color: @color-text-secondary;
+  .typography-label-md();
+  text-transform: none;
+  letter-spacing: normal;
+  color: @color-on-surface-variant;
+  transition: color 0.15s ease;
 
   /*
    * ──────────────────────────────────────────────────────────────────
@@ -65,7 +108,7 @@
    */
 
   &:hover:not(:disabled):not(.btn-disabled) {
-    color: @color-text-secondary-focus;
+    color: @color-primary;
   }
 
   &.btn-disabled,
@@ -77,19 +120,30 @@
 }
 
 .btn-primary.btn-danger {
-  background: @color-error;
+  background: @color-error-container;
+  color: @color-on-error-container;
 
   &:hover:not(:disabled):not(.btn-disabled) {
-    background: darken(@color-error, 8%);
+    background: darken(@color-error-container, 6%);
   }
 
   &.btn-disabled,
   &:disabled {
-    background: fade(@color-error, 75%);
+    background: fade(@color-error-container, 75%);
   }
 
   &.btn-loading {
-    background: darken(@color-error, 8%);
+    background: darken(@color-error-container, 6%);
+  }
+}
+
+.btn-secondary.btn-danger {
+  border-color: fade(@color-error, 40%);
+  color: @color-error;
+
+  &:hover:not(:disabled):not(.btn-disabled) {
+    border-color: @color-error;
+    color: @color-error;
   }
 }
 
@@ -97,22 +151,33 @@
   color: @color-error;
 
   &:hover:not(:disabled):not(.btn-disabled) {
-    color: darken(@color-error, 12%);
+    color: lighten(@color-error, 8%);
   }
 }
 
 .btn-spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid fade(@color-white, 35%);
-  border-top-color: @color-white;
+  border: 2px solid fade(@color-on-primary, 35%);
+  border-top-color: @color-on-primary;
   border-radius: 50%;
   animation: btn-spin 0.7s linear infinite;
   flex-shrink: 0;
 }
 
+.btn-secondary .btn-spinner,
+.btn-link .btn-spinner {
+  border-color: fade(@color-on-surface, 35%);
+  border-top-color: @color-on-surface;
+}
+
 .btn-label {
   line-height: 1.2;
+}
+
+.btn-icon {
+  font-size: 18px;
+  flex-shrink: 0;
 }
 
 /*

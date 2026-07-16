@@ -10,6 +10,8 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { projectUserGuard } from './core/guards/project-user.guard';
+import { guestGuard } from './core/guards/guest.guard';
+import { AppShellComponent } from './shared/compoments/app-shell/app-shell.component';
 
 export const routes: Routes = [
   {
@@ -19,11 +21,13 @@ export const routes: Routes = [
   },
   {
     path: 'login',
+    canActivate: [guestGuard],
     loadComponent: () =>
       import('./features/auth/components/login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: 'forgot-password',
+    canActivate: [guestGuard],
     loadComponent: () =>
       import('./features/auth/components/forgot-password/forgot-password.component').then(
         (m) => m.ForgotPasswordComponent,
@@ -37,19 +41,43 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'projects', pathMatch: 'full' },
       {
-        // Shared with the /project route below — it renders the admin view by role.
-        path: 'projects',
-        loadComponent: () =>
-          import('./features/projects/components/project-list/project-list.component').then(
-            (m) => m.ProjectListComponent,
-          ),
-      },
-      {
-        path: 'users',
-        loadComponent: () =>
-          import('./features/admin/components/users-list/users-list.component').then(
-            (m) => m.UsersListComponent,
-          ),
+        // Persistent nav shell — wraps every admin page EXCEPT the
+        // project-form wizard below, which stays full-bleed with its
+        // own step sidebar.
+        path: '',
+        component: AppShellComponent,
+        children: [
+          {
+            // Shared with the /project route below — it renders the admin view by role.
+            path: 'projects',
+            loadComponent: () =>
+              import('./features/projects/components/project-list/project-list.component').then(
+                (m) => m.ProjectListComponent,
+              ),
+          },
+          {
+            path: 'users',
+            loadComponent: () =>
+              import('./features/admin/components/users-list/users-list.component').then(
+                (m) => m.UsersListComponent,
+              ),
+          },
+          {
+            path: 'clients',
+            loadComponent: () =>
+              import('./features/admin/components/clients-list/clients-list.component').then(
+                (m) => m.ClientsListComponent,
+              ),
+          },
+          {
+            // Read-only detail screen for the project — :key is the URL-encoded project name.
+            path: 'projects/:key/view',
+            loadComponent: () =>
+              import('./features/projects/components/project-view/project-view.component').then(
+                (m) => m.ProjectViewComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'projects/new',
@@ -78,11 +106,27 @@ export const routes: Routes = [
     canActivate: [projectUserGuard],
     children: [
       {
+        // Persistent nav shell — wraps the list/detail pages; the
+        // wizard (:key/edit, below) stays outside it.
         path: '',
-        loadComponent: () =>
-          import('./features/projects/components/project-list/project-list.component').then(
-            (m) => m.ProjectListComponent,
-          ),
+        component: AppShellComponent,
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./features/projects/components/project-list/project-list.component').then(
+                (m) => m.ProjectListComponent,
+              ),
+          },
+          {
+            // Read-only detail screen for the project — :key is the URL-encoded project name.
+            path: ':key/view',
+            loadComponent: () =>
+              import('./features/projects/components/project-view/project-view.component').then(
+                (m) => m.ProjectViewComponent,
+              ),
+          },
+        ],
       },
       {
         // :key is the URL-encoded project name (column A value).

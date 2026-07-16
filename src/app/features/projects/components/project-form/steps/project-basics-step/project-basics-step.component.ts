@@ -22,22 +22,31 @@ export class ProjectBasicsStepComponent {
   assignableUsers = input<UserInterface[]>([]);
   entryMode = input<'new' | 'existing'>('new');
   existingProjects = input<string[]>([]);
-  // Pick-lists come from the API (GET /erps, GET /suppliers) — the parent
-  // form loads them and threads the names in here.
+  // Pick-lists come from the API (GET /erps, GET /suppliers,
+  // GET /client-companies) — the parent form loads them and threads the
+  // names in here.
   erps = input<string[]>([]);
   suppliers = input<string[]>([]);
+  clientCompanies = input<string[]>([]);
 
   entryModeChange = output<'new' | 'existing'>();
-  existingProjectPicked = output<string>();
   // Admin-only "+ Add new" actions — the parent form owns the dialog + API call.
   addErpRequested = output<void>();
   addSupplierRequested = output<void>();
+  addClientCompanyRequested = output<void>();
+
+  readonly existingProjectOptions = computed<SearchDropdownOption[]>(() =>
+    this.existingProjects().map((name) => ({ id: name, label: name })),
+  );
 
   readonly erpOptions = computed<SearchDropdownOption[]>(() =>
     this.erps().map((name) => ({ id: name, label: name })),
   );
   readonly supplierOptions = computed<SearchDropdownOption[]>(() =>
     this.suppliers().map((name) => ({ id: name, label: name })),
+  );
+  readonly clientCompanyOptions = computed<SearchDropdownOption[]>(() =>
+    this.clientCompanies().map((name) => ({ id: name, label: name })),
   );
 
   // Employees a project can be assigned to, shaped for the search dropdown.
@@ -52,10 +61,5 @@ export class ProjectBasicsStepComponent {
 
   hasError(key: keyof ProjectInterface): boolean {
     return hasError(this.form(), key);
-  }
-
-  onProjectPicked(event: Event): void {
-    const name = (event.target as HTMLSelectElement).value;
-    if (name) this.existingProjectPicked.emit(name);
   }
 }

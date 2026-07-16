@@ -1,14 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth/auth-service';
-import { RoleEnum } from '../../../../core/enums/role-enum';
+import { homeRouteForRole } from '../../../../core/utils/role-route.util';
 import { FormComponent } from '../../../../shared/compoments/form/form.component';
 import { FormFieldInterface } from '../../../../core/intefaces/form/form-field.interface';
 import { FieldTypeEnum } from '../../../../core/enums/field-type.enum';
 
 @Component({
   selector: 'app-login',
-  imports: [RouterLink, FormComponent],
+  imports: [FormComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.less',
 })
@@ -24,6 +24,7 @@ export class LoginComponent {
       required: true,
       inputType: 'email',
       placeholder: 'Enter email',
+      icon: 'mail',
     },
     {
       key: 'password',
@@ -32,6 +33,8 @@ export class LoginComponent {
       required: true,
       inputType: 'password',
       placeholder: 'Enter password',
+      icon: 'lock',
+      trailingLink: { label: 'Forgot password?', route: '/forgot-password' },
     },
   ];
 
@@ -45,7 +48,7 @@ export class LoginComponent {
     this.authService.login(value['email'] as string, value['password'] as string).subscribe({
       next: (user) => {
         this.isSubmitting.set(false);
-        this.router.navigateByUrl(user.role === RoleEnum.Admin ? '/admin/projects' : '/project');
+        this.router.navigateByUrl(homeRouteForRole(user.role));
       },
       error: (err: unknown) => {
         this.isSubmitting.set(false);

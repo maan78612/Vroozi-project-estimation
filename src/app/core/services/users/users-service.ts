@@ -1,9 +1,18 @@
 import { Service, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable, catchError, map, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../config/api.config';
 import { ApiResponse, ApiUser, toApiError } from '../../intefaces/api.interface';
 import { UserInterface } from '../../intefaces/user-interface';
 import { mapApiUser } from '../auth/auth-service';
+
+export interface CreateEmployeeInput {
+  name: string;
+  email: string;
+  password: string;
+  jobTitle?: string;
+  department?: string;
+}
 
 /*
  * ──────────────────────────────────────────────────────────────────
@@ -42,5 +51,21 @@ export class UsersService {
           this.loadError.set(toApiError(err, 'Could not load employees.').message);
         },
       });
+  }
+
+  /** Admin only (enforced by the API). Creates a role="user" account and adds it to the directory. */
+  create(input: CreateEmployeeInput): Observable<UserInterface> {
+    return this.http.post<ApiResponse<{ user: ApiUser }>>(`${API_BASE_URL}/users`, input).pipe(
+      map((res) => {
+        const created = mapApiUser(res.data.user);
+        this.assignableUsers.update((list) =>
+          [...list, created].sort((a, b) => a.name.localeCompare(b.name)),
+        );
+        return created;
+      }),
+      catchError((err: unknown) =>
+        throwError(() => toApiError(err, 'Could not add the employee.')),
+      ),
+    );
   }
 }

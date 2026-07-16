@@ -1,6 +1,6 @@
 @import (reference) 'styles.less';
 
-@spinner-gold-light: #c9a13d;
+@spinner-gold-light: @color-primary-container;
 
 .spinner-wrap {
   display: flex;
@@ -14,14 +14,25 @@
 
 .spinner-orbit {
   position: relative;
-  width: 56px;
-  height: 56px;
-  margin-bottom: 0.85rem;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 1rem;
+}
+
+// Soft ambient glow behind the rings so they read as an object with
+// depth rather than thin lines floating flat on the card.
+.spinner-glow {
+  position: absolute;
+  inset: -14px;
+  border-radius: @radius-full;
+  background: radial-gradient(circle, fade(@color-primary, 22%), transparent 70%);
+  filter: blur(6px);
+  animation: spinner-pulse 1.2s ease-in-out infinite;
 }
 
 .spinner-ring {
   position: absolute;
-  border-radius: 50%;
+  border-radius: @radius-full;
   border-style: solid;
   border-color: transparent;
 }
@@ -29,27 +40,29 @@
 // Outer arc — brand gold, clockwise.
 .spinner-ring-outer {
   inset: 0;
-  border-width: 3px;
+  border-width: 3.5px;
   border-top-color: @color-primary;
   border-right-color: fade(@color-primary, 35%);
-  animation: spinner-spin 0.9s linear infinite;
+  filter: drop-shadow(0 1px 2px fade(@color-primary, 30%));
+  animation: spinner-spin 1s cubic-bezier(0.65, 0.05, 0.36, 1) infinite;
 }
 
 // Inner arc — lighter gold, counter-clockwise for the orbital feel.
 .spinner-ring-inner {
-  inset: 9px;
+  inset: 10px;
   border-width: 2.5px;
   border-bottom-color: @spinner-gold-light;
   border-left-color: fade(@spinner-gold-light, 30%);
-  animation: spinner-spin 1.3s linear infinite reverse;
+  animation: spinner-spin 1.4s cubic-bezier(0.65, 0.05, 0.36, 1) infinite reverse;
 }
 
 // Pulsing core.
 .spinner-core {
   position: absolute;
-  inset: 22px;
-  border-radius: 50%;
-  background: radial-gradient(circle, @spinner-gold-light, @color-primary);
+  inset: 23px;
+  border-radius: @radius-full;
+  background: radial-gradient(circle at 35% 30%, @spinner-gold-light, @color-primary);
+  box-shadow: 0 2px 6px fade(@color-primary, 45%), inset 0 1px 1px fade(#fff, 35%);
   animation: spinner-pulse 1.2s ease-in-out infinite;
 }
 
@@ -57,13 +70,20 @@
   margin: 0;
   font-size: 0.95rem;
   font-weight: 600;
-  color: @color-text-primary;
+  color: @color-on-surface;
 }
 
 .spinner-sublabel {
   margin: 0;
   font-size: 0.8rem;
-  color: @color-text-secondary;
+  color: @color-on-surface-variant;
+}
+
+// ── Light variant (for use on the dark gradient page background) ──
+
+.spinner-wrap.is-light {
+  .spinner-label { color: fade(@color-on-surface, 85%); }
+  .spinner-sublabel { color: fade(@color-on-surface, 55%); }
 }
 
 // ── Compact variant (dialogs, tight blocks) ──────────────────────
@@ -77,6 +97,7 @@
     margin-bottom: 0.5rem;
   }
 
+  .spinner-glow { inset: -8px; }
   .spinner-ring-outer { border-width: 2.5px; }
   .spinner-ring-inner { inset: 6px; border-width: 2px; }
   .spinner-core { inset: 13px; }

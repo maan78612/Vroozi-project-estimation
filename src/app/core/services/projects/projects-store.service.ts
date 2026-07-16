@@ -2,8 +2,7 @@ import { Service, computed, inject, signal } from '@angular/core';
 import { Observable, forkJoin, map, of, switchMap, tap, throwError } from 'rxjs';
 import { ProjectInterface } from '../../intefaces/form/project.interface';
 import { ProjectsApiService } from './projects-api.service';
-import { AuthService } from '../auth/auth-service';
-import { RoleEnum } from '../../enums/role-enum';
+import { RoleService } from '../role/role-service';
 
 /*
  * ──────────────────────────────────────────────────────────────────
@@ -17,7 +16,7 @@ import { RoleEnum } from '../../enums/role-enum';
 @Service()
 export class ProjectsStoreService {
   private api = inject(ProjectsApiService);
-  private authService = inject(AuthService);
+  private roleService = inject(RoleService);
 
   private readonly projects = signal<ProjectInterface[]>([]);
 
@@ -132,8 +131,7 @@ export class ProjectsStoreService {
     saved: ProjectInterface,
     targetUserId: string,
   ): Observable<unknown> {
-    const isAdmin = this.authService.getRole() === RoleEnum.Admin;
-    if (!isAdmin || !saved.id || !targetUserId || targetUserId === saved.user) {
+    if (!this.roleService.isAdmin() || !saved.id || !targetUserId || targetUserId === saved.user) {
       return of(null);
     }
     return this.api.reassign(saved.id, targetUserId);

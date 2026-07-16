@@ -1,12 +1,14 @@
-import { Component, OnInit, inject, input, output } from '@angular/core';
+import { Component, OnInit, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { FormFieldInterface } from '../../../core/intefaces/form/form-field.interface';
 import { FieldTypeEnum } from '../../../core/enums/field-type.enum';
 import { ButtonComponent } from '../button/button';
+import { AutofocusDirective } from '../../directives/autofocus.directive';
 
 @Component({
   selector: 'app-form',
-  imports: [ReactiveFormsModule, ButtonComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, RouterLink, AutofocusDirective],
   templateUrl: './form.component.html',
   styleUrl: './form.component.less',
 })
@@ -78,5 +80,37 @@ export class FormComponent implements OnInit {
       return;
     }
     this.formSubmit.emit(this.formGroup.value as Record<string, string | number>);
+  }
+
+  /*
+   * ──────────────────────────────────────────────────────────────────
+   !  Password visibility — every password field gets a show/hide
+   *  toggle (matches the reference designs). Tracked by field key so
+   *  a form with more than one password field toggles independently.
+   * ──────────────────────────────────────────────────────────────────
+   */
+  private readonly revealedFields = signal<ReadonlySet<string>>(new Set());
+
+  isRevealed(key: string): boolean {
+    return this.revealedFields().has(key);
+  }
+
+  togglePasswordVisibility(key: string): void {
+    this.revealedFields.update((current) => {
+      const next = new Set(current);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
+  // Resolves the field's HTML input type, honoring the reveal toggle for password fields.
+  effectiveInputType(field: FormFieldInterface): string {
+    const base =
+      field.inputType ??
+      (field.type === FieldTypeEnum.Number || field.type === FieldTypeEnum.Percentage
+        ? 'number'
+        : 'text');
+    if (base !== 'password') return base;
+    return this.isRevealed(field.key) ? 'text' : 'password';
   }
 }

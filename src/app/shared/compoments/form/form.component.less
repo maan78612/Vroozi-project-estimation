@@ -28,20 +28,47 @@ form {
   flex-direction: column;
   gap: 0.4rem;
 
+  .field-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
   label {
     font-size: 1rem;
     font-weight: 500;
-    color: @color-text-primary;
+    color: @color-on-surface;
+  }
+
+  .field-trailing-link {
+    .typography-label-sm();
+    text-transform: none;
+    letter-spacing: normal;
+    color: @color-primary;
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .required-mark {
+    color: @color-error;
+    margin-left: 0.15rem;
   }
 
   input,
   select {
+    width: 100%;
+    box-sizing: border-box;
     padding: 0.65rem 0.85rem;
-    border: 1px solid @color-border;
-    border-radius: 8px;
+    border: 1px solid @color-outline-variant;
+    border-radius: @radius-lg;
     font-size: 0.95rem;
-    color: @color-text-primary;
-    background: @color-white;
+    color: @color-on-surface;
+    background: @color-surface-container-low;
     transition:
       border-color 0.15s ease,
       box-shadow 0.15s ease;
@@ -49,8 +76,8 @@ form {
     //* with & we are changing the state of the input when it is focused.
     &:focus {
       outline: none;
-      border-color: @color-border-focus;
-      box-shadow: 0 0 0 3px fade(@color-border-focus, 12%);
+      border-color: @color-primary;
+      box-shadow: 0 0 0 3px fade(@color-primary, 12%);
     }
 
     &.invalid {
@@ -64,41 +91,83 @@ form {
 
   select {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b6b6b' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239a8f7d' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.85rem center;
     padding-right: 2.25rem;
     cursor: pointer;
   }
 
+  .field-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+
+    .field-icon {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      color: @color-outline;
+      pointer-events: none;
+    }
+
+    &.has-icon input {
+      padding-left: 2.6rem;
+    }
+
+    &.has-trailing input {
+      padding-right: 2.6rem;
+    }
+
+    .field-trailing-btn {
+      position: absolute;
+      right: 0.6rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: @color-outline;
+      padding: 0.25rem;
+      display: flex;
+      border-radius: @radius-md;
+      transition: color 0.15s ease;
+
+      .material-symbols-outlined {
+        font-size: 20px;
+      }
+
+      &:hover {
+        color: @color-on-surface;
+      }
+    }
+  }
+
   .error-text {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
     font-size: 0.78rem;
     color: @color-error;
   }
 }
 
+// `.banner`/`.banner-error`/`.banner-success` base rules are global
+// (see styles.less) — this just positions one at the top of THIS form.
+.banner {
+  margin: 1.5rem 2.25rem 0;
+}
+
 .form-actions {
   flex: 0 0 auto;
   padding: 1.25rem 2.25rem;
-  border-top: 1px solid @color-border;
-  background: @color-bg-card;
-
-  .success-text {
-    margin-top: 0.6rem;
-    color: @color-success;
-    font-size: 0.85rem;
-    text-align: center;
-  }
-
-  .error-banner {
-    margin-top: 0.6rem;
-    color: @color-error;
-    font-size: 0.85rem;
-    text-align: center;
-  }
+  border-top: 1px solid @color-outline-variant;
+  background: @color-surface-container-high;
 }
 
-@media (max-width: 768px) {
+.respond-tablet({
   .form-fields {
     padding: 1.5rem;
   }
@@ -106,7 +175,11 @@ form {
   .form-actions {
     padding: 1rem 1.5rem;
   }
-}
+
+  .banner {
+    margin: 1.5rem 1.5rem 0;
+  }
+});
 
 /* ──────────────────────────────────────────────────────────────────
   * Grid layout mode (used in admin/data-entry forms)
@@ -130,15 +203,11 @@ form.grid-layout {
     justify-content: flex-end;
     gap: 1rem;
     padding: 1.25rem 2.5rem 1.75rem;
-
-    .success-text,
-    .error-banner {
-      margin-top: 0;
-      margin-right: auto;
-    }
   }
+}
 
-  @media (max-width: 900px) {
+.respond-tablet({
+  form.grid-layout {
     .form-fields {
       grid-template-columns: repeat(2, 1fr);
       padding: 1.75rem 2rem 2rem;
@@ -148,8 +217,10 @@ form.grid-layout {
       padding: 1.25rem 2rem 1.5rem;
     }
   }
+});
 
-  @media (max-width: 580px) {
+.respond-mobile({
+  form.grid-layout {
     .form-fields {
       grid-template-columns: 1fr;
       padding: 1.5rem;
@@ -160,4 +231,4 @@ form.grid-layout {
       justify-content: stretch;
     }
   }
-}
+});

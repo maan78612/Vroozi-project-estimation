@@ -1,0 +1,123 @@
+<div class="clients-page">
+  <div class="page-title-row">
+    <div>
+      <h1>Clients Directory</h1>
+      <p class="page-subtitle">Manage strategic relationships across the client portfolio.</p>
+    </div>
+    <app-button label="Add client" icon="add" [fullWidth]="false" (clicked)="openAdd()" />
+  </div>
+
+  @if (loadError()) {
+    <div class="clients-error">
+      <p>{{ loadError() }}</p>
+      <app-button label="Try again" [fullWidth]="false" (clicked)="retryLoad()" />
+    </div>
+  } @else {
+    <div class="table-card">
+      <div class="table-controls">
+        <div class="search-field">
+          <span class="material-symbols-outlined search-icon">search</span>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search client companies…"
+            [value]="searchQuery()"
+            (input)="onSearchChange($any($event.target).value)"
+          />
+        </div>
+        <div class="controls-right">
+          <select
+            class="sort-select"
+            [value]="sortBy()"
+            (change)="setSortBy($any($event.target).value)"
+          >
+            <option value="name">Sort: Name (A–Z)</option>
+            <option value="projects">Sort: Most projects</option>
+          </select>
+          <span class="results-count">
+            Showing {{ rangeStart() }}–{{ rangeEnd() }} of {{ filteredCompanies().length }} clients
+          </span>
+        </div>
+      </div>
+
+      <app-data-table
+        [bare]="true"
+        [loading]="isLoading()"
+        [empty]="filteredCompanies().length === 0"
+        emptyIcon="domain"
+        [emptyTitle]="searchQuery() ? 'No matching clients' : 'No client companies yet'"
+        [emptyMessage]="
+          searchQuery()
+            ? 'Nothing matched your search.'
+            : 'Add your first client company to get started.'
+        "
+      >
+        <table class="app-table">
+          <thead>
+            <tr>
+              <th>Client Name</th>
+              <th>Email</th>
+              <th>Primary Contact</th>
+              <th class="app-table-align-right">Total Projects</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (company of pagedCompanies(); track company._id) {
+              <tr>
+                <td>
+                  <span class="client-name">{{ company.name }}</span>
+                </td>
+                <td>{{ company.email || '—' }}</td>
+                <td>{{ company.primaryContact || '—' }}</td>
+                <td class="app-table-align-right">{{ projectCountFor(company) }}</td>
+                <td class="app-table-align-right">
+                  <div class="row-actions">
+                    <button type="button" class="row-action" (click)="openEdit(company)" aria-label="Edit client">
+                      <span class="material-symbols-outlined">edit</span>
+                    </button>
+                    <button type="button" class="row-action row-action-delete" (click)="requestDelete(company)" aria-label="Delete client">
+                      <span class="material-symbols-outlined">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </app-data-table>
+
+      @if (totalPages() > 1) {
+        <div class="table-pagination">
+          <app-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="page.set($event)" />
+        </div>
+      }
+    </div>
+  }
+
+  @if (dialogOpen()) {
+    <app-add-option-dialog
+      [title]="dialogTitle()"
+      subtitle="Shown on the Clients Directory and selectable in every project."
+      [fields]="fields"
+      [initialValue]="dialogInitialValue()"
+      [submitLabel]="editTarget() ? 'Save changes' : 'Add client'"
+      [saving]="saving()"
+      [errorMessage]="saveError()"
+      (save)="saveDialog($event)"
+      (cancelled)="closeDialog()"
+    />
+  }
+
+  @if (deleteTarget(); as company) {
+    <app-confirm-dialog
+      title="Delete client company?"
+      [message]="'This removes &quot;' + company.name + '&quot; from the pick-list. Existing projects and client accounts keep the name they saved. This can\'t be undone.'"
+      confirmLabel="Delete client"
+      [confirming]="deleting()"
+      [errorMessage]="deleteError()"
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
+    />
+  }
+</div>
