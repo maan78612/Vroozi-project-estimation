@@ -20,12 +20,15 @@
       }
       <div class="detail-header">
         <h2 class="detail-name">{{ entry.supplier || 'No supplier' }}</h2>
-        @if (!isClient()) {
-          <div class="detail-actions">
-            <app-button icon="edit" label="Edit" [fullWidth]="false" (clicked)="editSelected()" />
+        <div class="detail-actions">
+          <!-- Every role can edit (clients get the same edit rights as the
+               owning employee — scoped server-side); deleting stays hidden
+               from clients. -->
+          <app-button icon="edit" label="Edit" [fullWidth]="false" (clicked)="editSelected()" />
+          @if (!isClient()) {
             <app-button icon="delete" [danger]="true" label="Delete" [fullWidth]="false" (clicked)="requestDeleteSelected()" />
-          </div>
-        }
+          }
+        </div>
       </div>
 
       <section class="detail-section">

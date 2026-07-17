@@ -45,7 +45,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: inset 0 1px 0 fade(@color-on-surface, 4%);
+  box-shadow: inset 0 1px 0 rgba(var(--color-on-surface-rgb), 4%);
 }
 
 .state-icon-wrap {
@@ -58,13 +58,13 @@
   margin-bottom: 1.25rem;
 
   &.folder-icon-wrap {
-    background: fade(@color-primary-container, 12%);
-    border: 1.5px solid fade(@color-primary-container, 28%);
+    background: rgba(var(--color-primary-container-rgb), 12%);
+    border: 1.5px solid rgba(var(--color-primary-container-rgb), 28%);
     color: @color-primary-container;
   }
 
   &.search-icon-wrap {
-    background: fade(@color-outline-variant, 35%);
+    background: rgba(var(--color-outline-variant-rgb), 35%);
     border: 1.5px solid @color-outline-variant;
     color: @color-outline;
   }
@@ -110,10 +110,6 @@
 
 // ── Project table ────────────────────────────────────────────────────────────
 
-.project-row {
-  cursor: pointer;
-}
-
 .project-name {
   .typography-body-md();
   color: @color-on-surface;
@@ -150,13 +146,32 @@
 
   &:hover {
     color: @color-primary;
-    background: fade(@color-primary, 10%);
+    background: rgba(var(--color-primary-rgb), 10%);
   }
 }
 
 .row-action-delete:hover {
   color: @color-error;
-  background: fade(@color-error, 10%);
+  background: rgba(var(--color-error-rgb), 10%);
+}
+
+// ── Pagination — sits below the table's own card (this page doesn't use
+// the unified table-card layout the admin lists do). ─────────────────────────
+
+.table-pagination {
+  margin-top: @spacing-gutter;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: @spacing-gutter;
+  flex-wrap: wrap;
+}
+
+.table-pagination-range {
+  .typography-body-md();
+  font-size: 14px;
+  color: @color-on-surface-variant;
+  white-space: nowrap;
 }
 
 // ── Responsive ───────────────────────────────────────────────────────────────

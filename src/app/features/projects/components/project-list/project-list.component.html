@@ -27,16 +27,16 @@
     <!-- Toolbar: search + filters -->
     @if (isAdmin() || filteredProjects().length > 0 || hasActiveFilters()) {
       <app-project-filter-bar
-        [searchPlaceholder]="isAdmin() ? 'Search by project, ERP, supplier or assignee…' : 'Search by project, ERP or supplier…'"
+        [searchPlaceholder]="isAdmin() ? 'Search by project, ERP, supplier, assignee or client…' : 'Search by project, ERP or supplier…'"
         [searchQuery]="searchQuery()"
-        (searchChange)="searchQuery.set($event)"
+        (searchChange)="onSearchChange($event)"
         [erpFilter]="erpFilter()"
-        (erpChange)="erpFilter.set($event)"
+        (erpChange)="onErpChange($event)"
         [availableErps]="availableErps()"
         [sizeFilter]="sizeFilter()"
         (sizeToggle)="toggleSizeFilter($event)"
         [sortBy]="sortBy()"
-        (sortChange)="sortBy.set($event)"
+        (sortChange)="onSortChange($event)"
         [hasActiveFilters]="hasActiveFilters()"
         (clear)="clearFilters()"
       />
@@ -107,8 +107,8 @@
             </tr>
           </thead>
           <tbody>
-            @for (group of filteredGroups(); track group.projectName) {
-              <tr class="project-row" (click)="viewGroup(group)">
+            @for (group of pagedGroups(); track group.projectName) {
+              <tr>
                 <td>
                   <div class="project-name">{{ group.projectName }}</div>
                   @if (group.entries.length > 1) {
@@ -127,7 +127,7 @@
                 }
                 <td>{{ clientForGroup(group) }}</td>
                 <td class="app-table-align-right">
-                  <div class="row-actions" (click)="$event.stopPropagation()">
+                  <div class="row-actions">
                     <button type="button" class="row-action" aria-label="View project" (click)="viewGroup(group)">
                       <span class="material-symbols-outlined">visibility</span>
                     </button>
@@ -143,6 +143,17 @@
           </tbody>
         </table>
       </app-data-table>
+
+      <!-- Range line always shows (visible confirmation of what's on screen);
+           the pager itself only appears once there's more than one page. -->
+      <div class="table-pagination">
+        <span class="table-pagination-range">
+          Showing {{ rangeStart() }}–{{ rangeEnd() }} of {{ filteredGroups().length }} projects
+        </span>
+        @if (totalPages() > 1) {
+          <app-pagination [page]="currentPage()" [totalPages]="totalPages()" (pageChange)="page.set($event)" />
+        }
+      </div>
     }
 
     <!-- Delete confirmation -->

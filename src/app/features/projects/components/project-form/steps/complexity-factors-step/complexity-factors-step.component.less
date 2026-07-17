@@ -7,7 +7,11 @@
 }
 
 @media (max-width: @breakpoint-tablet) {
-  .flag-grid { grid-template-columns: 1fr 1fr; }
+  // minmax(0, 1fr), not plain 1fr — the base rule above already uses it to
+  // avoid grid blowout; this override was dropping it, so at this
+  // breakpoint a card's min-content width could force the row wider than
+  // its container (cards overlapping/overflowing the step card edge).
+  .flag-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: @breakpoint-mobile) {

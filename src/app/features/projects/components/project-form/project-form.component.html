@@ -19,7 +19,8 @@
       [assignableUsers]="assignableUsers()"
       [erps]="erps()"
       [suppliers]="suppliers()"
-      [clientCompanies]="clientCompanies()"
+      [clients]="clients()"
+      [clientName]="editingProject()?.clientName ?? ''"
       [complexityFlags]="complexityFlags"
       [riskFlags]="riskFlags"
       [estimateBreakdown]="estimateBreakdown()"
@@ -82,10 +83,45 @@
   <main class="wizard-main">
       <form class="wizard-form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
         <!-- ── Step header ──────────────────────────────────────────────── -->
-        <header class="wizard-main-header">
-          <span class="step-eyebrow">Step {{ currentStep() + 1 }} of {{ totalSteps }}</span>
+        <header class="wizard-main-header" #stepHeader>
+          <!-- Plain text on desktop; below tablet width this becomes the
+               step-jump control that replaces the (now-hidden) sidebar
+               step list — see .respond-tablet() in the stylesheet. -->
+          <button
+            type="button"
+            class="step-eyebrow-btn"
+            (click)="toggleMobileStepList()"
+            [attr.aria-expanded]="mobileStepListOpen()"
+            aria-label="Jump to a previous step"
+          >
+            <span class="step-eyebrow">Step {{ currentStep() + 1 }} of {{ totalSteps }}</span>
+            <span class="material-symbols-outlined mobile-step-chevron">
+              {{ mobileStepListOpen() ? 'expand_less' : 'expand_more' }}
+            </span>
+          </button>
           <h1 class="step-title">{{ stepMeta[currentStep()].title }}</h1>
           <p class="step-subtitle">{{ stepMeta[currentStep()].subtitle }}</p>
+
+          @if (mobileStepListOpen()) {
+            <nav class="mobile-step-list" aria-label="Form progress">
+              @for (step of stepMeta; track step.title; let i = $index) {
+                <button
+                  type="button"
+                  class="sidebar-step"
+                  [class.is-active]="currentStep() === i"
+                  [class.is-done]="currentStep() > i"
+                  [disabled]="i >= currentStep()"
+                  (click)="goToStep(i)"
+                  [attr.aria-current]="currentStep() === i ? 'step' : null"
+                >
+                  <span class="material-symbols-outlined sidebar-step-icon">
+                    {{ currentStep() > i ? 'check_circle' : step.icon }}
+                  </span>
+                  <span class="sidebar-step-label">{{ step.title }}</span>
+                </button>
+              }
+            </nav>
+          }
         </header>
 
         <!-- ── Thin segmented progress bar ──────────────────────────────── -->
@@ -107,13 +143,13 @@
                   [assignableUsers]="assignableUsers()"
                   [erps]="erps()"
                   [suppliers]="suppliers()"
-                  [clientCompanies]="clientCompanies()"
+                  [clients]="clients()"
                   [entryMode]="entryMode()"
                   [existingProjects]="existingProjects()"
                   (entryModeChange)="setEntryMode($event)"
                   (addErpRequested)="openAddOption('erp')"
                   (addSupplierRequested)="openAddOption('supplier')"
-                  (addClientCompanyRequested)="openAddOption('clientCompany')"
+                  (addClientRequested)="openAddOption('client')"
                 />
               </div>
             }
@@ -153,6 +189,7 @@
                   [complexityFlags]="complexityFlags"
                   [riskFlags]="riskFlags"
                   [assignableUsers]="assignableUsers()"
+                  [clients]="clients()"
                   [currentUser]="currentUser()"
                   [submitSuccess]="submitSuccess()"
                   [submitError]="submitError()"
@@ -196,7 +233,7 @@
 </div>
 }
 
-<!-- "+ Add new" ERP / Supplier / Client Company dialog (admin only) — shared by both layouts above -->
+<!-- "+ Add new" ERP / Supplier / Client dialog (admin only, wizard-only for Client) -->
 @if (addOptionCopy(); as copy) {
   <app-add-option-dialog
     eyebrow="Pick-list option"

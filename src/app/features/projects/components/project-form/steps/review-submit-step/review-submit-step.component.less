@@ -17,11 +17,11 @@
   }
 
   &.rv-computed {
-    background: fade(@color-primary, 4%);
-    border-color: fade(@color-primary, 18%);
+    background: rgba(var(--color-primary-rgb), 4%);
+    border-color: rgba(var(--color-primary-rgb), 18%);
 
     .rv-head {
-      background: fade(@color-primary, 7%);
+      background: rgba(var(--color-primary-rgb), 7%);
     }
   }
 }
@@ -77,7 +77,7 @@
   transition: background 0.15s;
 
   &:hover {
-    background: fade(@color-primary, 9%);
+    background: rgba(var(--color-primary-rgb), 9%);
   }
 }
 
@@ -123,7 +123,7 @@
   flex-shrink: 0;
 
   &.b-yes {
-    background: fade(@color-success-container, 30%);
+    background: rgba(var(--color-success-container-rgb), 30%);
     color: @color-success;
   }
 
@@ -143,23 +143,23 @@
   letter-spacing: 0.05em;
 
   &.size-s {
-    background: fade(@size-s-color, 20%);
+    background: rgba(var(--size-s-color-rgb), 20%);
     color: @size-s-color;
   }
   &.size-m {
-    background: fade(@size-m-color, 20%);
+    background: rgba(var(--size-m-color-rgb), 20%);
     color: @size-m-color;
   }
   &.size-l {
-    background: fade(@size-l-color, 20%);
+    background: rgba(var(--size-l-color-rgb), 20%);
     color: @size-l-color;
   }
   &.size-xl {
-    background: fade(@size-xl-color, 20%);
+    background: rgba(var(--size-xl-color-rgb), 20%);
     color: @size-xl-color;
   }
   &.size-xxl {
-    background: fade(@size-xxl-color, 20%);
+    background: rgba(var(--size-xxl-color-rgb), 20%);
     color: @size-xxl-color;
   }
 }
@@ -176,14 +176,14 @@
   animation: feedback-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   &.success {
-    background: fade(@color-success-container, 8%);
-    border: 1px solid fade(@color-success-container, 25%);
+    background: rgba(var(--color-success-container-rgb), 8%);
+    border: 1px solid rgba(var(--color-success-container-rgb), 25%);
     color: @color-success;
   }
 
   &.error {
-    background: fade(@color-error, 7%);
-    border: 1px solid fade(@color-error, 20%);
+    background: rgba(var(--color-error-rgb), 7%);
+    border: 1px solid rgba(var(--color-error-rgb), 20%);
     color: @color-error;
   }
 }

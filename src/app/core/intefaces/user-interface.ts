@@ -9,8 +9,6 @@ export interface UserInterface {
   name: string;
   email: string;
   role: RoleEnum;
-  // Only set (and only meaningful) when role === RoleEnum.Client.
-  clientCompany?: string;
   jobTitle?: string;
   department?: string;
 }

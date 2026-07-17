@@ -14,6 +14,14 @@ export interface CreateEmployeeInput {
   department?: string;
 }
 
+export interface UpdateEmployeeInput {
+  name?: string;
+  email?: string;
+  password?: string;
+  jobTitle?: string;
+  department?: string;
+}
+
 /*
  * ──────────────────────────────────────────────────────────────────
  !  Employee directory backed by GET /users (admin-only endpoint).
@@ -65,6 +73,22 @@ export class UsersService {
       }),
       catchError((err: unknown) =>
         throwError(() => toApiError(err, 'Could not add the employee.')),
+      ),
+    );
+  }
+
+  /** Admin only (enforced by the API). Partial update — only fields present in `patch` change. */
+  update(id: string, patch: UpdateEmployeeInput): Observable<UserInterface> {
+    return this.http.patch<ApiResponse<{ user: ApiUser }>>(`${API_BASE_URL}/users/${id}`, patch).pipe(
+      map((res) => {
+        const updated = mapApiUser(res.data.user);
+        this.assignableUsers.update((list) =>
+          list.map((u) => (u.id === id ? updated : u)).sort((a, b) => a.name.localeCompare(b.name)),
+        );
+        return updated;
+      }),
+      catchError((err: unknown) =>
+        throwError(() => toApiError(err, 'Could not update the employee.')),
       ),
     );
   }

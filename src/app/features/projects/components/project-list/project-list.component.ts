@@ -8,16 +8,19 @@ import { ProjectSizeEnum } from '../../../../core/enums/project-size.enum';
 import { ProjectSortOption, sortProjects } from '../../../../core/utils/project-sort.util';
 import { ProjectGroup, groupProjects } from '../../../../core/utils/project-group.util';
 import {
-  rollupClientCompany,
+  rollupClient,
   rollupErp,
   rollupRangeLabel,
   rollupSize,
 } from '../../../../core/utils/project-rollup.util';
 import { ButtonComponent } from '../../../../shared/compoments/button/button';
 import { DataTableComponent } from '../../../../shared/compoments/data-table/data-table.component';
+import { PaginationComponent } from '../../../../shared/compoments/pagination/pagination.component';
 import { ProjectFilterBarComponent } from '../../../../shared/compoments/project-filter-bar/project-filter-bar.component';
 import { ConfirmDialogComponent } from '../../../../shared/compoments/confirm-dialog/confirm-dialog.component';
 import { SpinnerComponent } from '../../../../shared/compoments/spinner/spinner.component';
+
+const PAGE_SIZE = 10;
 
 /*
  * ──────────────────────────────────────────────────────────────────
@@ -37,6 +40,7 @@ import { SpinnerComponent } from '../../../../shared/compoments/spinner/spinner.
   imports: [
     ButtonComponent,
     DataTableComponent,
+    PaginationComponent,
     ProjectFilterBarComponent,
     ConfirmDialogComponent,
     SpinnerComponent,
@@ -59,6 +63,7 @@ export class ProjectListComponent {
   sizeFilter = signal<ProjectSizeEnum | null>(null);
   erpFilter = signal('');
   sortBy = signal<ProjectSortOption>('name');
+  page = signal(1);
 
   // Every employee a project can be assigned to — feeds the admin "assigned to" chip.
   private readonly assignableUsers = this.usersService.assignableUsers;
@@ -106,7 +111,8 @@ export class ProjectListComponent {
           p.projectName.toLowerCase().includes(query) ||
           (p.erp && p.erp.toLowerCase().includes(query)) ||
           p.supplier.toLowerCase().includes(query) ||
-          (this.isAdmin() && this.assignedToName(p).toLowerCase().includes(query)),
+          (this.isAdmin() && this.assignedToName(p).toLowerCase().includes(query)) ||
+          (this.isAdmin() && !!p.clientName && p.clientName.toLowerCase().includes(query)),
       );
     }
     if (size) {
@@ -121,6 +127,27 @@ export class ProjectListComponent {
 
   // One card per project — each group holds that project's supplier entries.
   readonly filteredGroups = computed(() => groupProjects(this.filteredProjects()));
+
+  // ── Pagination — over groups (table rows), same convention as
+  // users-list / clients-list. `currentPage` clamps rather than trusting
+  // `page` directly so deleting the last row of the last page can never
+  // strand the table on a page that no longer exists.
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filteredGroups().length / PAGE_SIZE)),
+  );
+  readonly currentPage = computed(() => Math.min(this.page(), this.totalPages()));
+
+  readonly pagedGroups = computed(() => {
+    const start = (this.currentPage() - 1) * PAGE_SIZE;
+    return this.filteredGroups().slice(start, start + PAGE_SIZE);
+  });
+
+  readonly rangeStart = computed(() =>
+    this.filteredGroups().length === 0 ? 0 : (this.currentPage() - 1) * PAGE_SIZE + 1,
+  );
+  readonly rangeEnd = computed(() =>
+    Math.min(this.currentPage() * PAGE_SIZE, this.filteredGroups().length),
+  );
 
   // Pending destructive action — set while the confirm dialog is open.
   projectDeleteTarget = signal<ProjectGroup | null>(null);
@@ -154,17 +181,36 @@ export class ProjectListComponent {
   }
 
   clientForGroup(group: ProjectGroup): string {
-    return rollupClientCompany(group.entries) || '—';
+    return rollupClient(group.entries) || '—';
+  }
+
+  // Any filter/sort change restarts at page 1 — the old offset is
+  // meaningless against a different result set.
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+    this.page.set(1);
+  }
+
+  onErpChange(value: string): void {
+    this.erpFilter.set(value);
+    this.page.set(1);
+  }
+
+  onSortChange(value: ProjectSortOption): void {
+    this.sortBy.set(value);
+    this.page.set(1);
   }
 
   toggleSizeFilter(size: ProjectSizeEnum): void {
     this.sizeFilter.set(this.sizeFilter() === size ? null : size);
+    this.page.set(1);
   }
 
   clearFilters(): void {
     this.searchQuery.set('');
     this.sizeFilter.set(null);
     this.erpFilter.set('');
+    this.page.set(1);
   }
 
   retryLoad(): void {

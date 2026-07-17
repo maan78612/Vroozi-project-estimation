@@ -1,66 +1,87 @@
 //* ──────────────────────────────────────────────────────────────────
-// Design tokens — "Aurelian Dark": deep charcoal/gold glassmorphism.
-// Single source of truth for every component's .less file — they
-// `@import (reference) 'styles.less';` to consume these without
-// re-emitting them. Mirrored onto :root as CSS custom properties
-// further down for the handful of cases that need a runtime value
-// (inline styles, JS-driven color).
+// Design tokens — "Aurelian": charcoal/gold glassmorphism, dark and
+// light. Single source of truth for every component's .less file —
+// they `@import (reference) 'styles.less';` to consume these without
+// re-emitting them.
+//
+// Every @color-* variable here is a compile-time ALIAS for a runtime
+// CSS custom property (`~"var(--x)"`), not a literal hex value — the
+// actual dark/light values live only in the :root / [data-theme='light']
+// blocks near the bottom of this file. That's what makes the theme
+// swappable at runtime (ThemeService flips `data-theme` on <html>)
+// without a second build: every component's compiled CSS already
+// reads `var(--color-x)`, so it just re-resolves.
+//
+// `fade(@color, X%)` (a LESS *compile-time* function) can't operate on
+// a var() string, so tokens that are ever wrapped in `fade()` also get
+// a `--color-x-rgb: r, g, b` custom property — call sites use
+// `rgba(var(--color-x-rgb), X%)` instead. The project-size ramp
+// (@size-*-color) is intentionally identical in both themes (a size
+// badge shouldn't change meaning/color by theme), so it stays a plain
+// LESS constant.
 //* ──────────────────────────────────────────────────────────────────
 
 // ── Surfaces (dark → light ramp) ──────────────────────────────────
-@color-surface: #16130e;
-@color-surface-dim: #16130e;
-@color-surface-bright: #3d3933;
-@color-surface-container-lowest: #110e09;
-@color-surface-container-low: #1e1b16;
-@color-surface-container: #231f1a;
-@color-surface-container-high: #2d2924;
-@color-surface-container-highest: #38342e;
+@color-surface: ~"var(--color-surface)";
+@color-surface-dim: ~"var(--color-surface-dim)";
+@color-surface-bright: ~"var(--color-surface-bright)";
+@color-surface-container-lowest: ~"var(--color-surface-container-lowest)";
+@color-surface-container-low: ~"var(--color-surface-container-low)";
+@color-surface-container: ~"var(--color-surface-container)";
+@color-surface-container-high: ~"var(--color-surface-container-high)";
+@color-surface-container-highest: ~"var(--color-surface-container-highest)";
 @color-background: @color-surface;
 
 // ── Content on surfaces ────────────────────────────────────────────
-@color-on-surface: #e9e1d8;
-@color-on-surface-variant: #d1c5b1;
+@color-on-surface: ~"var(--color-on-surface)";
+@color-on-surface-variant: ~"var(--color-on-surface-variant)";
 @color-on-background: @color-on-surface;
-@color-outline: #9a8f7d;
-@color-outline-variant: #4e4636;
-@color-inverse-surface: #e9e1d8;
-@color-inverse-on-surface: #34302a;
+@color-outline: ~"var(--color-outline)";
+@color-outline-variant: ~"var(--color-outline-variant)";
+@color-inverse-surface: ~"var(--color-inverse-surface)";
+@color-inverse-on-surface: ~"var(--color-inverse-on-surface)";
 
 // ── Brand: primary (gold) ──────────────────────────────────────────
-@color-primary: #ecc15a;
-@color-on-primary: #3f2e00;
-@color-primary-container: #c9a13d;
-@color-on-primary-container: #4d3900;
-@color-inverse-primary: #775a00;
+@color-primary: ~"var(--color-primary)";
+@color-primary-hover: ~"var(--color-primary-hover)";
+@color-on-primary: ~"var(--color-on-primary)";
+@color-primary-container: ~"var(--color-primary-container)";
+@color-on-primary-container: ~"var(--color-on-primary-container)";
+@color-inverse-primary: ~"var(--color-inverse-primary)";
 
 // ── Secondary / tertiary accents ───────────────────────────────────
-@color-secondary: #e9c178;
-@color-on-secondary: #412d00;
-@color-secondary-container: #604404;
-@color-on-secondary-container: #dab36b;
+@color-secondary: ~"var(--color-secondary)";
+@color-on-secondary: ~"var(--color-on-secondary)";
+@color-secondary-container: ~"var(--color-secondary-container)";
+@color-on-secondary-container: ~"var(--color-on-secondary-container)";
 
-@color-tertiary: #d9c594;
-@color-on-tertiary: #3b2f0b;
-@color-tertiary-container: #b8a576;
-@color-on-tertiary-container: #473a16;
+@color-tertiary: ~"var(--color-tertiary)";
+@color-on-tertiary: ~"var(--color-on-tertiary)";
+@color-tertiary-container: ~"var(--color-tertiary-container)";
+@color-on-tertiary-container: ~"var(--color-on-tertiary-container)";
 
 // ── Semantic: error ─────────────────────────────────────────────────
-@color-error: #ffb4ab;
-@color-on-error: #690005;
-@color-error-container: #93000a;
-@color-on-error-container: #ffdad6;
+@color-error: ~"var(--color-error)";
+@color-on-error: ~"var(--color-on-error)";
+@color-error-container: ~"var(--color-error-container)";
+@color-on-error-container: ~"var(--color-on-error-container)";
+// Solid destructive fill (btn-primary.btn-danger) — a theme-picked pairing,
+// because neither M3 token role is solid red in BOTH themes: error-container
+// is deep red on dark but washes out to pastel pink on light.
+@color-danger-fill: ~"var(--color-danger-fill)";
+@color-on-danger-fill: ~"var(--color-on-danger-fill)";
+@color-danger-fill-hover: ~"var(--color-danger-fill-hover)";
 
-// ── Semantic: success (not part of the Aurelian Dark spec — chosen to
-// sit comfortably in the same desaturated, dark-surface palette) ────
-@color-success: #7fd9a0;
-@color-on-success: #0a2e17;
-@color-success-container: #1c6e56;
-@color-on-success-container: #d3f5e3;
+// ── Semantic: success ────────────────────────────────────────────────
+@color-success: ~"var(--color-success)";
+@color-on-success: ~"var(--color-on-success)";
+@color-success-container: ~"var(--color-success-container)";
+@color-on-success-container: ~"var(--color-on-success-container)";
 
 // ── Project size scale — a traffic-light-ish ramp independent of the
 // gold brand color, so size badges (project-list, project-view) read
-// at a glance without competing with primary/accent usage. ──────────
+// at a glance without competing with primary/accent usage. Constant
+// across both themes on purpose (see file header). ──────────────────
 @size-s-color: #1c6e56;
 @size-m-color: #856404;
 @size-l-color: #7d4e1a;
@@ -167,26 +188,33 @@
 }
 
 //* ──────────────────────────────────────────────────────────────────
-// Elevation — translucent "glass" surfaces + a soft primary glow,
-// used instead of conventional drop shadows (see DESIGN.md).
+// Elevation — dark theme: translucent "glass" surfaces + a soft
+// primary glow. Light theme ("Aurelian Light"): flat opaque surfaces
+// with a crisp neutral outline, no blur — "Tonal Layering and Crisp
+// Outlines" rather than glassmorphism. One mixin serves both: the
+// blur/opacity/border it emits are theme-driven CSS custom properties
+// (--glass-*, defined per theme below), not hardcoded.
 //* ──────────────────────────────────────────────────────────────────
 
-.glass-surface(@bg: @color-surface-container, @border-opacity: 10%) {
-  background: fade(@bg, 80%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid fade(@color-primary, @border-opacity);
+// @bg-rgb is the NAME of an `--x-rgb` custom property (see file header),
+// not a color value — callers that need a non-default background pass
+// e.g. `.glass-surface(~"--color-surface-container-high-rgb")`.
+.glass-surface(@bg-rgb: ~"--color-surface-container-rgb") {
+  background: rgba(var(@bg-rgb), var(--glass-bg-opacity));
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
 }
 .glass-surface-hover() {
-  border-color: fade(@color-primary, 20%);
+  border-color: rgba(var(--color-primary-rgb), 20%);
 }
 .premium-glow(@spread: 24px, @opacity: 5%) {
-  box-shadow: 0 0 @spread fade(@color-primary-container, @opacity);
+  box-shadow: 0 0 @spread rgba(var(--color-primary-container-rgb), @opacity);
 }
 .focus-ring() {
   outline: none;
   border-color: @color-primary;
-  box-shadow: 0 0 0 2px fade(@color-primary, 20%);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 20%);
 }
 
 //* ──────────────────────────────────────────────────────────────────
@@ -208,7 +236,7 @@ body {
 }
 
 ::selection {
-  background: fade(@color-primary, 30%);
+  background: rgba(var(--color-primary-rgb), 30%);
   color: @color-on-surface;
 }
 
@@ -254,7 +282,7 @@ body {
   text-align: left;
 
   thead tr {
-    background: fade(@color-surface-container-highest, 60%);
+    background: rgba(var(--color-surface-container-highest-rgb), 60%);
     border-bottom: 1px solid @color-outline-variant;
   }
 
@@ -273,7 +301,7 @@ body {
   }
 
   tbody tr {
-    border-bottom: 1px solid fade(@color-outline-variant, 40%);
+    border-bottom: 1px solid rgba(var(--color-outline-variant-rgb), 40%);
     transition: background 0.15s ease;
   }
 
@@ -282,7 +310,7 @@ body {
   }
 
   tbody tr:hover {
-    background: fade(@color-primary, 5%);
+    background: rgba(var(--color-primary-rgb), 5%);
   }
 
   td {
@@ -333,7 +361,7 @@ body {
 }
 
 .banner-error {
-  background: fade(@color-error-container, 40%);
+  background: rgba(var(--color-error-container-rgb), 40%);
   border-color: @color-error-container;
   color: @color-on-error-container;
 
@@ -343,7 +371,7 @@ body {
 }
 
 .banner-success {
-  background: fade(@color-success-container, 30%);
+  background: rgba(var(--color-success-container-rgb), 30%);
   border-color: @color-success-container;
   color: @color-on-success-container;
 
@@ -368,34 +396,207 @@ body {
   font-weight: 700;
   letter-spacing: 0.05em;
 
-  &.size-s { background: fade(@size-s-color, 20%); color: @size-s-color; }
-  &.size-m { background: fade(@size-m-color, 20%); color: @size-m-color; }
-  &.size-l { background: fade(@size-l-color, 20%); color: @size-l-color; }
-  &.size-xl { background: fade(@size-xl-color, 20%); color: @size-xl-color; }
-  &.size-xxl { background: fade(@size-xxl-color, 20%); color: @size-xxl-color; }
+  &.size-s { background: rgba(var(--size-s-color-rgb), 20%); color: @size-s-color; }
+  &.size-m { background: rgba(var(--size-m-color-rgb), 20%); color: @size-m-color; }
+  &.size-l { background: rgba(var(--size-l-color-rgb), 20%); color: @size-l-color; }
+  &.size-xl { background: rgba(var(--size-xl-color-rgb), 20%); color: @size-xl-color; }
+  &.size-xxl { background: rgba(var(--size-xxl-color-rgb), 20%); color: @size-xxl-color; }
 }
 
+//* ──────────────────────────────────────────────────────────────────
+// Theme values — the actual source of truth (everything above this
+// point only *references* these via var()). `:root` is the dark
+// theme's values (the app's original/default look); `[data-theme=
+// 'light']` overrides them. ThemeService (core/services/theme) stamps
+// `data-theme` on <html> and persists the choice — see theme-service.ts.
+//
+// `--x-rgb` custom properties hold comma-separated R, G, B (no `rgb()`
+// wrapper) so `rgba(var(--x-rgb), alpha)` can splice them into a
+// 4-argument rgba() call. Only tokens actually passed through
+// `fade()`/`rgba()` in component styles need one.
+//* ──────────────────────────────────────────────────────────────────
+
 :root {
-  --color-surface: @color-surface;
-  --color-surface-dim: @color-surface-dim;
-  --color-surface-bright: @color-surface-bright;
-  --color-surface-container-lowest: @color-surface-container-lowest;
-  --color-surface-container-low: @color-surface-container-low;
-  --color-surface-container: @color-surface-container;
-  --color-surface-container-high: @color-surface-container-high;
-  --color-surface-container-highest: @color-surface-container-highest;
-  --color-on-surface: @color-on-surface;
-  --color-on-surface-variant: @color-on-surface-variant;
-  --color-outline: @color-outline;
-  --color-outline-variant: @color-outline-variant;
-  --color-primary: @color-primary;
-  --color-on-primary: @color-on-primary;
-  --color-primary-container: @color-primary-container;
-  --color-on-primary-container: @color-on-primary-container;
-  --color-secondary: @color-secondary;
-  --color-tertiary: @color-tertiary;
-  --color-error: @color-error;
-  --color-error-container: @color-error-container;
-  --color-success: @color-success;
-  --color-success-container: @color-success-container;
+  // ── Surfaces ──────────────────────────────────────────────────────
+  --color-surface: #16130e;
+  --color-surface-dim: #16130e;
+  --color-surface-bright: #3d3933;
+  --color-surface-container-lowest: #110e09;
+  --color-surface-container-low: #1e1b16;
+  --color-surface-container: #231f1a;
+  --color-surface-container-high: #2d2924;
+  --color-surface-container-highest: #38342e;
+
+  // ── Content on surfaces ─────────────────────────────────────────────
+  --color-on-surface: #e9e1d8;
+  --color-on-surface-variant: #d1c5b1;
+  --color-outline: #9a8f7d;
+  --color-outline-variant: #4e4636;
+  --color-inverse-surface: #e9e1d8;
+  --color-inverse-on-surface: #34302a;
+
+  // ── Brand: primary (gold) ────────────────────────────────────────────
+  --color-primary: #ecc15a;
+  // Hover state for primary-filled controls: lighten on dark (illuminate),
+  // darken on light (press) — same hue either way, never a hue swap.
+  --color-primary-hover: #f4cd74;
+  --color-on-primary: #3f2e00;
+  --color-primary-container: #c9a13d;
+  --color-on-primary-container: #4d3900;
+  --color-inverse-primary: #775a00;
+
+  // ── Secondary / tertiary accents ─────────────────────────────────────
+  --color-secondary: #e9c178;
+  --color-on-secondary: #412d00;
+  --color-secondary-container: #604404;
+  --color-on-secondary-container: #dab36b;
+  --color-tertiary: #d9c594;
+  --color-on-tertiary: #3b2f0b;
+  --color-tertiary-container: #b8a576;
+  --color-on-tertiary-container: #473a16;
+
+  // ── Semantic ──────────────────────────────────────────────────────
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+  // Solid destructive fill (delete buttons): the error-container pair —
+  // deep red with pale text. Hover illuminates, same hue (see
+  // --color-primary-hover note above).
+  --color-danger-fill: #93000a;
+  --color-on-danger-fill: #ffdad6;
+  --color-danger-fill-hover: #a51a23;
+  --color-success: #7fd9a0;
+  --color-on-success: #0a2e17;
+  --color-success-container: #1c6e56;
+  --color-on-success-container: #d3f5e3;
+
+  // ── RGB variants for fade()-replacement rgba() calls ─────────────────
+  --color-primary-rgb: 236, 193, 90;
+  --color-on-primary-rgb: 63, 46, 0;
+  --color-primary-container-rgb: 201, 161, 61;
+  --color-on-surface-rgb: 233, 225, 216;
+  --color-outline-variant-rgb: 78, 70, 54;
+  --color-error-rgb: 255, 180, 171;
+  --color-error-container-rgb: 147, 0, 10;
+  --color-danger-fill-rgb: 147, 0, 10;
+  --color-on-danger-fill-rgb: 255, 218, 214;
+  --color-success-rgb: 127, 217, 160;
+  --color-success-container-rgb: 28, 110, 86;
+  --color-surface-container-rgb: 35, 31, 26;
+  --color-surface-container-high-rgb: 45, 41, 36;
+  --color-surface-container-highest-rgb: 56, 52, 46;
+  --color-surface-container-lowest-rgb: 17, 14, 9;
+
+  // ── Project size ramp — identical in both themes ─────────────────────
+  --size-s-color-rgb: 28, 110, 86;
+  --size-m-color-rgb: 133, 100, 4;
+  --size-l-color-rgb: 125, 78, 26;
+  --size-xl-color-rgb: 125, 53, 16;
+  --size-xxl-color-rgb: 132, 32, 41;
+
+  // Native <select> chevron (project-filter-bar, users-list, clients-list
+  // sort/filter selects) — a CSS custom property because it's a
+  // background-image, which fade()/var() alone can't recolor per theme.
+  // Stroke color matches @color-outline.
+  --select-chevron-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a8f7d' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+
+  // ── Elevation (.glass-surface() in this file) — translucent blur + a
+  // soft gold-tinted border, the "Aurelian Dark" glassmorphism look.
+  --glass-bg-opacity: 80%;
+  --glass-blur: blur(12px);
+  --glass-border: rgba(var(--color-primary-rgb), 10%);
+}
+
+// "Aurelian Light" — keeps the DESIGN.md brief's *structure* ("Gallery
+// Minimalism": high-contrast, no blur/heavy shadow, crisp 1px outlines,
+// tonal layering) but not its neutral hexes: the spec's cool greys +
+// slate accents read as a dull grey wash next to the charcoal/gold dark
+// theme (user feedback, 2026-07-17). Neutrals are re-keyed to a warm
+// ivory/parchment ramp and secondary/tertiary to bronze/olive so light
+// mode shares the dark theme's gold identity. Contrast targets are
+// unchanged (text and filled-button pairings hold WCAG AA).
+:root[data-theme='light'] {
+  // ── Surfaces (warm ivory ramp) ────────────────────────────────────
+  --color-surface: #faf7f0;
+  --color-surface-dim: #e4dcc9;
+  --color-surface-bright: #fdfbf6;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f6f1e6;
+  --color-surface-container: #f1ead9;
+  --color-surface-container-high: #ece3cd;
+  --color-surface-container-highest: #e6dcc2;
+
+  // ── Content on surfaces ───────────────────────────────────────────
+  --color-on-surface: #201b11;
+  --color-on-surface-variant: #4e4637;
+  --color-outline: #7f7460;
+  --color-outline-variant: #dcd2ba;
+  --color-inverse-surface: #34302a;
+  --color-inverse-on-surface: #f7f2e9;
+
+  // ── Brand: primary (rich gold — 5.2:1 with white text, WCAG AA) ─────
+  --color-primary: #8a6602;
+  --color-primary-hover: #6e4f00;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #c9a13d;
+  --color-on-primary-container: #3f2e00;
+  --color-inverse-primary: #eec05d;
+
+  // ── Secondary / tertiary accents (bronze / olive-taupe) ──────────────
+  --color-secondary: #745a20;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #f0e0b8;
+  --color-on-secondary-container: #524007;
+  --color-tertiary: #666038;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #e8e2c3;
+  --color-on-tertiary-container: #211d04;
+
+  // ── Semantic ──────────────────────────────────────────────────────
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  // Solid destructive fill: light mode's error-container is pastel pink,
+  // which reads washed-out/disabled as a filled delete button — use the
+  // solid error red + white instead. Hover presses (darkens), same hue.
+  --color-danger-fill: #ba1a1a;
+  --color-on-danger-fill: #ffffff;
+  --color-danger-fill-hover: #a51717;
+  // Not part of the DESIGN.md palette (no "success" token given) — a
+  // desaturated sage in the same restrained key as its error/secondary
+  // colors, per the doc's "very desaturated backgrounds, high-contrast
+  // dark text" chip guidance.
+  --color-success: #1e6e3c;
+  --color-on-success: #ffffff;
+  --color-success-container: #d4ead9;
+  --color-on-success-container: #163d24;
+
+  // ── RGB variants ──────────────────────────────────────────────────
+  --color-primary-rgb: 138, 102, 2;
+  --color-on-primary-rgb: 255, 255, 255;
+  --color-primary-container-rgb: 201, 161, 61;
+  --color-on-surface-rgb: 32, 27, 17;
+  --color-outline-variant-rgb: 220, 210, 186;
+  --color-error-rgb: 186, 26, 26;
+  --color-error-container-rgb: 255, 218, 214;
+  --color-danger-fill-rgb: 186, 26, 26;
+  --color-on-danger-fill-rgb: 255, 255, 255;
+  --color-success-rgb: 30, 110, 60;
+  --color-success-container-rgb: 212, 234, 217;
+  --color-surface-container-rgb: 241, 234, 217;
+  --color-surface-container-high-rgb: 236, 227, 205;
+  --color-surface-container-highest-rgb: 230, 220, 194;
+  --color-surface-container-lowest-rgb: 255, 255, 255;
+
+  --select-chevron-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237f7460' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+
+  // ── Elevation — "rejects shadows in favor of Tonal Layering and Crisp
+  // Outlines": fully opaque surfaces, no blur, a solid 1px neutral border
+  // (DESIGN.md's #E5E7EB ≈ this theme's outline-variant) instead of glow.
+  --glass-bg-opacity: 100%;
+  --glass-blur: none;
+  --glass-border: var(--color-outline-variant);
+  // Size ramp RGB variants are intentionally not redeclared — same in both themes.
 }

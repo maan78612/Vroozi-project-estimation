@@ -13,6 +13,43 @@ import { projectUserGuard } from './core/guards/project-user.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { AppShellComponent } from './shared/compoments/app-shell/app-shell.component';
 
+/*
+ * Pages every signed-in role gets, rendered inside whichever shell the
+ * role lives in — spread into BOTH shell trees below so they resolve as
+ * /admin/profile and /project/profile etc., keeping each role inside its
+ * own guarded URL space (and its own nav chrome).
+ */
+const profileAndStaticRoutes: Routes = [
+  {
+    path: 'profile',
+    loadComponent: () =>
+      import('./features/profile/components/profile/profile.component').then(
+        (m) => m.ProfileComponent,
+      ),
+  },
+  {
+    path: 'privacy-policy',
+    loadComponent: () =>
+      import('./features/static/components/privacy-policy/privacy-policy.component').then(
+        (m) => m.PrivacyPolicyComponent,
+      ),
+  },
+  {
+    path: 'terms',
+    loadComponent: () =>
+      import('./features/static/components/terms-of-use/terms-of-use.component').then(
+        (m) => m.TermsOfUseComponent,
+      ),
+  },
+  {
+    path: 'contact',
+    loadComponent: () =>
+      import('./features/static/components/contact-us/contact-us.component').then(
+        (m) => m.ContactUsComponent,
+      ),
+  },
+];
+
 export const routes: Routes = [
   {
     path: '',
@@ -77,6 +114,7 @@ export const routes: Routes = [
                 (m) => m.ProjectViewComponent,
               ),
           },
+          ...profileAndStaticRoutes,
         ],
       },
       {
@@ -118,8 +156,11 @@ export const routes: Routes = [
                 (m) => m.ProjectListComponent,
               ),
           },
+          ...profileAndStaticRoutes,
           {
-            // Read-only detail screen for the project — :key is the URL-encoded project name.
+            // Read-only detail screen for the project — :key is the URL-encoded
+            // project name. Declared AFTER the profile/static routes so fixed
+            // words like `profile` match those, not this parameter.
             path: ':key/view',
             loadComponent: () =>
               import('./features/projects/components/project-view/project-view.component').then(

@@ -52,7 +52,7 @@
   gap: 1rem;
   flex-wrap: wrap;
   padding: @spacing-gutter @spacing-container-padding;
-  border-bottom: 1px solid fade(@color-on-surface, 8%);
+  border-bottom: 1px solid rgba(var(--color-on-surface-rgb), 8%);
 }
 
 .controls-right {
@@ -64,8 +64,11 @@
 
 .search-field {
   position: relative;
-  width: 100%;
-  max-width: 320px;
+  // Grow into the controls row's free space (same idea as
+  // project-filter-bar's search) instead of a fixed 320px stub that
+  // left a dead gap before the sort/count cluster on wide screens.
+  flex: 1 1 320px;
+  max-width: 40rem;
 
   .search-icon {
     position: absolute;
@@ -73,7 +76,7 @@
     top: 50%;
     transform: translateY(-50%);
     font-size: 18px;
-    color: fade(@color-on-surface, 45%);
+    color: rgba(var(--color-on-surface-rgb), 45%);
     pointer-events: none;
   }
 
@@ -81,8 +84,8 @@
     width: 100%;
     box-sizing: border-box;
     padding: 0.7rem 1rem 0.7rem 2.5rem;
-    background: fade(@color-on-surface, 7%);
-    border: 1px solid fade(@color-on-surface, 12%);
+    background: rgba(var(--color-on-surface-rgb), 7%);
+    border: 1px solid rgba(var(--color-on-surface-rgb), 12%);
     border-radius: @radius-lg;
     color: @color-on-surface;
     .typography-body-md();
@@ -96,22 +99,22 @@
 
     &:focus {
       .focus-ring();
-      background: fade(@color-on-surface, 10%);
+      background: rgba(var(--color-on-surface-rgb), 10%);
     }
   }
 }
 
 .sort-select {
   padding: 0.6rem 2rem 0.6rem 0.9rem;
-  background: fade(@color-on-surface, 7%);
-  border: 1px solid fade(@color-on-surface, 12%);
+  background: rgba(var(--color-on-surface-rgb), 7%);
+  border: 1px solid rgba(var(--color-on-surface-rgb), 12%);
   border-radius: @radius-lg;
   color: @color-on-surface;
   .typography-body-md();
   font-size: 14px;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a8a4b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: var(--select-chevron-icon);
   background-repeat: no-repeat;
   background-position: right 0.6rem center;
 
@@ -131,6 +134,36 @@
   .typography-body-md();
   color: @color-on-surface;
   font-weight: 600;
+}
+
+.project-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  max-width: 320px;
+}
+
+.no-projects {
+  .typography-body-md();
+  color: @color-outline;
+  font-style: italic;
+}
+
+.project-chip {
+  display: inline-block;
+  .typography-label-sm();
+  text-transform: none;
+  letter-spacing: normal;
+  color: @color-on-surface-variant;
+  background: rgba(var(--color-outline-variant-rgb), 40%);
+  border-radius: @radius-md;
+  padding: 0.25rem 0.6rem;
+
+  &.project-chip-more {
+    font-weight: 700;
+    color: @color-primary;
+    background: rgba(var(--color-primary-rgb), 12%);
+  }
 }
 
 .row-actions {
@@ -155,18 +188,18 @@
 
   &:hover {
     color: @color-primary;
-    background: fade(@color-primary, 10%);
+    background: rgba(var(--color-primary-rgb), 10%);
   }
 
   &.row-action-delete:hover {
     color: @color-error;
-    background: fade(@color-error, 10%);
+    background: rgba(var(--color-error-rgb), 10%);
   }
 }
 
 .table-pagination {
   padding: @spacing-gutter @spacing-container-padding;
-  border-top: 1px solid fade(@color-on-surface, 8%);
+  border-top: 1px solid rgba(var(--color-on-surface-rgb), 8%);
 }
 
 .respond-mobile({
@@ -186,5 +219,9 @@
 
   .search-field {
     max-width: 100%;
+  }
+
+  .project-chips {
+    max-width: none;
   }
 });

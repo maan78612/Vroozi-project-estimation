@@ -65,12 +65,12 @@
   &:focus {
     border-color: @color-primary;
     background: @color-surface-container;
-    box-shadow: 0 0 0 3px fade(@color-primary, 12%);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 12%);
   }
 
   &.is-error {
     border-color: @color-error;
-    &:focus { box-shadow: 0 0 0 3px fade(@color-error, 12%); }
+    &:focus { box-shadow: 0 0 0 3px rgba(var(--color-error-rgb), 12%); }
   }
 }
 
@@ -114,7 +114,7 @@
   transition: border-color 0.18s, background 0.18s, box-shadow 0.18s, transform 0.18s;
 
   &:hover:not(:disabled):not(.is-selected) {
-    border-color: fade(@color-primary, 45%);
+    border-color: rgba(var(--color-primary-rgb), 45%);
     background: @color-surface-container;
     transform: translateY(-1px);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
@@ -122,9 +122,9 @@
 
   &.is-selected {
     border-color: @color-primary;
-    background: linear-gradient(135deg, fade(@color-primary, 7%), fade(@color-primary, 2%)),
+    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 7%), rgba(var(--color-primary-rgb), 2%)),
       @color-surface-container;
-    box-shadow: 0 0 0 3px fade(@color-primary, 12%), 0 4px 14px fade(@color-primary, 8%);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 12%), 0 4px 14px rgba(var(--color-primary-rgb), 8%);
   }
 
   &:disabled {
@@ -141,8 +141,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: fade(@color-primary, 7%);
-  border: 1.5px solid fade(@color-primary, 14%);
+  background: rgba(var(--color-primary-rgb), 7%);
+  border: 1.5px solid rgba(var(--color-primary-rgb), 14%);
   color: @color-on-surface-variant;
   transition: background 0.18s, color 0.18s, border-color 0.18s;
 

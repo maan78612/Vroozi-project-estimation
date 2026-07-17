@@ -16,6 +16,10 @@
   gap: 2rem;
 }
 
+@media (max-width: @breakpoint-mobile) {
+  .flag-grid.flag-grid-2 { grid-template-columns: 1fr; }
+}
+
 .range-wrap { /* container */ }
 
 .range-header {
@@ -80,7 +84,7 @@
 
   &:hover::-webkit-slider-thumb {
     transform: scale(1.18);
-    box-shadow: 0 2px 10px fade(@color-primary, 30%);
+    box-shadow: 0 2px 10px rgba(var(--color-primary-rgb), 30%);
   }
 
   &::-moz-range-thumb {

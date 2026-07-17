@@ -31,7 +31,10 @@ const PAGE_SIZE = 10;
 
 type EmployeeSortOption = 'name' | 'projects';
 
-const EMPLOYEE_FIELDS: FormFieldInterface[] = [
+// Password is required on create, optional on edit (blank = keep the
+// current password) — same split as CLIENT_CREATE_FIELDS/CLIENT_EDIT_FIELDS
+// in client-fields.config.ts.
+const BASE_EMPLOYEE_FIELDS: FormFieldInterface[] = [
   {
     key: 'name',
     label: 'Full name',
@@ -50,15 +53,9 @@ const EMPLOYEE_FIELDS: FormFieldInterface[] = [
     placeholder: 'priya@company.com',
     icon: 'mail',
   },
-  {
-    key: 'password',
-    label: 'Password',
-    type: FieldTypeEnum.Text,
-    required: true,
-    inputType: 'password',
-    placeholder: 'Minimum 8 characters',
-    icon: 'lock',
-  },
+];
+
+const TRAILING_EMPLOYEE_FIELDS: FormFieldInterface[] = [
   {
     key: 'jobTitle',
     label: 'Job title',
@@ -75,6 +72,34 @@ const EMPLOYEE_FIELDS: FormFieldInterface[] = [
     placeholder: 'e.g. Integrations',
     icon: 'apartment',
   },
+];
+
+const EMPLOYEE_CREATE_FIELDS: FormFieldInterface[] = [
+  ...BASE_EMPLOYEE_FIELDS,
+  {
+    key: 'password',
+    label: 'Password',
+    type: FieldTypeEnum.Text,
+    required: true,
+    inputType: 'password',
+    placeholder: 'Minimum 8 characters',
+    icon: 'lock',
+  },
+  ...TRAILING_EMPLOYEE_FIELDS,
+];
+
+const EMPLOYEE_EDIT_FIELDS: FormFieldInterface[] = [
+  ...BASE_EMPLOYEE_FIELDS,
+  {
+    key: 'password',
+    label: 'Password',
+    type: FieldTypeEnum.Text,
+    required: false,
+    inputType: 'password',
+    placeholder: 'Leave blank to keep the current password',
+    icon: 'lock',
+  },
+  ...TRAILING_EMPLOYEE_FIELDS,
 ];
 
 @Component({
@@ -94,7 +119,7 @@ export class UsersListComponent {
   private projectsStore = inject(ProjectsStoreService);
   private router = inject(Router);
 
-  readonly fields = EMPLOYEE_FIELDS;
+  readonly fields = computed(() => (this.editTarget() ? EMPLOYEE_EDIT_FIELDS : EMPLOYEE_CREATE_FIELDS));
 
   searchQuery = signal('');
   sortBy = signal<EmployeeSortOption>('name');
@@ -141,15 +166,19 @@ export class UsersListComponent {
     Math.max(1, Math.ceil(this.filteredEmployees().length / PAGE_SIZE)),
   );
 
+  // Clamped view of `page` — a shrinking list (e.g. rows removed while on
+  // the last page) can never strand the table on a page that no longer exists.
+  readonly currentPage = computed(() => Math.min(this.page(), this.totalPages()));
+
   readonly rangeStart = computed(() =>
-    this.filteredEmployees().length === 0 ? 0 : (this.page() - 1) * PAGE_SIZE + 1,
+    this.filteredEmployees().length === 0 ? 0 : (this.currentPage() - 1) * PAGE_SIZE + 1,
   );
   readonly rangeEnd = computed(() =>
-    Math.min(this.page() * PAGE_SIZE, this.filteredEmployees().length),
+    Math.min(this.currentPage() * PAGE_SIZE, this.filteredEmployees().length),
   );
 
   readonly pagedEmployees = computed(() => {
-    const start = (this.page() - 1) * PAGE_SIZE;
+    const start = (this.currentPage() - 1) * PAGE_SIZE;
     return this.filteredEmployees().slice(start, start + PAGE_SIZE);
   });
 
@@ -188,12 +217,38 @@ export class UsersListComponent {
     });
   }
 
-  // ── Add member ─────────────────────────────────────────────────────
+  // ── Add / edit employee (same dialog — `editTarget` tells save() which) ──
   dialogOpen = signal(false);
+  editTarget = signal<UserInterface | null>(null);
   saving = signal(false);
   saveError = signal('');
 
+  readonly dialogTitle = computed(() => (this.editTarget() ? 'Edit Employee' : 'Add Employee'));
+  readonly dialogSubtitle = computed(() =>
+    this.editTarget()
+      ? 'Update this employee’s account details.'
+      : 'Creates a sign-in account with the User role.',
+  );
+  readonly dialogInitialValue = computed<Record<string, string>>(() => {
+    const target = this.editTarget();
+    if (!target) return {} as Record<string, string>;
+    // Password is never prefilled — blank means "keep the current one" on edit.
+    return {
+      name: target.name,
+      email: target.email,
+      jobTitle: target.jobTitle ?? '',
+      department: target.department ?? '',
+    };
+  });
+
   openAdd(): void {
+    this.editTarget.set(null);
+    this.saveError.set('');
+    this.dialogOpen.set(true);
+  }
+
+  openEdit(employee: UserInterface): void {
+    this.editTarget.set(employee);
     this.saveError.set('');
     this.dialogOpen.set(true);
   }
@@ -206,22 +261,29 @@ export class UsersListComponent {
   saveDialog(value: Record<string, string | number>): void {
     const name = (value['name'] as string)?.trim();
     const email = (value['email'] as string)?.trim();
-    const password = (value['password'] as string) ?? '';
+    const password = (value['password'] as string) || undefined;
     const jobTitle = (value['jobTitle'] as string)?.trim() || undefined;
     const department = (value['department'] as string)?.trim() || undefined;
-    if (!name || !email || !password) return;
+    if (!name || !email) return;
+
+    const target = this.editTarget();
+    if (!target && !password) return; // password required on create
 
     this.saving.set(true);
     this.saveError.set('');
 
-    this.usersService.create({ name, email, password, jobTitle, department }).subscribe({
+    const save$ = target
+      ? this.usersService.update(target.id, { name, email, password, jobTitle, department })
+      : this.usersService.create({ name, email, password: password!, jobTitle, department });
+
+    save$.subscribe({
       next: () => {
         this.saving.set(false);
         this.dialogOpen.set(false);
       },
       error: (err: unknown) => {
         this.saving.set(false);
-        this.saveError.set(err instanceof Error ? err.message : 'Could not add the employee.');
+        this.saveError.set(err instanceof Error ? err.message : 'Could not save the employee.');
       },
     });
   }

@@ -10,18 +10,18 @@
  * ──────────────────────────────────────────────────────────────────
  */
 
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth/auth-service';
 import { UsersService } from '../../../../core/services/users/users-service';
 import { ErpsService } from '../../../../core/services/erps/erps-service';
 import { SuppliersService } from '../../../../core/services/suppliers/suppliers-service';
-import { ClientCompaniesService } from '../../../../core/services/client-companies/client-companies-service';
+import { ClientUsersService } from '../../../../core/services/client-users/client-users-service';
 import { ProjectsStoreService } from '../../../../core/services/projects/projects-store.service';
 import { RoleService } from '../../../../core/services/role/role-service';
 import { COMPLEXITY_FLAGS, RISK_FLAGS } from '../../../../core/config/feature-flags.config';
-import { CLIENT_COMPANY_FIELDS } from '../../../../core/config/client-fields.config';
+import { CLIENT_CREATE_FIELDS } from '../../../../core/config/client-fields.config';
 import { ProjectInterface, YesNo } from '../../../../core/intefaces/form/project.interface';
 import { FormFieldInterface } from '../../../../core/intefaces/form/form-field.interface';
 import { FieldTypeEnum } from '../../../../core/enums/field-type.enum';
@@ -59,10 +59,14 @@ export class ProjectFormComponent {
   private usersService = inject(UsersService);
   private erpsService = inject(ErpsService);
   private suppliersService = inject(SuppliersService);
-  private clientCompaniesService = inject(ClientCompaniesService);
+  private clientUsersService = inject(ClientUsersService);
   private projectsStore = inject(ProjectsStoreService);
   private roleService = inject(RoleService);
   private fb = inject(FormBuilder);
+  // Scopes the outside-click check below to just the step header — the
+  // component's own host element is the whole wizard page, so "outside
+  // the host" would almost never be true.
+  @ViewChild('stepHeader') private stepHeader?: ElementRef<HTMLElement>;
 
   /*
    * ──────────────────────────────────────────────────────────────────
@@ -109,8 +113,8 @@ export class ProjectFormComponent {
     projectName: ['', [Validators.required, Validators.minLength(2)]],
     erp: ['', [Validators.required]],
     supplier: [''],
-    // Admin-editable only — see addOptionTarget / the basics step template.
-    clientCompany: [''],
+    // Admin-editable only — see the basics step template.
+    client: [''],
     user: ['', [Validators.required]],
     masterDataInterfaces: [0, [Validators.required, Validators.min(0)]],
     transactionalInterfaces: [0, [Validators.required, Validators.min(0)]],
@@ -141,6 +145,10 @@ export class ProjectFormComponent {
   private readonly _routeSupplier = this.route.snapshot.queryParamMap.get('supplier') ?? '';
 
   currentStep = signal(0);
+  // Mobile-only: the sidebar step drawer collapses into a compact
+  // "Step X of N" toggle below tablet width (see project-form.component.less)
+  // — this is whether its tap-to-expand step list is open.
+  mobileStepListOpen = signal(false);
   editingProject = signal<ProjectInterface | null>(null);
   loadError = signal('');
   isSubmitting = signal(false);
@@ -159,12 +167,14 @@ export class ProjectFormComponent {
 
   /*
    * ──────────────────────────────────────────────────────────────────
-   !  "+ Add new" dialog for the ERP / Supplier pick-lists (admin only;
-   *  the API rejects the call for anyone else). Which list is being
-   *  added to (null = dialog closed), plus request progress/error.
+   !  "+ Add new" dialog for the ERP / Supplier / Client pick-lists
+   *  (admin only; the API rejects the call for anyone else). Which
+   *  list is being added to (null = dialog closed), plus request
+   *  progress/error. Only offered from the create wizard's basics step
+   *  (see project-basics-step.component.html) — not from the edit form.
    * ──────────────────────────────────────────────────────────────────
    */
-  addOptionTarget = signal<'erp' | 'supplier' | 'clientCompany' | null>(null);
+  addOptionTarget = signal<'erp' | 'supplier' | 'client' | null>(null);
   addOptionSaving = signal(false);
   addOptionError = signal('');
 
@@ -192,10 +202,10 @@ export class ProjectFormComponent {
   // Employees a project can be assigned/reassigned to — admin-only concern, loaded from the API.
   readonly assignableUsers = this.usersService.assignableUsers;
 
-  // Dropdown pick-lists, loaded from the API (GET /erps, GET /suppliers, GET /client-companies).
+  // Dropdown pick-lists, loaded from the API (GET /erps, GET /suppliers, GET /users?role=client).
   readonly erps = this.erpsService.erps;
   readonly suppliers = this.suppliersService.suppliers;
-  readonly clientCompanies = this.clientCompaniesService.names;
+  readonly clients = this.clientUsersService.clientUsers;
 
   // Edit mode waits for the store before it can populate the form.
   readonly projectsLoading = this.projectsStore.loading;
@@ -218,20 +228,36 @@ export class ProjectFormComponent {
     // "Existing project" mode: picking a project auto-fills its ERP as a
     // convenience (still editable). Re-fires on every distinct pick, and
     // is a no-op in 'new' mode or when the field is cleared.
+    //
+    // Client is different: it's not just a convenience default, it's
+    // locked to whatever was set on the project's first supplier entry
+    // and can't be changed here. Client-role visibility is scoped
+    // per-document (project.client, see project.service.ts) — a later
+    // entry saved with a different client would silently vanish from
+    // part of "their" project, so every entry sharing a projectName must
+    // carry the same client. (Still editable from the edit form, which
+    // changes it on all — see edit-project-form.component.ts.)
     this.form.get('projectName')?.valueChanges.subscribe((name) => {
       if (this.entryMode() !== 'existing' || !name) return;
       const first = this.projectsStore.entriesFor(name)[0];
-      if (first) this.form.get('erp')?.setValue(first.erp);
+      if (!first) return;
+      this.form.get('erp')?.setValue(first.erp);
+      this.form.get('client')?.setValue(first.client ?? '');
+      this.form.get('client')?.disable();
     });
 
     // The store feeds edit-mode lookups and the "existing project" dropdown.
     this.projectsStore.load();
-    // ERP + Supplier + Client Company pick-lists for the basics step.
+    // ERP + Supplier pick-lists for the basics step.
     this.erpsService.load();
     this.suppliersService.load();
-    this.clientCompaniesService.load();
-    // The assignee dropdown is fed by an admin-only endpoint.
-    if (this.isAdmin()) this.usersService.load();
+    // Client + assignee dropdowns are fed by admin-only endpoints — the
+    // call would just 403 for employees/clients, who see read-only text
+    // instead of these dropdowns anyway.
+    if (this.isAdmin()) {
+      this.clientUsersService.load();
+      this.usersService.load();
+    }
 
     /*
      * Employees don't get to reassign their own project — lock the field
@@ -275,7 +301,7 @@ export class ProjectFormComponent {
         projectName: p.projectName ?? '',
         erp: p.erp ?? '',
         supplier: p.supplier ?? '',
-        clientCompany: p.clientCompany ?? '',
+        client: p.client ?? '',
         user: p.user ?? '',
         masterDataInterfaces: p.masterDataInterfaces ?? 0,
         transactionalInterfaces: p.transactionalInterfaces ?? 0,
@@ -364,24 +390,34 @@ export class ProjectFormComponent {
      * is scoped by a different field, so each gets its own check.
      */
     if (this.isClient()) {
-      if (found.clientCompany !== this.currentUser()?.clientCompany) {
-        this.loadError.set('This project is no longer available to your company.');
+      if (found.client !== this.currentUserId()) {
+        this.loadError.set('This project is no longer assigned to you.');
         return;
       }
     } else if (!this.isAdmin() && found.user !== this.currentUserId()) {
       this.loadError.set('This project is no longer assigned to you.');
       return;
     }
+    /*
+     * Non-admins see the name but can't change it (renaming would split
+     * this entry out of its project group — the backend strips the field
+     * from their updates too, this just makes the form honest about it).
+     * getRawValue() in onSubmit still reads disabled controls, so the
+     * rest of the payload is unaffected.
+     */
+    if (!this.isAdmin()) {
+      this.form.get('projectName')?.disable({ emitEvent: false });
+    }
     this.editingProject.set(found);
   }
 
   /*
    * ──────────────────────────────────────────────────────────────────
-   !  "+ Add new" ERP / Supplier — opened from the basics step.
-   *  On success the created name is selected in the matching field.
+   !  "+ Add new" ERP / Supplier / Client — opened from the basics step.
+   *  On success the created value is selected in the matching field.
    * ──────────────────────────────────────────────────────────────────
    */
-  openAddOption(target: 'erp' | 'supplier' | 'clientCompany'): void {
+  openAddOption(target: 'erp' | 'supplier' | 'client'): void {
     this.addOptionError.set('');
     this.addOptionTarget.set(target);
   }
@@ -395,9 +431,11 @@ export class ProjectFormComponent {
   // three-way ternary repeated across the template for every field.
   // `fields` is a single-element FormFieldInterface[] — <app-form>
   // (via the generalized AddOptionDialogComponent) renders it the
-  // same way it renders any other form.
+  // same way it renders any other form. Client reuses CLIENT_CREATE_FIELDS
+  // (name/email/password) since it creates a real login account, not
+  // just a pick-list name.
   private static readonly ADD_OPTION_COPY: Record<
-    'erp' | 'supplier' | 'clientCompany',
+    'erp' | 'supplier' | 'client',
     { title: string; subtitle: string; fields: FormFieldInterface[] }
   > = {
     erp: {
@@ -428,11 +466,10 @@ export class ProjectFormComponent {
         },
       ],
     },
-    clientCompany: {
-      title: 'Add Client Company',
-      // Same copy as the Clients Directory's own add dialog — same fields too (see below).
-      subtitle: 'Shown on the Clients Directory and selectable in every project.',
-      fields: CLIENT_COMPANY_FIELDS,
+    client: {
+      title: 'Add Client',
+      subtitle: 'Creates a login account — the client can sign in immediately.',
+      fields: CLIENT_CREATE_FIELDS,
     },
   };
 
@@ -443,22 +480,42 @@ export class ProjectFormComponent {
 
   saveAddOption(value: Record<string, string | number>): void {
     const target = this.addOptionTarget();
+    if (!target) return;
+
+    if (target === 'client') {
+      const name = (value['name'] as string)?.trim();
+      const email = (value['email'] as string)?.trim();
+      const password = (value['password'] as string) ?? '';
+      if (!name || !email || !password) return;
+
+      this.addOptionSaving.set(true);
+      this.addOptionError.set('');
+
+      this.clientUsersService.create({ name, email, password }).subscribe({
+        next: (created) => {
+          this.addOptionSaving.set(false);
+          this.addOptionTarget.set(null);
+          // Convenience: what you just added is what you meant to pick —
+          // the field stores the client's id, not their name.
+          this.form.get('client')?.setValue(created.id);
+        },
+        error: (err: unknown) => {
+          this.addOptionSaving.set(false);
+          this.addOptionError.set(
+            err instanceof Error ? err.message : 'Could not save. Please try again.',
+          );
+        },
+      });
+      return;
+    }
+
     const name = (value['name'] as string)?.trim();
-    if (!target || !name) return;
+    if (!name) return;
 
     this.addOptionSaving.set(true);
     this.addOptionError.set('');
 
-    const create$ =
-      target === 'erp'
-        ? this.erpsService.create(name)
-        : target === 'supplier'
-          ? this.suppliersService.create(name)
-          : this.clientCompaniesService.create(
-              name,
-              (value['email'] as string)?.trim() || undefined,
-              (value['primaryContact'] as string)?.trim() || undefined,
-            );
+    const create$ = target === 'erp' ? this.erpsService.create(name) : this.suppliersService.create(name);
 
     create$.subscribe({
       next: (created) => {
@@ -486,6 +543,10 @@ export class ProjectFormComponent {
     this.entryMode.set(mode);
     // The name field switches between free text and the project dropdown.
     this.form.get('projectName')?.setValue('');
+    // Release the client lock from a previous 'existing' pick (see the
+    // projectName subscription above) — re-locked once a project is
+    // chosen again, left editable in 'new' mode.
+    this.form.get('client')?.enable();
   }
 
   /*
@@ -517,6 +578,29 @@ export class ProjectFormComponent {
       this.currentStep.set(index);
       window.scrollTo(0, 0);
     }
+    this.mobileStepListOpen.set(false);
+  }
+
+  toggleMobileStepList(): void {
+    this.mobileStepListOpen.update((open) => !open);
+  }
+
+  // Outside click / Escape close the mobile step list, same pattern as
+  // SearchDropdownComponent — there's otherwise no way to dismiss it
+  // without picking a step.
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (
+      this.mobileStepListOpen() &&
+      !this.stepHeader?.nativeElement.contains(event.target as Node)
+    ) {
+      this.mobileStepListOpen.set(false);
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onDocumentEscape(): void {
+    this.mobileStepListOpen.set(false);
   }
 
   /*
@@ -549,7 +633,7 @@ export class ProjectFormComponent {
       projectName: (raw.projectName ?? '').trim(),
       erp: raw.erp ?? '',
       supplier: (raw.supplier ?? '').trim(),
-      clientCompany: raw.clientCompany ?? '',
+      client: raw.client ?? '',
       user: raw.user ?? '',
       masterDataInterfaces: raw.masterDataInterfaces ?? 0,
       transactionalInterfaces: raw.transactionalInterfaces ?? 0,

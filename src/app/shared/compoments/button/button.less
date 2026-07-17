@@ -27,10 +27,11 @@
     transform 0.1s ease,
     opacity 0.15s ease,
     box-shadow 0.15s ease;
-  box-shadow: 0 2px 12px fade(@color-primary, 15%);
+  box-shadow: 0 2px 12px rgba(var(--color-primary-rgb), 15%);
 
   &:hover:not(:disabled):not(.btn-disabled) {
-    background: @color-secondary;
+    background: @color-primary-hover;
+    box-shadow: 0 4px 16px rgba(var(--color-primary-rgb), 25%);
   }
 
   &:active:not(:disabled):not(.btn-disabled) {
@@ -46,7 +47,7 @@
   }
 
   &.btn-loading {
-    background: @color-secondary;
+    background: @color-primary-hover;
   }
 }
 
@@ -120,25 +121,27 @@
 }
 
 .btn-primary.btn-danger {
-  background: @color-error-container;
-  color: @color-on-error-container;
+  background: @color-danger-fill;
+  color: @color-on-danger-fill;
+  box-shadow: 0 2px 12px rgba(var(--color-danger-fill-rgb), 15%);
 
   &:hover:not(:disabled):not(.btn-disabled) {
-    background: darken(@color-error-container, 6%);
+    background: @color-danger-fill-hover;
+    box-shadow: 0 4px 16px rgba(var(--color-danger-fill-rgb), 25%);
   }
 
   &.btn-disabled,
   &:disabled {
-    background: fade(@color-error-container, 75%);
+    background: rgba(var(--color-danger-fill-rgb), 75%);
   }
 
   &.btn-loading {
-    background: darken(@color-error-container, 6%);
+    background: @color-danger-fill-hover;
   }
 }
 
 .btn-secondary.btn-danger {
-  border-color: fade(@color-error, 40%);
+  border-color: rgba(var(--color-error-rgb), 40%);
   color: @color-error;
 
   &:hover:not(:disabled):not(.btn-disabled) {
@@ -151,14 +154,14 @@
   color: @color-error;
 
   &:hover:not(:disabled):not(.btn-disabled) {
-    color: lighten(@color-error, 8%);
+    color: color-mix(in srgb, @color-error, white 8%);
   }
 }
 
 .btn-spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid fade(@color-on-primary, 35%);
+  border: 2px solid rgba(var(--color-on-primary-rgb), 35%);
   border-top-color: @color-on-primary;
   border-radius: 50%;
   animation: btn-spin 0.7s linear infinite;
@@ -167,8 +170,13 @@
 
 .btn-secondary .btn-spinner,
 .btn-link .btn-spinner {
-  border-color: fade(@color-on-surface, 35%);
+  border-color: rgba(var(--color-on-surface-rgb), 35%);
   border-top-color: @color-on-surface;
+}
+
+.btn-primary.btn-danger .btn-spinner {
+  border-color: rgba(var(--color-on-danger-fill-rgb), 35%);
+  border-top-color: @color-on-danger-fill;
 }
 
 .btn-label {

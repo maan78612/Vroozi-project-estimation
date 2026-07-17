@@ -34,7 +34,7 @@
   height: 40px;
   flex-shrink: 0;
   border-radius: @radius-lg;
-  background: fade(@color-primary, 15%);
+  background: rgba(var(--color-primary-rgb), 15%);
   color: @color-primary;
   display: flex;
   align-items: center;
@@ -75,7 +75,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
   border-radius: @radius-lg;
   background: none;
   border: none;
@@ -86,9 +86,23 @@
     background 0.15s ease,
     color 0.15s ease;
 
+  // The icon sits in a small tonal circle. State is carried by the
+  // chip's fill (neutral → gold → success), NEVER by opacity — the old
+  // `:disabled { opacity: 0.5 }` also caught the active step (it's
+  // disabled too, since you can't re-click it) and washed the whole
+  // nav out to the grey-on-grey look in both themes.
   .sidebar-step-icon {
-    font-size: 20px;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: grid;
+    place-items: center;
     flex-shrink: 0;
+    font-size: 20px;
+    border-radius: 50%;
+    background: @color-surface-container-high;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
   }
 
   .sidebar-step-label {
@@ -98,25 +112,35 @@
   &:not(:disabled):hover {
     background: @color-surface-container-high;
     color: @color-on-surface;
+
+    .sidebar-step-icon {
+      background: @color-surface-container-highest;
+    }
   }
 
   &:disabled {
     cursor: default;
-    opacity: 0.5;
   }
 
+  // Completed: revisitable — full-contrast label + success check chip.
   &.is-done {
-    color: @color-on-surface-variant;
-    opacity: 1;
+    color: @color-on-surface;
 
     .sidebar-step-icon {
+      background: rgba(var(--color-success-rgb), 14%);
       color: @color-success;
     }
   }
 
+  // Current: soft gold wash on the row, solid gold chip, bold label.
   &.is-active {
-    background: @color-primary-container;
-    color: @color-on-primary-container;
+    background: rgba(var(--color-primary-rgb), 14%);
+    color: @color-on-surface;
+
+    .sidebar-step-icon {
+      background: @color-primary;
+      color: @color-on-primary;
+    }
 
     .sidebar-step-label {
       font-weight: 700;
@@ -207,6 +231,22 @@
   padding: 2rem 2.5rem 1.25rem;
 }
 
+// Plain-text wrapper on desktop (the sidebar drawer already gives full step
+// nav there); becomes the tappable step-jump control below tablet width —
+// see .respond-tablet() for the interactive styling and .mobile-step-list.
+.step-eyebrow-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0 0 0.5rem;
+  font: inherit;
+  cursor: default;
+  color: inherit;
+}
+
 .step-eyebrow {
   display: block;
   font-size: 0.71rem;
@@ -214,7 +254,16 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: @color-primary;
-  margin-bottom: 0.5rem;
+}
+
+.mobile-step-chevron {
+  display: none;
+  font-size: 18px;
+  color: @color-primary;
+}
+
+.mobile-step-list {
+  display: none;
 }
 
 .step-title {
@@ -245,7 +294,7 @@
 
   &.is-filled {
     background: @color-primary;
-    box-shadow: 0 0 8px fade(@color-primary, 50%);
+    box-shadow: 0 0 8px rgba(var(--color-primary-rgb), 50%);
   }
 }
 
@@ -314,7 +363,7 @@
   gap: 1rem;
   padding: 1.25rem 2.5rem;
   border-top: 1px solid @color-outline-variant;
-  background: fade(@color-surface-container-lowest, 85%);
+  background: rgba(var(--color-surface-container-lowest-rgb), 85%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -338,26 +387,26 @@
   }
 
   &.btn-ghost {
-    background: fade(@color-on-surface, 7%);
-    border: 1.5px solid fade(@color-on-surface, 14%);
+    background: rgba(var(--color-on-surface-rgb), 7%);
+    border: 1.5px solid rgba(var(--color-on-surface-rgb), 14%);
     color: @color-on-surface-variant;
 
     &:hover {
-      background: fade(@color-on-surface, 12%);
+      background: rgba(var(--color-on-surface-rgb), 12%);
       color: @color-on-surface;
-      border-color: fade(@color-on-surface, 25%);
+      border-color: rgba(var(--color-on-surface-rgb), 25%);
     }
   }
 
   &.btn-primary {
     background: @color-primary;
     color: @color-on-primary;
-    box-shadow: 0 4px 16px fade(@color-primary, 35%);
+    box-shadow: 0 4px 16px rgba(var(--color-primary-rgb), 35%);
 
     &:hover:not(:disabled) {
       background: @color-primary-container;
       transform: translateY(-1px);
-      box-shadow: 0 6px 22px fade(@color-primary, 45%);
+      box-shadow: 0 6px 22px rgba(var(--color-primary-rgb), 45%);
     }
 
     &:active:not(:disabled) { transform: translateY(0); }
@@ -375,7 +424,7 @@
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid fade(@color-on-primary, 35%);
+  border: 2px solid rgba(var(--color-on-primary-rgb), 35%);
   border-top-color: @color-on-primary;
   border-radius: @radius-full;
   animation: spin 0.7s linear infinite;
@@ -406,33 +455,26 @@
     width: 100%;
     flex-direction: row;
     align-items: center;
+    justify-content: space-between;
     border-right: none;
     border-bottom: 1px solid @color-outline-variant;
-    overflow-x: auto;
-    overflow-y: visible;
   }
 
   .sidebar-brand {
     flex-shrink: 0;
   }
 
+  // The full step list moves into the header as a tap-to-expand control
+  // (.step-eyebrow-btn / .mobile-step-list below) — a horizontal icon strip
+  // here doesn't have room for 5 steps and had to scroll sideways to see
+  // the last ones, with no indication that it scrolled at all.
   .sidebar-steps {
-    flex-direction: row;
-    padding: 0.5rem;
-  }
-
-  .sidebar-step {
-    flex-shrink: 0;
-
-    .sidebar-step-label {
-      display: none;
-    }
+    display: none;
   }
 
   .sidebar-footer {
     flex-direction: row;
     border-top: none;
-    border-left: 1px solid @color-outline-variant;
   }
 
   .sidebar-footer-link span:last-child {
@@ -445,11 +487,43 @@
 
   .wizard-scroll-body {
     overflow-y: visible;
-    padding: 0 1.5rem 1.5rem;
+    // Generous bottom clearance so content can scroll fully clear of the
+    // sticky footer below instead of the footer covering the last of it.
+    padding: 0 1.5rem 6rem;
   }
 
   .wizard-main-header {
     padding: 1.5rem 1.5rem 1rem;
+    position: relative;
+  }
+
+  .step-eyebrow-btn {
+    cursor: pointer;
+  }
+
+  .mobile-step-chevron {
+    display: inline-flex;
+  }
+
+  .mobile-step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    position: absolute;
+    top: 100%;
+    left: 1.5rem;
+    right: 1.5rem;
+    z-index: 30;
+    margin-top: 0.25rem;
+    padding: 0.4rem;
+    background: @color-surface-container-high;
+    border: 1px solid @color-outline-variant;
+    border-radius: @radius-xl;
+    box-shadow:
+      0 4px 8px rgba(0, 0, 0, 0.1),
+      0 20px 48px rgba(0, 0, 0, 0.22);
+    max-height: 60vh;
+    overflow-y: auto;
   }
 
   .wizard-progress-bar {
@@ -472,12 +546,18 @@
     padding: 1.25rem 1rem 0.875rem;
   }
 
+  .mobile-step-list {
+    left: 1rem;
+    right: 1rem;
+  }
+
   .wizard-progress-bar {
     padding: 0 1rem 1rem;
   }
 
   .wizard-scroll-body {
-    padding: 0 1rem 1rem;
+    // Same reasoning as the tablet breakpoint — clear the sticky footer.
+    padding: 0 1rem 6rem;
   }
 
   .step-title {

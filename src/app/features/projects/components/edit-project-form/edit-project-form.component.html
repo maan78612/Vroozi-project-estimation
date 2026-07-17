@@ -69,6 +69,9 @@
             <div class="basics-grid">
               <div class="field-block">
                 <label class="field-label" for="ef-name">Name</label>
+                <!-- Disabled (visible but locked) for non-admins — the parent
+                     disables the control; the backend ignores the field for
+                     them anyway (see project.service.ts updateProject). -->
                 <input
                   id="ef-name"
                   type="text"
@@ -79,6 +82,8 @@
                 />
                 @if (hasError('projectName')) {
                   <span class="field-error" role="alert">Project name is required (min. 2 characters)</span>
+                } @else if (!isAdmin()) {
+                  <span class="field-hint">Only an admin can rename a project.</span>
                 }
               </div>
 
@@ -133,16 +138,31 @@
 
             @if (isAdmin()) {
               <div class="field-block client-company-row">
-                <span class="field-label">Client Company</span>
+                <span class="field-label">Client</span>
                 <app-search-dropdown
-                  formControlName="clientCompany"
-                  [options]="clientCompanyOptions()"
-                  placeholder="Select a client company…"
-                  searchPlaceholder="Search client companies…"
+                  formControlName="client"
+                  [options]="clientOptions()"
+                  placeholder="Select a client…"
+                  searchPlaceholder="Search clients…"
                 />
                 <span class="field-hint">
-                  Which client this project is for — controls which client-user accounts can see it.
+                  Which client this project is for — only they (and admins) can see it.
                 </span>
+              </div>
+            } @else {
+              <!-- Read-only for non-admins: the clients pick-list is an
+                   admin-only endpoint, and reassigning the client tag is an
+                   admin-only action (it's what scopes client access). -->
+              <div class="field-block client-company-row">
+                <label class="field-label" for="ef-client">Client</label>
+                <input
+                  id="ef-client"
+                  type="text"
+                  class="field-input"
+                  [value]="clientName() || 'No client assigned'"
+                  disabled
+                />
+                <span class="field-hint">Only an admin can change which client a project is for.</span>
               </div>
             }
           </section>
@@ -265,32 +285,35 @@
               </div>
 
               <div class="risk-sliders-col" [formGroup]="form()">
-                <div class="range-wrap">
-                  <div class="range-header">
-                    <span class="range-name">Data Layer Complexity</span>
-                    <span class="range-pct">{{ tenthsVal('dataLayer') }}<sup>/10</sup></span>
+                <p class="risk-col-label">Complexity</p>
+                <div class="range-wrap-boxed">
+                  <div class="range-wrap">
+                    <div class="range-header">
+                      <span class="range-name">Data Layer Complexity</span>
+                      <span class="range-pct">{{ numVal('dataLayer') }}<sup>%</sup></span>
+                    </div>
+                    <input
+                      type="range"
+                      class="range-input"
+                      formControlName="dataLayer"
+                      min="0" max="100"
+                      [style.background]="sliderTrack('dataLayer')"
+                    />
                   </div>
-                  <input
-                    type="range"
-                    class="range-input"
-                    formControlName="dataLayer"
-                    min="0" max="100"
-                    [style.background]="sliderTrack('dataLayer')"
-                  />
-                </div>
 
-                <div class="range-wrap">
-                  <div class="range-header">
-                    <span class="range-name">Project Uncertainties</span>
-                    <span class="range-pct">{{ tenthsVal('uncertainties') }}<sup>/10</sup></span>
+                  <div class="range-wrap">
+                    <div class="range-header">
+                      <span class="range-name">Project Uncertainties</span>
+                      <span class="range-pct">{{ numVal('uncertainties') }}<sup>%</sup></span>
+                    </div>
+                    <input
+                      type="range"
+                      class="range-input"
+                      formControlName="uncertainties"
+                      min="0" max="100"
+                      [style.background]="sliderTrack('uncertainties')"
+                    />
                   </div>
-                  <input
-                    type="range"
-                    class="range-input"
-                    formControlName="uncertainties"
-                    min="0" max="100"
-                    [style.background]="sliderTrack('uncertainties')"
-                  />
                 </div>
               </div>
             </div>

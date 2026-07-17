@@ -20,12 +20,14 @@ const BASE = `${API_BASE_URL}/projects`;
 
 function fromDoc(doc: ApiProject): ProjectInterface {
   const owner = typeof doc.owner === 'object' && doc.owner !== null ? doc.owner : null;
+  const client = typeof doc.client === 'object' && doc.client !== null ? doc.client : null;
   return {
     id: doc._id,
     projectName: doc.projectName,
     erp: doc.erp,
     supplier: doc.supplier ?? '',
-    clientCompany: doc.clientCompany,
+    client: client ? client._id : ((doc.client as string) ?? ''),
+    clientName: client?.name,
     user: owner ? owner._id : ((doc.owner as string) ?? ''),
     userName: owner?.name,
     masterDataInterfaces: doc.masterDataInterfaces,
@@ -62,7 +64,7 @@ function toBody(entry: Partial<ProjectInterface>): Record<string, unknown> {
     [
       'projectName',
       'erp',
-      'clientCompany',
+      'client',
       'masterDataInterfaces',
       'transactionalInterfaces',
       'customLogic',

@@ -1,0 +1,64 @@
+<div class="profile-page">
+  <div class="page-title-row">
+    <div>
+      <h1>My Profile</h1>
+      <p class="page-subtitle">Manage your account details and password.</p>
+    </div>
+  </div>
+
+  <!-- ── Identity card — read-only summary of who's signed in ─────────── -->
+  <section class="identity-card">
+    <div class="identity-avatar">{{ user()?.name | initials }}</div>
+    <div class="identity-texts">
+      <h2 class="identity-name">{{ user()?.name }}</h2>
+      <p class="identity-email">{{ user()?.email }}</p>
+    </div>
+    <span class="identity-role">{{ roleLabel() }}</span>
+  </section>
+
+  <div class="profile-grid">
+    <!-- ── Account details ────────────────────────────────────────────── -->
+    <section class="profile-card">
+      <header class="profile-card-header">
+        <span class="material-symbols-outlined profile-card-icon">badge</span>
+        <div>
+          <h3>Account details</h3>
+          <p>Your display name. Email is managed by an administrator.</p>
+        </div>
+      </header>
+      <app-form
+        [fields]="nameFields"
+        [initialValue]="nameInitial()"
+        submitLabel="Save name"
+        loadingLabel="Saving…"
+        [isSubmitting]="savingName()"
+        [submitError]="nameError()"
+        [submitSuccess]="nameSuccess()"
+        successMessage="Name updated."
+        (formSubmit)="saveName($event)"
+      />
+    </section>
+
+    <!-- ── Change password ────────────────────────────────────────────── -->
+    <section class="profile-card">
+      <header class="profile-card-header">
+        <span class="material-symbols-outlined profile-card-icon">key</span>
+        <div>
+          <h3>Change password</h3>
+          <p>Enter your current password, then the new one (min. 8 characters).</p>
+        </div>
+      </header>
+      <app-form
+        #passwordForm
+        [fields]="passwordFields"
+        submitLabel="Change password"
+        loadingLabel="Changing…"
+        [isSubmitting]="savingPassword()"
+        [submitError]="passwordError()"
+        [submitSuccess]="passwordSuccess()"
+        successMessage="Password changed."
+        (formSubmit)="savePassword($event)"
+      />
+    </section>
+  </div>
+</div>

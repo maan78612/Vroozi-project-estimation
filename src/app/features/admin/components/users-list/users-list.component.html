@@ -100,12 +100,17 @@
                     </div>
                   </td>
                   <td class="app-table-align-right">
-                    <app-button
-                      variant="link"
-                      label="View projects"
-                      [fullWidth]="false"
-                      (clicked)="viewProjects(employee)"
-                    />
+                    <div class="row-actions">
+                      <app-button
+                        variant="link"
+                        label="View projects"
+                        [fullWidth]="false"
+                        (clicked)="viewProjects(employee)"
+                      />
+                      <button type="button" class="row-action" (click)="openEdit(employee)" aria-label="Edit employee">
+                        <span class="material-symbols-outlined">edit</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               }
@@ -115,7 +120,7 @@
 
         @if (totalPages() > 1) {
           <div class="table-pagination">
-            <app-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="page.set($event)" />
+            <app-pagination [page]="currentPage()" [totalPages]="totalPages()" (pageChange)="page.set($event)" />
           </div>
         }
       </div>
@@ -124,10 +129,11 @@
 
   @if (dialogOpen()) {
     <app-add-option-dialog
-      title="Add Employee"
-      subtitle="Creates a sign-in account with the User role."
-      [fields]="fields"
-      submitLabel="Add member"
+      [title]="dialogTitle()"
+      [subtitle]="dialogSubtitle()"
+      [fields]="fields()"
+      [initialValue]="dialogInitialValue()"
+      [submitLabel]="editTarget() ? 'Save changes' : 'Add member'"
       [saving]="saving()"
       [errorMessage]="saveError()"
       (save)="saveDialog($event)"

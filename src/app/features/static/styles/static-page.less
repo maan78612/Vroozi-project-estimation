@@ -1,0 +1,79 @@
+@import (reference) 'styles.less';
+
+/*
+ * ──────────────────────────────────────────────────────────────────
+ !  Shared layout for the static info pages (privacy / terms /
+ *  contact) — imported by each page's own .less. They all render
+ *  inside the app shell, so this is just the content column.
+ * ──────────────────────────────────────────────────────────────────
+ */
+
+.static-page {
+  display: flex;
+  flex-direction: column;
+  gap: @spacing-gutter;
+  max-width: 820px;
+  width: 100%;
+  margin: 0 auto; // centered in the shell's full-width content column
+}
+
+.static-title {
+  .typography-headline-lg();
+  color: @color-on-surface;
+  margin: 0 0 0.25rem;
+}
+
+.static-subtitle {
+  .typography-body-md();
+  color: @color-on-surface-variant;
+  margin: 0;
+}
+
+.static-updated {
+  .typography-label-sm();
+  color: @color-outline;
+}
+
+.static-card {
+  .glass-surface();
+  border-radius: @radius-xl;
+  padding: @spacing-container-padding;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.static-section {
+  h2 {
+    .typography-body-lg();
+    font-weight: 700;
+    color: @color-on-surface;
+    margin: 0 0 0.5rem;
+  }
+
+  p,
+  li {
+    .typography-body-md();
+    color: @color-on-surface-variant;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  p + p { margin-top: 0.6rem; }
+
+  ul {
+    margin: 0.4rem 0 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  a {
+    color: @color-primary;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+  }
+}

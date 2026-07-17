@@ -1,7 +1,11 @@
 @import (reference) 'styles.less';
 
-@flag-yes-border: fade(@color-success-container, 45%);
-@flag-yes-bg:     fade(@color-success-container, 5%);
+// Border/shadow use --color-success-rgb (the strong, saturated tone) rather
+// than --color-success-container-rgb (a pale wash meant for pill/fill
+// backgrounds) — the container tone alone read as a washed-out, muddy edge
+// in both themes since it's already desaturated before the alpha fade.
+@flag-yes-border: rgba(var(--color-success-rgb), 50%);
+@flag-yes-bg:     rgba(var(--color-success-container-rgb), 10%);
 
 :host {
   display: block;
@@ -27,23 +31,23 @@
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 
   &:hover {
-    border-color: fade(@color-primary, 35%);
-    background: fade(@color-primary, 2%);
+    border-color: rgba(var(--color-primary-rgb), 35%);
+    background: rgba(var(--color-primary-rgb), 2%);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 3px fade(@color-primary, 20%);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 20%);
   }
 
   &.is-yes {
     border-color: @flag-yes-border;
     background: @flag-yes-bg;
-    box-shadow: 0 2px 12px fade(@color-success-container, 8%);
+    box-shadow: 0 2px 12px rgba(var(--color-success-rgb), 14%);
 
     &:hover {
-      border-color: fade(@color-success-container, 60%);
-      background: fade(@color-success-container, 8%);
+      border-color: rgba(var(--color-success-rgb), 70%);
+      background: rgba(var(--color-success-container-rgb), 16%);
     }
   }
 }
@@ -93,7 +97,7 @@
   align-self: flex-start;
 
   &.b-yes {
-    background: fade(@color-success-container, 12%);
+    background: rgba(var(--color-success-container-rgb), 12%);
     color: @color-success;
   }
 

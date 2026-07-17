@@ -81,24 +81,136 @@
   flex-shrink: 0;
 }
 
+// Anchors the absolutely-positioned dropdown to the chip.
+.shell-user-wrap {
+  position: relative;
+}
+
+// A <button> now — opens the user menu (profile / static pages / sign out).
 .shell-user {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  border-radius: @radius-full;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: rgba(var(--color-primary-rgb), 8%);
+    border-color: rgba(var(--color-primary-rgb), 20%);
+  }
+}
+
+.shell-user-chevron {
+  font-size: 18px;
+  color: @color-on-surface-variant;
+}
+
+.shell-user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 230px;
+  padding: 0.4rem;
+  // Flat opaque, NOT .glass-surface(): the header above already has a
+  // backdrop-filter, so a nested one here can't sample the page behind
+  // it — in dark theme the glass mixin degraded to a translucent panel
+  // with no blur, unreadable over table content.
+  background: @color-surface-container-high;
+  border: 1px solid @color-outline-variant;
+  border-radius: @radius-lg;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  z-index: 60; // above the sticky header's own stacking context
+}
+
+.shell-user-menu-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.5rem 0.75rem 0.6rem;
+  border-bottom: 1px solid rgba(var(--color-on-surface-rgb), 8%);
+  margin-bottom: 0.25rem;
+}
+
+.shell-user-menu-name {
+  .typography-body-md();
+  font-weight: 700;
+  color: @color-on-surface;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-user-menu-email {
+  .typography-label-sm();
+  text-transform: none;
+  letter-spacing: normal;
+  color: @color-outline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  border-radius: @radius-md;
+  background: none;
+  font-family: inherit;
+  .typography-body-md();
+  color: @color-on-surface-variant;
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  .material-symbols-outlined {
+    font-size: 19px;
+  }
+
+  &:hover {
+    background: rgba(var(--color-primary-rgb), 10%);
+    color: @color-on-surface;
+  }
+}
+
+.shell-user-menu-signout {
+  color: @color-error;
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(var(--color-on-surface-rgb), 8%);
+  border-radius: 0 0 @radius-md @radius-md;
+  padding-top: 0.65rem;
+
+  &:hover {
+    background: rgba(var(--color-error-rgb), 10%);
+    color: @color-error;
+  }
 }
 
 .shell-avatar {
   width: 32px;
   height: 32px;
   border-radius: @radius-full;
-  background: fade(@color-primary, 20%);
+  background: rgba(var(--color-primary-rgb), 20%);
   color: @color-primary;
   display: flex;
   align-items: center;
   justify-content: center;
   .typography-label-sm();
   font-weight: 700;
-  border: 1px solid fade(@color-primary, 30%);
+  border: 1px solid rgba(var(--color-primary-rgb), 30%);
 }
 
 .shell-user-name {
@@ -110,27 +222,27 @@
   white-space: nowrap;
 }
 
-.shell-signout {
+.shell-theme-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   background: none;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: @radius-full;
   cursor: pointer;
   color: @color-on-surface-variant;
-  .typography-label-md();
-  text-transform: none;
-  letter-spacing: normal;
-  padding: 0.4rem 0.5rem;
-  border-radius: @radius-md;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 
   .material-symbols-outlined {
     font-size: 20px;
   }
 
   &:hover {
-    color: @color-error;
+    color: @color-primary;
+    background: rgba(var(--color-primary-rgb), 10%);
+    border-color: rgba(var(--color-primary-rgb), 20%);
   }
 }
 
@@ -182,7 +294,7 @@
 }
 
 .shell-mobile-nav-link-active {
-  background: fade(@color-primary, 12%);
+  background: rgba(var(--color-primary-rgb), 12%);
   color: @color-primary;
   font-weight: 700;
 }
@@ -202,6 +314,22 @@
   padding: @spacing-section-gap @spacing-container-padding;
 }
 
+.shell-footer {
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: @spacing-gutter @spacing-container-padding;
+  box-sizing: border-box;
+  border-top: 1px solid rgba(var(--color-on-surface-rgb), 8%);
+}
+
+.shell-footer-copy {
+  .typography-label-sm();
+  text-transform: none;
+  letter-spacing: normal;
+  color: @color-outline;
+}
+
 .respond-laptop({
   .shell-nav {
     gap: 20px;
@@ -215,7 +343,7 @@
 .respond-tablet({
   .shell-nav,
   .shell-user-name,
-  .shell-signout {
+  .shell-theme-toggle {
     display: none;
   }
 
@@ -239,7 +367,8 @@
     padding: 0 @spacing-gutter;
   }
 
-  .shell-user {
+  // The mobile nav sheet covers profile/static/sign-out at this size.
+  .shell-user-wrap {
     display: none;
   }
 });

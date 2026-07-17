@@ -26,7 +26,7 @@
     top: 50%;
     transform: translateY(-50%);
     font-size: 18px;
-    color: fade(@color-on-surface, 45%);
+    color: rgba(var(--color-on-surface-rgb), 45%);
     pointer-events: none;
   }
 
@@ -34,8 +34,8 @@
     width: 100%;
     box-sizing: border-box;
     padding: 0.7rem 1rem 0.7rem 2.5rem;
-    background: fade(@color-on-surface, 7%);
-    border: 1px solid fade(@color-on-surface, 12%);
+    background: rgba(var(--color-on-surface-rgb), 7%);
+    border: 1px solid rgba(var(--color-on-surface-rgb), 12%);
     border-radius: @radius-lg;
     color: @color-on-surface;
     .typography-body-md();
@@ -50,7 +50,7 @@
 
     &:focus {
       .focus-ring();
-      background: fade(@color-on-surface, 10%);
+      background: rgba(var(--color-on-surface-rgb), 10%);
     }
   }
 }
@@ -58,15 +58,15 @@
 .filter-select {
   flex: 0 0 auto;
   padding: 0.65rem 2rem 0.65rem 1rem;
-  background: fade(@color-on-surface, 7%);
-  border: 1px solid fade(@color-on-surface, 12%);
+  background: rgba(var(--color-on-surface-rgb), 7%);
+  border: 1px solid rgba(var(--color-on-surface-rgb), 12%);
   border-radius: @radius-full;
   color: @color-on-surface;
   font-size: 0.85rem;
   font-family: inherit;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a8a4b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: var(--select-chevron-icon);
   background-repeat: no-repeat;
   background-position: right 0.7rem center;
   transition:
@@ -87,7 +87,7 @@
   width: 1px;
   align-self: stretch;
   min-height: 2.25rem;
-  background: fade(@color-on-surface, 12%);
+  background: rgba(var(--color-on-surface-rgb), 12%);
   flex: 0 0 auto;
 }
 
@@ -122,21 +122,21 @@
   font-weight: 700;
   font-family: @font-family-mono;
   cursor: pointer;
-  background: fade(@color-on-surface, 6%);
-  border: 1.5px solid fade(@color-on-surface, 14%);
-  color: fade(@color-on-surface, 50%);
+  background: rgba(var(--color-on-surface-rgb), 6%);
+  border: 1.5px solid rgba(var(--color-on-surface-rgb), 14%);
+  color: rgba(var(--color-on-surface-rgb), 50%);
   transition: all 0.15s ease;
 
   &:hover {
-    border-color: fade(@color-on-surface, 30%);
+    border-color: rgba(var(--color-on-surface-rgb), 30%);
     color: @color-on-surface;
   }
 
-  &.is-active.size-square-s { background: fade(@size-s-color, 22%); border-color: @size-s-color; color: @size-s-color; }
-  &.is-active.size-square-m { background: fade(@size-m-color, 22%); border-color: @size-m-color; color: @size-m-color; }
-  &.is-active.size-square-l { background: fade(@size-l-color, 22%); border-color: @size-l-color; color: @size-l-color; }
-  &.is-active.size-square-xl { background: fade(@size-xl-color, 22%); border-color: @size-xl-color; color: @size-xl-color; }
-  &.is-active.size-square-xxl { background: fade(@size-xxl-color, 22%); border-color: @size-xxl-color; color: @size-xxl-color; }
+  &.is-active.size-square-s { background: rgba(var(--size-s-color-rgb), 22%); border-color: @size-s-color; color: @size-s-color; }
+  &.is-active.size-square-m { background: rgba(var(--size-m-color-rgb), 22%); border-color: @size-m-color; color: @size-m-color; }
+  &.is-active.size-square-l { background: rgba(var(--size-l-color-rgb), 22%); border-color: @size-l-color; color: @size-l-color; }
+  &.is-active.size-square-xl { background: rgba(var(--size-xl-color-rgb), 22%); border-color: @size-xl-color; color: @size-xl-color; }
+  &.is-active.size-square-xxl { background: rgba(var(--size-xxl-color-rgb), 22%); border-color: @size-xxl-color; color: @size-xxl-color; }
 }
 
 .clear-filters-btn {
@@ -150,7 +150,7 @@
   font-size: 0.8rem;
   font-weight: 600;
   font-family: inherit;
-  color: fade(@color-on-surface, 55%);
+  color: rgba(var(--color-on-surface-rgb), 55%);
   cursor: pointer;
   border-radius: @radius-md;
 
@@ -160,7 +160,7 @@
 
   &:hover {
     color: @color-on-surface;
-    background: fade(@color-on-surface, 6%);
+    background: rgba(var(--color-on-surface-rgb), 6%);
   }
 }
 

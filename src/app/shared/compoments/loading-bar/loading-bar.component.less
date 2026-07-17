@@ -9,7 +9,7 @@
   z-index: 2000;
   overflow: hidden;
   pointer-events: none;
-  background: fade(@color-primary, 12%);
+  background: rgba(var(--color-primary-rgb), 12%);
   opacity: 0;
   // Fade in with a small delay so ultra-fast requests never flash the bar;
   // fade out quickly the moment the last request settles.
@@ -34,7 +34,7 @@
     @color-primary 75%,
     transparent
   );
-  box-shadow: 0 0 12px fade(@color-primary-container, 55%);
+  box-shadow: 0 0 12px rgba(var(--color-primary-container-rgb), 55%);
   animation: loading-bar-sweep 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 

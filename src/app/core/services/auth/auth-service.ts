@@ -14,7 +14,6 @@ export function mapApiUser(user: ApiUser): UserInterface {
     name: user.name,
     email: user.email,
     role: user.role,
-    clientCompany: user.clientCompany,
     jobTitle: user.jobTitle,
     department: user.department,
   };
@@ -24,9 +23,9 @@ export function mapApiUser(user: ApiUser): UserInterface {
  * ──────────────────────────────────────────────────────────────────
  !  Authentication against the backend API (POST /auth/login).
  *
- *  The JWT + user live in SessionService (in memory only — a page
- *  refresh ends the session). The HTTP interceptor attaches the
- *  token to every request and drops the session on 401.
+ *  The JWT + user live in SessionService (persisted to localStorage,
+ *  so a refresh keeps the session alive). The HTTP interceptor
+ *  attaches the token to every request and drops the session on 401.
  * ──────────────────────────────────────────────────────────────────
  */
 @Service()
@@ -61,6 +60,31 @@ export class AuthService {
         throwError(() => toApiError(err, 'Could not load your account.')),
       ),
     );
+  }
+
+  /**
+   * Self-service profile update (PATCH /auth/me) — any signed-in role.
+   * Send only what changes; a password change must include the current
+   * one. The refreshed user is written back to the session so the shell
+   * header picks up a new name immediately.
+   */
+  updateProfile(patch: {
+    name?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }): Observable<UserInterface> {
+    return this.http
+      .patch<ApiResponse<{ user: ApiUser }>>(`${API_BASE_URL}/auth/me`, patch)
+      .pipe(
+        map((res) => {
+          const user = mapApiUser(res.data.user);
+          this.session.setUser(user);
+          return user;
+        }),
+        catchError((err: unknown) =>
+          throwError(() => toApiError(err, 'Could not update your profile.')),
+        ),
+      );
   }
 
   logout(): void {

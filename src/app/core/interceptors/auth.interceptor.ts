@@ -6,11 +6,12 @@ import { SessionService } from '../services/session/session-service';
 
 /*
  * ──────────────────────────────────────────────────────────────────
- !  Attaches the JWT to every outgoing request and handles expiry:
- *  a 401 from any endpoint except login means the token is invalid
- *  or expired, so the session is dropped and the user sent back to
- *  the login page. Login's own 401 (wrong credentials) stays with
- *  the login form.
+ !  Attaches the JWT (restored from localStorage via SessionService,
+ *  or freshly issued at login) to every outgoing request and handles
+ *  expiry: a 401 from any endpoint except login means the token is
+ *  invalid or expired, so the session is dropped and the user sent
+ *  back to the login page. Login's own 401 (wrong credentials) stays
+ *  with the login form.
  * ──────────────────────────────────────────────────────────────────
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {

@@ -2,7 +2,10 @@
 
 .stepper-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  // minmax(0, 1fr), not plain 1fr — otherwise the track's automatic minimum
+  // stays content-based, so a card's min-content width can force the whole
+  // grid wider than its container (blowout) at in-between viewport widths.
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.125rem;
 }
 
@@ -17,7 +20,7 @@
   text-align: center;
   transition: border-color 0.2s;
 
-  &:hover { border-color: fade(@color-primary, 30%); }
+  &:hover { border-color: rgba(var(--color-primary-rgb), 30%); }
 }
 
 .stepper-card-label {
@@ -55,7 +58,7 @@
 
   &:hover:not(:disabled) {
     border-color: @color-primary;
-    background: fade(@color-primary, 6%);
+    background: rgba(var(--color-primary-rgb), 6%);
     color: @color-primary;
   }
 
@@ -78,7 +81,16 @@
   margin: 0;
 }
 
+// Matches the breakpoint the wizard shell itself collapses at (see
+// project-form.component.less's .respond-tablet()) — this grid used to
+// only respond at @breakpoint-mobile (480px), so between 480–768px it
+// stayed a cramped 2-column grid while the rest of the wizard had
+// already switched to its compact mobile chrome.
+@media (max-width: @breakpoint-tablet) {
+  .stepper-grid { grid-template-columns: 1fr; gap: 0.875rem; }
+}
+
 @media (max-width: @breakpoint-mobile) {
-  .stepper-grid  { grid-template-columns: 1fr; gap: 0.875rem; }
-  .stepper-value { font-size: 2.25rem; }
+  .stepper-card   { padding: 1.25rem 1rem; }
+  .stepper-value  { font-size: 2.25rem; }
 }

@@ -16,7 +16,7 @@
 .add-option-panel {
   width: 100%;
   max-width: 440px;
-  .glass-surface(@color-surface-container-high);
+  .glass-surface(~"--color-surface-container-high-rgb");
   border-radius: @radius-xl;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
   overflow: hidden;
@@ -32,7 +32,7 @@
   gap: 1rem;
   padding: 1.35rem 1.5rem 1.1rem;
   border-bottom: 1px solid @color-outline-variant;
-  background: linear-gradient(135deg, fade(@color-primary, 6%), fade(@color-primary, 1.5%));
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 6%), rgba(var(--color-primary-rgb), 1.5%));
 }
 
 .add-option-head-texts {
@@ -74,7 +74,7 @@
   padding: 0;
   border: none;
   border-radius: @radius-full;
-  background: fade(@color-primary, 7%);
+  background: rgba(var(--color-primary-rgb), 7%);
   color: @color-on-surface-variant;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -84,7 +84,7 @@
   }
 
   &:hover {
-    background: fade(@color-primary, 15%);
+    background: rgba(var(--color-primary-rgb), 15%);
     color: @color-on-surface;
   }
 }

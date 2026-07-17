@@ -16,7 +16,13 @@ import { ButtonComponent } from '../button/button';
   imports: [ButtonComponent],
   templateUrl: './confirm-dialog.component.html',
   styleUrl: './confirm-dialog.component.less',
-  host: { '(document:keydown.escape)': 'onCancel()' },
+  host: {
+    '(document:keydown.escape)': 'onCancel()',
+    // The `title` input shares its name with the native title attribute, so a
+    // static `title="…"` at a call site would linger in the DOM and show up as
+    // a browser tooltip on hover — strip it from the host element.
+    '[attr.title]': 'null',
+  },
 })
 export class ConfirmDialogComponent {
   title = input.required<string>();

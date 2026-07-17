@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth/auth-service';
+import { ThemeService } from '../../../../core/services/theme/theme-service';
 import { homeRouteForRole } from '../../../../core/utils/role-route.util';
 import { FormComponent } from '../../../../shared/compoments/form/form.component';
 import { FormFieldInterface } from '../../../../core/intefaces/form/form-field.interface';
@@ -15,6 +16,7 @@ import { FieldTypeEnum } from '../../../../core/enums/field-type.enum';
 export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  readonly themeService = inject(ThemeService);
 
   readonly loginFields: FormFieldInterface[] = [
     {

@@ -3,38 +3,58 @@ import { FieldTypeEnum } from '../enums/field-type.enum';
 
 /*
  * ──────────────────────────────────────────────────────────────────
- !  Shared "Add/Edit Client Company" field set
+ !  "Add/Edit Client" field set — a client is a role="client" User
+ *  (a real login account), not a separate catalog entity, so this
+ *  mirrors EMPLOYEE_FIELDS (users-list.component.ts) exactly.
  *
- *  Used by the Clients Directory's add/edit dialog and the Add
- *  Project wizard's "+ Add new" client-company shortcut, so both
- *  render the exact same fields instead of drifting apart.
+ *  Password is required on create, optional on edit (blank = keep
+ *  the current password) — hence two field sets sharing everything
+ *  else.
  * ──────────────────────────────────────────────────────────────────
  */
-export const CLIENT_COMPANY_FIELDS: FormFieldInterface[] = [
+const BASE_CLIENT_FIELDS: FormFieldInterface[] = [
   {
     key: 'name',
-    label: 'Client company name',
+    label: 'Full name',
     type: FieldTypeEnum.Text,
     required: true,
-    placeholder: 'e.g. Acme Client Co.',
-    icon: 'domain',
+    placeholder: 'e.g. Julian Sterling',
+    icon: 'person',
     autofocus: true,
   },
   {
     key: 'email',
     label: 'Email',
     type: FieldTypeEnum.Text,
-    required: false,
+    required: true,
     inputType: 'email',
-    placeholder: 'contact@acme.com',
+    placeholder: 'julian@acme.com',
     icon: 'mail',
   },
+];
+
+export const CLIENT_CREATE_FIELDS: FormFieldInterface[] = [
+  ...BASE_CLIENT_FIELDS,
   {
-    key: 'primaryContact',
-    label: 'Primary contact',
+    key: 'password',
+    label: 'Password',
+    type: FieldTypeEnum.Text,
+    required: true,
+    inputType: 'password',
+    placeholder: 'Minimum 8 characters',
+    icon: 'lock',
+  },
+];
+
+export const CLIENT_EDIT_FIELDS: FormFieldInterface[] = [
+  ...BASE_CLIENT_FIELDS,
+  {
+    key: 'password',
+    label: 'Password',
     type: FieldTypeEnum.Text,
     required: false,
-    placeholder: 'e.g. Julian Sterling',
-    icon: 'person',
+    inputType: 'password',
+    placeholder: 'Leave blank to keep the current password',
+    icon: 'lock',
   },
 ];

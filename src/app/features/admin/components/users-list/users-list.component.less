@@ -73,7 +73,7 @@
   gap: 1rem;
   flex-wrap: wrap;
   padding: @spacing-gutter @spacing-container-padding;
-  border-bottom: 1px solid fade(@color-on-surface, 8%);
+  border-bottom: 1px solid rgba(var(--color-on-surface-rgb), 8%);
 }
 
 .controls-right {
@@ -85,8 +85,11 @@
 
 .search-field {
   position: relative;
-  width: 100%;
-  max-width: 320px;
+  // Grow into the controls row's free space (same idea as
+  // project-filter-bar's search) instead of a fixed 320px stub that
+  // left a dead gap before the sort/count cluster on wide screens.
+  flex: 1 1 320px;
+  max-width: 40rem;
 
   .search-icon {
     position: absolute;
@@ -94,7 +97,7 @@
     top: 50%;
     transform: translateY(-50%);
     font-size: 18px;
-    color: fade(@color-on-surface, 45%);
+    color: rgba(var(--color-on-surface-rgb), 45%);
     pointer-events: none;
   }
 
@@ -102,8 +105,8 @@
     width: 100%;
     box-sizing: border-box;
     padding: 0.7rem 1rem 0.7rem 2.5rem;
-    background: fade(@color-on-surface, 7%);
-    border: 1px solid fade(@color-on-surface, 12%);
+    background: rgba(var(--color-on-surface-rgb), 7%);
+    border: 1px solid rgba(var(--color-on-surface-rgb), 12%);
     border-radius: @radius-lg;
     color: @color-on-surface;
     .typography-body-md();
@@ -117,22 +120,22 @@
 
     &:focus {
       .focus-ring();
-      background: fade(@color-on-surface, 10%);
+      background: rgba(var(--color-on-surface-rgb), 10%);
     }
   }
 }
 
 .sort-select {
   padding: 0.6rem 2rem 0.6rem 0.9rem;
-  background: fade(@color-on-surface, 7%);
-  border: 1px solid fade(@color-on-surface, 12%);
+  background: rgba(var(--color-on-surface-rgb), 7%);
+  border: 1px solid rgba(var(--color-on-surface-rgb), 12%);
   border-radius: @radius-lg;
   color: @color-on-surface;
   .typography-body-md();
   font-size: 14px;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a8a4b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: var(--select-chevron-icon);
   background-repeat: no-repeat;
   background-position: right 0.6rem center;
 
@@ -159,9 +162,9 @@
   height: 40px;
   flex-shrink: 0;
   border-radius: @radius-full;
-  background: fade(@color-primary, 18%);
+  background: rgba(var(--color-primary-rgb), 18%);
   color: @color-primary;
-  border: 1px solid fade(@color-primary, 30%);
+  border: 1px solid rgba(var(--color-primary-rgb), 30%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -189,8 +192,8 @@
   text-transform: none;
   letter-spacing: normal;
   color: @color-primary;
-  background: fade(@color-primary, 12%);
-  border: 1px solid fade(@color-primary, 25%);
+  background: rgba(var(--color-primary-rgb), 12%);
+  border: 1px solid rgba(var(--color-primary-rgb), 25%);
   border-radius: @radius-md;
   padding: 0.25rem 0.6rem;
 }
@@ -218,20 +221,46 @@
   text-transform: none;
   letter-spacing: normal;
   color: @color-on-surface-variant;
-  background: fade(@color-outline-variant, 40%);
+  background: rgba(var(--color-outline-variant-rgb), 40%);
   border-radius: @radius-md;
   padding: 0.25rem 0.6rem;
 
   &.project-chip-more {
     font-weight: 700;
     color: @color-primary;
-    background: fade(@color-primary, 12%);
+    background: rgba(var(--color-primary-rgb), 12%);
   }
 }
 
 .table-pagination {
   padding: @spacing-gutter @spacing-container-padding;
-  border-top: 1px solid fade(@color-on-surface, 8%);
+  border-top: 1px solid rgba(var(--color-on-surface-rgb), 8%);
+}
+
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.row-action {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: @radius-md;
+  color: @color-on-surface-variant;
+  display: inline-flex;
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  &:hover {
+    color: @color-primary;
+    background: rgba(var(--color-primary-rgb), 10%);
+  }
 }
 
 .respond-mobile({

@@ -1,0 +1,52 @@
+// Full import (not `(reference)`) — static-page.less holds the actual
+// rules for this page's markup, so they must be emitted into this
+// component's (view-encapsulated) stylesheet.
+@import '../../styles/static-page.less';
+
+// Contact-specific: the three "how to reach us" tiles.
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: @spacing-gutter;
+}
+
+.contact-tile {
+  .glass-surface();
+  border-radius: @radius-xl;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .material-symbols-outlined {
+    font-size: 24px;
+    color: @color-primary;
+  }
+
+  h2 {
+    .typography-body-lg();
+    font-weight: 700;
+    color: @color-on-surface;
+    margin: 0;
+  }
+
+  p {
+    .typography-body-md();
+    font-size: 0.85rem;
+    color: @color-on-surface-variant;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  a {
+    color: @color-primary;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+  }
+}
+
+.respond-tablet({
+  .contact-grid { grid-template-columns: 1fr; }
+});

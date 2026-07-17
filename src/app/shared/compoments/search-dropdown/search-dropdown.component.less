@@ -30,17 +30,22 @@
   outline: none;
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 
+  &:hover:not(:disabled):not(.is-open) {
+    border-color: rgba(var(--color-primary-rgb), 40%);
+    background: @color-surface-container-high;
+  }
+
   &:focus-visible,
   &.is-open {
     border-color: @color-primary;
     background: @color-surface-container-high;
-    box-shadow: 0 0 0 3px fade(@color-primary, 10%);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 10%);
   }
 
   &.is-error {
     border-color: @color-error;
 
-    &:focus-visible { box-shadow: 0 0 0 3px fade(@color-error, 12%); }
+    &:focus-visible { box-shadow: 0 0 0 3px rgba(var(--color-error-rgb), 12%); }
   }
 
   &:disabled {
@@ -114,7 +119,7 @@
   }
 
   &:hover {
-    background: fade(@color-on-surface, 8%);
+    background: rgba(var(--color-on-surface-rgb), 8%);
     color: @color-on-surface;
   }
 }
@@ -129,7 +134,7 @@
   align-items: center;
   justify-content: center;
   border-radius: @radius-full;
-  background: fade(@color-primary, 12%);
+  background: rgba(var(--color-primary-rgb), 12%);
   color: @color-primary;
   font-size: 0.68rem;
   font-weight: 700;
@@ -144,11 +149,17 @@
   left: 0;
   right: 0;
   z-index: 40;
-  .glass-surface();
+  // Nearly-opaque on purpose: this panel floats directly over page content
+  // with no backdrop scrim (unlike the modal dialogs, which have their own
+  // full-page overlay behind them) — the glass-surface() mixin's usual
+  // translucency let text underneath bleed through the option list and
+  // made it hard to read, so it's a solid surface here instead.
+  background: @color-surface-container-high;
+  border: 1px solid @color-outline-variant;
   border-radius: @radius-xl;
   box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.06),
-    0 16px 40px rgba(0, 0, 0, 0.16);
+    0 4px 8px rgba(0, 0, 0, 0.1),
+    0 20px 48px rgba(0, 0, 0, 0.22);
   overflow: hidden;
   animation: sd-panel-in 0.14s ease;
 }
@@ -160,6 +171,7 @@
 
 .sd-search {
   position: relative;
+  background: @color-surface-container-highest;
   border-bottom: 1px solid @color-outline-variant;
 }
 
@@ -207,7 +219,7 @@
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  padding: 0.5rem 0.6rem;
+  padding: 0.55rem 0.65rem;
   border: none;
   border-radius: @radius-lg;
   background: transparent;
@@ -216,10 +228,15 @@
   color: @color-on-surface;
   text-align: left;
   cursor: pointer;
+  transition: background 0.1s ease;
 
-  &.is-active { background: fade(@color-primary, 7%); }
+  &.is-active { background: rgba(var(--color-primary-rgb), 10%); }
 
-  &.is-selected .sd-option-name { color: @color-primary-container; }
+  &.is-selected {
+    background: rgba(var(--color-primary-rgb), 6%);
+  }
+
+  &.is-selected .sd-option-name { color: @color-primary; }
 }
 
 .sd-option-text {
@@ -252,8 +269,22 @@
 }
 
 .sd-empty {
-  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1.5rem 1rem;
   font-size: 0.83rem;
   color: @color-outline;
   text-align: center;
+
+  &::before {
+    content: '';
+    width: 22px;
+    height: 22px;
+    background-color: @color-outline;
+    opacity: 0.6;
+    mask: url('/assets/icons/search.svg') no-repeat center / contain;
+    -webkit-mask: url('/assets/icons/search.svg') no-repeat center / contain;
+  }
 }

@@ -153,19 +153,25 @@
   @if (isAdmin()) {
     <div class="field-block">
       <div class="field-label-row">
-        <span class="field-label">Client Company</span>
-        <button type="button" class="add-option-link" (click)="addClientCompanyRequested.emit()">
-          + Add new
-        </button>
+        <span class="field-label">Client</span>
+        @if (entryMode() !== 'existing') {
+          <button type="button" class="add-option-link" (click)="addClientRequested.emit()">
+            + Add new
+          </button>
+        }
       </div>
       <app-search-dropdown
-        formControlName="clientCompany"
-        [options]="clientCompanyOptions()"
-        placeholder="Select a client company…"
-        searchPlaceholder="Search client companies…"
+        formControlName="client"
+        [options]="clientOptions()"
+        placeholder="Select a client…"
+        searchPlaceholder="Search clients…"
       />
       <span class="field-hint">
-        Which client this project is for — controls which client-user accounts can see it.
+        @if (entryMode() === 'existing') {
+          Locked to this project's client — set on its first supplier entry. Change it from the edit form instead.
+        } @else {
+          Which client this project is for — only they (and admins) can see it.
+        }
       </span>
     </div>
   }

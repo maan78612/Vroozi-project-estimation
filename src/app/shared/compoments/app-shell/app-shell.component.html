@@ -18,14 +18,56 @@
       </div>
 
       <div class="shell-actions">
-        <div class="shell-user">
-          <div class="shell-avatar">{{ currentUser()?.name | initials }}</div>
-          <span class="shell-user-name">{{ currentUser()?.name }}</span>
-        </div>
-        <button type="button" class="shell-signout" (click)="signOut()">
-          <span class="material-symbols-outlined">logout</span>
-          <span>Sign out</span>
+        <button
+          type="button"
+          class="shell-theme-toggle"
+          [attr.aria-label]="themeService.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+          [attr.title]="themeService.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+          (click)="themeService.toggle()"
+        >
+          <span class="material-symbols-outlined">{{ themeService.mode() === 'dark' ? 'light_mode' : 'dark_mode' }}</span>
         </button>
+
+        <!-- User chip → dropdown menu (profile, static pages, sign out) -->
+        <div class="shell-user-wrap">
+          <button
+            type="button"
+            class="shell-user"
+            (click)="toggleUserMenu()"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="userMenuOpen()"
+          >
+            <div class="shell-avatar">{{ currentUser()?.name | initials }}</div>
+            <span class="shell-user-name">{{ currentUser()?.name }}</span>
+            <span class="material-symbols-outlined shell-user-chevron">
+              {{ userMenuOpen() ? 'expand_less' : 'expand_more' }}
+            </span>
+          </button>
+
+          @if (userMenuOpen()) {
+            <div class="shell-user-menu" role="menu">
+              <div class="shell-user-menu-header">
+                <span class="shell-user-menu-name">{{ currentUser()?.name }}</span>
+                <span class="shell-user-menu-email">{{ currentUser()?.email }}</span>
+              </div>
+              @for (link of userMenuLinks(); track link.path) {
+                <a
+                  class="shell-user-menu-item"
+                  role="menuitem"
+                  [routerLink]="link.path"
+                  (click)="closeUserMenu()"
+                >
+                  <span class="material-symbols-outlined">{{ link.icon }}</span>
+                  {{ link.label }}
+                </a>
+              }
+              <button type="button" class="shell-user-menu-item shell-user-menu-signout" role="menuitem" (click)="requestSignOut()">
+                <span class="material-symbols-outlined">logout</span>
+                Sign out
+              </button>
+            </div>
+          }
+        </div>
 
         <button
           type="button"
@@ -52,7 +94,20 @@
             {{ link.label }}
           </a>
         }
-        <button type="button" class="shell-mobile-nav-link shell-mobile-signout" (click)="signOut()">
+        <a
+          class="shell-mobile-nav-link"
+          [routerLink]="profilePath()"
+          routerLinkActive="shell-mobile-nav-link-active"
+          (click)="closeMobileMenu()"
+        >
+          <span class="material-symbols-outlined">account_circle</span>
+          My Profile
+        </a>
+        <button type="button" class="shell-mobile-nav-link" (click)="themeService.toggle()">
+          <span class="material-symbols-outlined">{{ themeService.mode() === 'dark' ? 'light_mode' : 'dark_mode' }}</span>
+          {{ themeService.mode() === 'dark' ? 'Light theme' : 'Dark theme' }}
+        </button>
+        <button type="button" class="shell-mobile-nav-link shell-mobile-signout" (click)="requestSignOut()">
           <span class="material-symbols-outlined">logout</span>
           Sign out
         </button>
@@ -63,4 +118,18 @@
   <main class="shell-content">
     <router-outlet></router-outlet>
   </main>
+
+  <footer class="shell-footer">
+    <span class="shell-footer-copy">© 2026 ProjectsEstimation</span>
+  </footer>
+
+  @if (signOutConfirmOpen()) {
+    <app-confirm-dialog
+      title="Sign out?"
+      message="You'll be returned to the login screen. Any unsaved changes will be lost."
+      confirmLabel="Sign out"
+      (confirmed)="confirmSignOut()"
+      (cancelled)="cancelSignOut()"
+    />
+  }
 </div>

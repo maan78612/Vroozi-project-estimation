@@ -17,6 +17,7 @@ export class ReviewSubmitStepComponent {
   complexityFlags = input.required<FeatureFlagInterface[]>();
   riskFlags = input.required<FeatureFlagInterface[]>();
   assignableUsers = input<UserInterface[]>([]);
+  clients = input<UserInterface[]>([]);
   submitSuccess = input(false);
   submitError = input('');
 
@@ -41,6 +42,16 @@ export class ReviewSubmitStepComponent {
     const me = this.currentUser();
     if (me && me.id === userId) return me.name;
     return this.ownerName() ?? '—';
+  }
+
+  // Which client this project is for — `client` on the form is the
+  // client-user's id, so resolve it to a display name the same way
+  // assignedToName() does for the employee.
+  clientName(): string {
+    const clientId = this.form().get('client')?.value as string;
+    if (!clientId) return '—';
+    const match = this.clients().find((c) => c.id === clientId);
+    return match?.name ?? '—';
   }
 
   numVal(key: keyof ProjectInterface): number {

@@ -32,8 +32,6 @@ export interface ApiUser {
   name: string;
   email: string;
   role: RoleEnum;
-  // Only set (and only meaningful) when role === RoleEnum.Client.
-  clientCompany?: string;
   jobTitle?: string;
   department?: string;
   createdAt?: string;
@@ -51,7 +49,9 @@ export interface ApiProject {
   projectName: string;
   erp: string;
   supplier: string;
-  clientCompany?: string;
+  // Populated ({ _id, name, email }) from every endpoint the app uses,
+  // same as `owner` — see ApiUser.
+  client?: ApiUser | string;
   masterDataInterfaces: number;
   transactionalInterfaces: number;
   dataLayer: number;
@@ -83,14 +83,6 @@ export interface ApiErp {
 export interface ApiSupplier {
   _id: string;
   name: string;
-}
-
-/** Client company pick-list option from GET /client-companies. */
-export interface ApiClientCompany {
-  _id: string;
-  name: string;
-  email?: string;
-  primaryContact?: string;
 }
 
 /** Payload of POST /auth/login and /auth/register. */

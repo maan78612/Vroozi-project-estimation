@@ -48,7 +48,11 @@ export class EditProjectFormComponent {
   assignableUsers = input<UserInterface[]>([]);
   erps = input<string[]>([]);
   suppliers = input<string[]>([]);
-  clientCompanies = input<string[]>([]);
+  clients = input<UserInterface[]>([]);
+  // Non-admins see the client as read-only text (the clients pick-list is an
+  // admin-only endpoint, so the dropdown can't even load for them) — this is
+  // the loaded entry's populated clientName, passed down by the parent.
+  clientName = input('');
   complexityFlags = input.required<FeatureFlagInterface[]>();
   riskFlags = input.required<FeatureFlagInterface[]>();
   estimateBreakdown = input<EstimateBreakdown | null>(null);
@@ -66,8 +70,8 @@ export class EditProjectFormComponent {
     this.erps().map((name): SearchDropdownOption => ({ id: name, label: name }));
   readonly supplierOptions = () =>
     this.suppliers().map((name): SearchDropdownOption => ({ id: name, label: name }));
-  readonly clientCompanyOptions = () =>
-    this.clientCompanies().map((name): SearchDropdownOption => ({ id: name, label: name }));
+  readonly clientOptions = () =>
+    this.clients().map((c): SearchDropdownOption => ({ id: c.id, label: c.name, sublabel: c.email }));
   readonly employeeOptions = () =>
     this.assignableUsers().map(
       (u): SearchDropdownOption => ({ id: u.id, label: u.name, sublabel: u.email }),
@@ -99,12 +103,6 @@ export class EditProjectFormComponent {
 
   sliderTrack(key: keyof ProjectInterface): string {
     return sliderTrack(this.form(), key);
-  }
-
-  // Mockup shows the 0–100 stored value as an "X/10" dial — display-only,
-  // the underlying value/validators/estimate math all stay 0–100.
-  tenthsVal(key: keyof ProjectInterface): number {
-    return Math.round(this.numVal(key) / 10);
   }
 
   onSubmit(): void {

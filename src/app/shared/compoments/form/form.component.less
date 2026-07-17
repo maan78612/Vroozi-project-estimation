@@ -77,14 +77,14 @@ form {
     &:focus {
       outline: none;
       border-color: @color-primary;
-      box-shadow: 0 0 0 3px fade(@color-primary, 12%);
+      box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 12%);
     }
 
     &.invalid {
       border-color: @color-error;
 
       &:focus {
-        box-shadow: 0 0 0 3px fade(@color-error, 12%);
+        box-shadow: 0 0 0 3px rgba(var(--color-error-rgb), 12%);
       }
     }
   }

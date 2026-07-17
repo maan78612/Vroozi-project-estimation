@@ -20,7 +20,7 @@
           <input
             type="text"
             class="search-input"
-            placeholder="Search client companies…"
+            placeholder="Search clients…"
             [value]="searchQuery()"
             (input)="onSearchChange($any($event.target).value)"
           />
@@ -45,34 +45,51 @@
         [loading]="isLoading()"
         [empty]="filteredCompanies().length === 0"
         emptyIcon="domain"
-        [emptyTitle]="searchQuery() ? 'No matching clients' : 'No client companies yet'"
+        [emptyTitle]="searchQuery() ? 'No matching clients' : 'No clients yet'"
         [emptyMessage]="
           searchQuery()
             ? 'Nothing matched your search.'
-            : 'Add your first client company to get started.'
+            : 'Add your first client to get started.'
         "
       >
         <table class="app-table">
           <thead>
             <tr>
-              <th>Client Name</th>
+              <th>Name</th>
               <th>Email</th>
-              <th>Primary Contact</th>
-              <th class="app-table-align-right">Total Projects</th>
+              <th>Projects</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            @for (company of pagedCompanies(); track company._id) {
+            @for (company of pagedCompanies(); track company.id) {
               <tr>
                 <td>
                   <span class="client-name">{{ company.name }}</span>
                 </td>
                 <td>{{ company.email || '—' }}</td>
-                <td>{{ company.primaryContact || '—' }}</td>
-                <td class="app-table-align-right">{{ projectCountFor(company) }}</td>
+                <td>
+                  <div class="project-chips">
+                    @if (projectsFor(company).length === 0) {
+                      <span class="no-projects">No projects assigned yet</span>
+                    } @else {
+                      @for (name of visibleProjectsFor(company); track name) {
+                        <span class="project-chip">{{ name }}</span>
+                      }
+                      @if (remainingProjectsCountFor(company) > 0) {
+                        <span class="project-chip project-chip-more">+{{ remainingProjectsCountFor(company) }} more</span>
+                      }
+                    }
+                  </div>
+                </td>
                 <td class="app-table-align-right">
                   <div class="row-actions">
+                    <app-button
+                      variant="link"
+                      label="View projects"
+                      [fullWidth]="false"
+                      (clicked)="viewProjects(company)"
+                    />
                     <button type="button" class="row-action" (click)="openEdit(company)" aria-label="Edit client">
                       <span class="material-symbols-outlined">edit</span>
                     </button>
@@ -89,7 +106,7 @@
 
       @if (totalPages() > 1) {
         <div class="table-pagination">
-          <app-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="page.set($event)" />
+          <app-pagination [page]="currentPage()" [totalPages]="totalPages()" (pageChange)="page.set($event)" />
         </div>
       }
     </div>
@@ -98,8 +115,8 @@
   @if (dialogOpen()) {
     <app-add-option-dialog
       [title]="dialogTitle()"
-      subtitle="Shown on the Clients Directory and selectable in every project."
-      [fields]="fields"
+      subtitle="Clients log in with these credentials and see only the project(s) directly assigned to them."
+      [fields]="fields()"
       [initialValue]="dialogInitialValue()"
       [submitLabel]="editTarget() ? 'Save changes' : 'Add client'"
       [saving]="saving()"
@@ -111,8 +128,8 @@
 
   @if (deleteTarget(); as company) {
     <app-confirm-dialog
-      title="Delete client company?"
-      [message]="'This removes &quot;' + company.name + '&quot; from the pick-list. Existing projects and client accounts keep the name they saved. This can\'t be undone.'"
+      title="Delete client?"
+      [message]="'This permanently removes &quot;' + company.name + '&quot;\'s login account. Any project directly assigned to them will need a new client. This can\'t be undone.'"
       confirmLabel="Delete client"
       [confirming]="deleting()"
       [errorMessage]="deleteError()"

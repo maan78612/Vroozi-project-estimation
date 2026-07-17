@@ -1,0 +1,136 @@
+@import (reference) 'styles.less';
+
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  gap: @spacing-gutter;
+  max-width: 920px;
+  width: 100%;
+  margin: 0 auto; // centered in the shell's full-width content column
+}
+
+.page-title-row {
+  h1 {
+    .typography-headline-lg();
+    color: @color-on-surface;
+    margin: 0 0 0.25rem;
+  }
+}
+
+.page-subtitle {
+  .typography-body-md();
+  color: @color-on-surface-variant;
+  margin: 0;
+}
+
+// ── Identity summary ───────────────────────────────────────────────────
+.identity-card {
+  .glass-surface();
+  border-radius: @radius-xl;
+  padding: 1.25rem @spacing-container-padding;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.identity-avatar {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: @radius-full;
+  background: rgba(var(--color-primary-rgb), 18%);
+  color: @color-primary;
+  border: 1px solid rgba(var(--color-primary-rgb), 30%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.identity-texts {
+  flex: 1;
+  min-width: 0;
+}
+
+.identity-name {
+  .typography-body-lg();
+  font-weight: 700;
+  color: @color-on-surface;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identity-email {
+  .typography-body-md();
+  color: @color-on-surface-variant;
+  margin: 0.1rem 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identity-role {
+  flex-shrink: 0;
+  .typography-label-sm();
+  color: @color-primary;
+  background: rgba(var(--color-primary-rgb), 12%);
+  border: 1px solid rgba(var(--color-primary-rgb), 25%);
+  border-radius: @radius-full;
+  padding: 0.3rem 0.8rem;
+}
+
+// ── The two edit cards ─────────────────────────────────────────────────
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: @spacing-gutter;
+  align-items: start;
+}
+
+.profile-card {
+  .glass-surface();
+  border-radius: @radius-xl;
+  padding: @spacing-container-padding;
+}
+
+.profile-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+
+  h3 {
+    .typography-body-lg();
+    font-weight: 700;
+    color: @color-on-surface;
+    margin: 0;
+  }
+
+  p {
+    .typography-body-md();
+    font-size: 0.82rem;
+    color: @color-on-surface-variant;
+    margin: 0.15rem 0 0;
+  }
+}
+
+.profile-card-icon {
+  flex-shrink: 0;
+  font-size: 22px;
+  color: @color-primary;
+  margin-top: 0.1rem;
+}
+
+.respond-tablet({
+  .profile-grid { grid-template-columns: 1fr; }
+});
+
+.respond-mobile({
+  .identity-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+});

@@ -26,7 +26,7 @@
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  .glass-surface(@color-surface-container-high);
+  .glass-surface(~"--color-surface-container-high-rgb");
   border-radius: @radius-xl;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
   overflow: hidden;
@@ -42,7 +42,7 @@
   gap: 1rem;
   padding: 1.35rem 1.5rem 1.1rem;
   border-bottom: 1px solid @color-outline-variant;
-  background: linear-gradient(135deg, fade(@color-primary, 6%), fade(@color-primary, 1.5%));
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 6%), rgba(var(--color-primary-rgb), 1.5%));
 }
 
 .picker-head-texts {
@@ -87,7 +87,7 @@
   padding: 0;
   border: none;
   border-radius: @radius-full;
-  background: fade(@color-primary, 7%);
+  background: rgba(var(--color-primary-rgb), 7%);
   color: @color-on-surface-variant;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -97,7 +97,7 @@
   }
 
   &:hover {
-    background: fade(@color-primary, 15%);
+    background: rgba(var(--color-primary-rgb), 15%);
     color: @color-on-surface;
   }
 }
@@ -131,7 +131,7 @@
     border-color: @color-primary;
     background: @color-surface-container-high;
     transform: translateX(3px);
-    box-shadow: 0 4px 14px fade(@color-primary, 10%);
+    box-shadow: 0 4px 14px rgba(var(--color-primary-rgb), 10%);
 
     .row-chevron { transform: translateX(2px); opacity: 1; }
   }
@@ -145,8 +145,8 @@
   align-items: center;
   justify-content: center;
   border-radius: @radius-full;
-  background: fade(@color-primary, 10%);
-  border: 1.5px solid fade(@color-primary, 16%);
+  background: rgba(var(--color-primary-rgb), 10%);
+  border: 1.5px solid rgba(var(--color-primary-rgb), 16%);
   color: @color-primary-container;
   font-size: 0.8rem;
   font-weight: 700;
@@ -181,11 +181,11 @@
   font-size: 0.7rem;
   font-weight: 700;
 
-  &.size-s { background: fade(@size-s-color, 20%); color: @size-s-color; }
-  &.size-m { background: fade(@size-m-color, 20%); color: @size-m-color; }
-  &.size-l { background: fade(@size-l-color, 20%); color: @size-l-color; }
-  &.size-xl { background: fade(@size-xl-color, 20%); color: @size-xl-color; }
-  &.size-xxl { background: fade(@size-xxl-color, 20%); color: @size-xxl-color; }
+  &.size-s { background: rgba(var(--size-s-color-rgb), 20%); color: @size-s-color; }
+  &.size-m { background: rgba(var(--size-m-color-rgb), 20%); color: @size-m-color; }
+  &.size-l { background: rgba(var(--size-l-color-rgb), 20%); color: @size-l-color; }
+  &.size-xl { background: rgba(var(--size-xl-color-rgb), 20%); color: @size-xl-color; }
+  &.size-xxl { background: rgba(var(--size-xxl-color-rgb), 20%); color: @size-xxl-color; }
 }
 
 .row-delete {
@@ -215,7 +215,7 @@
   }
 
   &:hover {
-    background: fade(@color-error, 12%);
+    background: rgba(var(--color-error-rgb), 12%);
 
     &::before { opacity: 1; }
   }

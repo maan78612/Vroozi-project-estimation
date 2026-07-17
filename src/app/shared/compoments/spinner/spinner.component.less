@@ -25,7 +25,7 @@
   position: absolute;
   inset: -14px;
   border-radius: @radius-full;
-  background: radial-gradient(circle, fade(@color-primary, 22%), transparent 70%);
+  background: radial-gradient(circle, rgba(var(--color-primary-rgb), 22%), transparent 70%);
   filter: blur(6px);
   animation: spinner-pulse 1.2s ease-in-out infinite;
 }
@@ -42,8 +42,8 @@
   inset: 0;
   border-width: 3.5px;
   border-top-color: @color-primary;
-  border-right-color: fade(@color-primary, 35%);
-  filter: drop-shadow(0 1px 2px fade(@color-primary, 30%));
+  border-right-color: rgba(var(--color-primary-rgb), 35%);
+  filter: drop-shadow(0 1px 2px rgba(var(--color-primary-rgb), 30%));
   animation: spinner-spin 1s cubic-bezier(0.65, 0.05, 0.36, 1) infinite;
 }
 
@@ -52,7 +52,7 @@
   inset: 10px;
   border-width: 2.5px;
   border-bottom-color: @spinner-gold-light;
-  border-left-color: fade(@spinner-gold-light, 30%);
+  border-left-color: rgba(var(--color-primary-container-rgb), 30%);
   animation: spinner-spin 1.4s cubic-bezier(0.65, 0.05, 0.36, 1) infinite reverse;
 }
 
@@ -62,7 +62,7 @@
   inset: 23px;
   border-radius: @radius-full;
   background: radial-gradient(circle at 35% 30%, @spinner-gold-light, @color-primary);
-  box-shadow: 0 2px 6px fade(@color-primary, 45%), inset 0 1px 1px fade(#fff, 35%);
+  box-shadow: 0 2px 6px rgba(var(--color-primary-rgb), 45%), inset 0 1px 1px rgba(255, 255, 255, 35%);
   animation: spinner-pulse 1.2s ease-in-out infinite;
 }
 
@@ -82,8 +82,8 @@
 // ── Light variant (for use on the dark gradient page background) ──
 
 .spinner-wrap.is-light {
-  .spinner-label { color: fade(@color-on-surface, 85%); }
-  .spinner-sublabel { color: fade(@color-on-surface, 55%); }
+  .spinner-label { color: rgba(var(--color-on-surface-rgb), 85%); }
+  .spinner-sublabel { color: rgba(var(--color-on-surface-rgb), 55%); }
 }
 
 // ── Compact variant (dialogs, tight blocks) ──────────────────────
