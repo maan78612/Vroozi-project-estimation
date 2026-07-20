@@ -146,10 +146,15 @@
                   [clients]="clients()"
                   [entryMode]="entryMode()"
                   [existingProjects]="existingProjects()"
+                  [brdAnalyzing]="brdAnalyzing()"
+                  [brdError]="brdError()"
+                  [brdSummary]="brdSummary()"
+                  [brdCoverage]="brdCoverage()"
                   (entryModeChange)="setEntryMode($event)"
                   (addErpRequested)="openAddOption('erp')"
                   (addSupplierRequested)="openAddOption('supplier')"
                   (addClientRequested)="openAddOption('client')"
+                  (brdFileSelected)="onBrdFileSelected($event)"
                 />
               </div>
             }
@@ -245,4 +250,28 @@
     (save)="saveAddOption($event)"
     (cancelled)="closeAddOption()"
   />
+}
+
+<!-- Full-screen overlay while the AI analyzes an uploaded BRD -->
+@if (brdAnalyzing()) {
+  <div class="brd-overlay" role="alert" aria-busy="true" aria-live="assertive">
+    <div class="brd-overlay-card">
+      <div class="brd-orb" aria-hidden="true">
+        <span class="brd-orb-ring"></span>
+        <span class="brd-orb-ring brd-orb-ring--reverse"></span>
+        <span class="brd-orb-core">
+          <span class="brd-orb-icon"></span>
+        </span>
+      </div>
+      <h2 class="brd-overlay-title">AI is analyzing your BRD</h2>
+      <span class="brd-overlay-file">{{ brdFileName() }}</span>
+      <p class="brd-overlay-status">{{ brdStatusMessages[brdStatusIndex()] }}</p>
+      <div class="brd-overlay-track" aria-hidden="true">
+        <span class="brd-overlay-shimmer"></span>
+      </div>
+      <span class="brd-overlay-note">
+        Extracting scope, complexity, and risk — this usually takes under a minute.
+      </span>
+    </div>
+  </div>
 }

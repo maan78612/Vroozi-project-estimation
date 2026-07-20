@@ -92,4 +92,16 @@ export class UsersService {
       ),
     );
   }
+
+  /** Admin only (enforced by the API). Soft delete — removes the account from the directory. */
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${API_BASE_URL}/users/${id}`).pipe(
+      map(() => {
+        this.assignableUsers.update((list) => list.filter((u) => u.id !== id));
+      }),
+      catchError((err: unknown) =>
+        throwError(() => toApiError(err, 'Could not delete the employee.')),
+      ),
+    );
+  }
 }

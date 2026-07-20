@@ -1,6 +1,7 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ProjectInterface } from '../../../../../../core/intefaces/form/project.interface';
+import { BrdCoverage } from '../../../../../../core/intefaces/api.interface';
 import { UserInterface } from '../../../../../../core/intefaces/user-interface';
 import { hasError } from '../../../../../../core/utils/form-control.util';
 import {
@@ -17,7 +18,6 @@ import {
 })
 export class ProjectBasicsStepComponent {
   form = input.required<FormGroup>();
-  isEditMode = input(false);
   isAdmin = input(false);
   assignableUsers = input<UserInterface[]>([]);
   entryMode = input<'new' | 'existing'>('new');
@@ -29,6 +29,14 @@ export class ProjectBasicsStepComponent {
   // Client-role users a project can be assigned to (GET /users?role=client).
   clients = input<UserInterface[]>([]);
 
+  // BRD auto-fill — the parent form owns the API call and patches steps
+  // 2-4 with the returned suggestions; this step only hosts the upload UI.
+  brdAnalyzing = input(false);
+  brdError = input('');
+  brdSummary = input('');
+  // 'full' → success card, 'partial' → warning card, 'none' → failure card.
+  brdCoverage = input<BrdCoverage | ''>('');
+
   entryModeChange = output<'new' | 'existing'>();
   // Admin-only "+ Add new" actions — the parent form owns the dialog + API
   // call. Client's dialog additionally collects a password (it creates a
@@ -36,6 +44,9 @@ export class ProjectBasicsStepComponent {
   addErpRequested = output<void>();
   addSupplierRequested = output<void>();
   addClientRequested = output<void>();
+  brdFileSelected = output<File>();
+
+  readonly brdFileName = signal('');
 
   readonly existingProjectOptions = computed<SearchDropdownOption[]>(() =>
     this.existingProjects().map((name) => ({ id: name, label: name })),
@@ -63,5 +74,37 @@ export class ProjectBasicsStepComponent {
 
   hasError(key: keyof ProjectInterface): boolean {
     return hasError(this.form(), key);
+  }
+
+  brdResultTitle(): string {
+    switch (this.brdCoverage()) {
+      case 'partial':
+        return 'Partial analysis';
+      case 'none':
+        return 'No scoping data found';
+      default:
+        return 'AI analysis complete';
+    }
+  }
+
+  brdResultNote(): string {
+    switch (this.brdCoverage()) {
+      case 'partial':
+        return 'Some fields weren’t found in the document and were set conservatively — double-check Steps 2–4 before submitting.';
+      case 'none':
+        return 'This document didn’t contain usable scoping information — Steps 2–4 were left at conservative defaults.';
+      default:
+        return 'Steps 2–4 were pre-filled from the document — review and adjust before submitting.';
+    }
+  }
+
+  onBrdFileChange(event: Event): void {
+    const inputEl = event.target as HTMLInputElement;
+    const file = inputEl.files?.[0];
+    // Reset so picking the same file again re-fires the change event.
+    inputEl.value = '';
+    if (!file || this.brdAnalyzing()) return;
+    this.brdFileName.set(file.name);
+    this.brdFileSelected.emit(file);
   }
 }

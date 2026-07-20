@@ -11,7 +11,7 @@
   </header>
 
   <!-- ── Detail field sections, reused for both the solo and split layouts ── -->
-  <ng-template #detailContent let-entry let-showBack="showBack">
+  <ng-template #detailContent let-entry let-showBack="showBack" let-showAddSupplier="showAddSupplier">
     <div class="detail-scroll">
       @if (showBack) {
         <button type="button" class="detail-back-mobile" (click)="backToList()">
@@ -21,6 +21,11 @@
       <div class="detail-header">
         <h2 class="detail-name">{{ entry.supplier || 'No supplier' }}</h2>
         <div class="detail-actions">
+          <!-- Only shown in the solo layout — the split layout already has
+               its own "Add New Estimation" button in the list pane. -->
+          @if (showAddSupplier && isAdmin()) {
+            <app-button icon="add" label="Add Estimation" [fullWidth]="false" (clicked)="addSupplier()" />
+          }
           <!-- Every role can edit (clients get the same edit rights as the
                owning employee — scoped server-side); deleting stays hidden
                from clients. -->
@@ -120,18 +125,6 @@
             }
           </div>
         </div>
-
-        <div class="estimate-callout">
-          <div class="callout-text">
-            <span class="callout-label">Tentative Range</span>
-            <span class="callout-value">{{ entry.tentativeRangeDays || '—' }} days</span>
-          </div>
-          @if (entry.tentativeProjectSize) {
-            <span class="size-badge size-{{ entry.tentativeProjectSize.toLowerCase() }}">{{
-              entry.tentativeProjectSize
-            }}</span>
-          }
-        </div>
       </section>
     </div>
   </ng-template>
@@ -190,6 +183,29 @@
         </span>
       </section>
 
+      <!-- ── Selected supplier's tentative range/scale ── Sits right under
+           the hero bar — always visible on landing, no scrolling needed.
+           Tracks whichever entry is selected below (was previously
+           duplicated inside the detail pane too, and static there). -->
+      @if (selectedEntry(); as sel) {
+        @if (sel.tentativeRangeDays || sel.tentativeProjectSize) {
+          <section class="delivery-band">
+            <div class="delivery-band-text">
+              <span class="delivery-band-label">Tentative Range</span>
+              <span class="delivery-band-value">{{ sel.tentativeRangeDays || '—' }} days</span>
+            </div>
+            @if (sel.tentativeProjectSize) {
+              <div class="delivery-band-scale">
+                <span class="delivery-band-scale-label">Project Scale</span>
+                <span class="size-badge size-{{ sel.tentativeProjectSize.toLowerCase() }}">{{
+                  sel.tentativeProjectSize
+                }}</span>
+              </div>
+            }
+          </section>
+        }
+      }
+
       <!-- ── Master-detail split (multi-supplier) or solo detail pane ─────── -->
       @if (entries().length > 1) {
         <div class="view-split">
@@ -233,7 +249,7 @@
             </div>
             @if (isAdmin()) {
               <button type="button" class="add-supplier-btn" (click)="addSupplier()">
-                <span class="add-supplier-icon" aria-hidden="true">+</span> Add New Supplier
+                <span class="add-supplier-icon" aria-hidden="true">+</span> Add New Estimation
               </button>
             }
           </aside>
@@ -247,23 +263,7 @@
       } @else {
         <section class="supplier-detail-pane detail-solo">
           @if (selectedEntry(); as entry) {
-            <ng-container *ngTemplateOutlet="detailContent; context: { $implicit: entry, showBack: false }" />
-          }
-        </section>
-      }
-
-      <!-- ── Project-level closing summary (rolled up across all suppliers) ── -->
-      @if (rangeLabel() || size()) {
-        <section class="delivery-band">
-          <div class="delivery-band-text">
-            <span class="delivery-band-label">Tentative Delivery Range</span>
-            <span class="delivery-band-value">{{ rangeLabel() || '—' }} days</span>
-          </div>
-          @if (size()) {
-            <div class="delivery-band-scale">
-              <span class="delivery-band-scale-label">Project Scale</span>
-              <span class="size-badge size-{{ size()!.toLowerCase() }}">{{ size() }}</span>
-            </div>
+            <ng-container *ngTemplateOutlet="detailContent; context: { $implicit: entry, showBack: false, showAddSupplier: true }" />
           }
         </section>
       }

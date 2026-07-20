@@ -10,7 +10,7 @@
  * ──────────────────────────────────────────────────────────────────
  */
 
-import { Component, ElementRef, HostListener, ViewChild, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth/auth-service';
@@ -19,10 +19,12 @@ import { ErpsService } from '../../../../core/services/erps/erps-service';
 import { SuppliersService } from '../../../../core/services/suppliers/suppliers-service';
 import { ClientUsersService } from '../../../../core/services/client-users/client-users-service';
 import { ProjectsStoreService } from '../../../../core/services/projects/projects-store.service';
+import { ProjectsApiService } from '../../../../core/services/projects/projects-api.service';
 import { RoleService } from '../../../../core/services/role/role-service';
 import { COMPLEXITY_FLAGS, RISK_FLAGS } from '../../../../core/config/feature-flags.config';
 import { CLIENT_CREATE_FIELDS } from '../../../../core/config/client-fields.config';
 import { ProjectInterface, YesNo } from '../../../../core/intefaces/form/project.interface';
+import { BrdCoverage } from '../../../../core/intefaces/api.interface';
 import { FormFieldInterface } from '../../../../core/intefaces/form/form-field.interface';
 import { FieldTypeEnum } from '../../../../core/enums/field-type.enum';
 import { ProjectSizeEnum } from '../../../../core/enums/project-size.enum';
@@ -61,6 +63,7 @@ export class ProjectFormComponent {
   private suppliersService = inject(SuppliersService);
   private clientUsersService = inject(ClientUsersService);
   private projectsStore = inject(ProjectsStoreService);
+  private projectsApi = inject(ProjectsApiService);
   private roleService = inject(RoleService);
   private fb = inject(FormBuilder);
   // Scopes the outside-click check below to just the step header — the
@@ -180,6 +183,34 @@ export class ProjectFormComponent {
 
   /*
    * ──────────────────────────────────────────────────────────────────
+   !  BRD auto-fill (basics step) — uploading a BRD sends it to
+   *  POST /projects/analyze-brd; the AI suggestions patch every step
+   *  2-4 control in one go, and the summary shows on the basics step.
+   * ──────────────────────────────────────────────────────────────────
+   */
+  brdAnalyzing = signal(false);
+  brdError = signal('');
+  brdSummary = signal('');
+  // Extraction quality reported by the AI — colors the result card
+  // (full → success, partial → warning, none → failure).
+  brdCoverage = signal<BrdCoverage | ''>('');
+  // Overlay copy while the AI reads the document: the uploaded file's name
+  // plus a slowly advancing status line (purely cosmetic — the backend call
+  // is a single request; these keep the wait from feeling frozen).
+  brdFileName = signal('');
+  brdStatusIndex = signal(0);
+  readonly brdStatusMessages = [
+    'Reading your document…',
+    'Identifying interfaces and integrations…',
+    'Assessing complexity drivers…',
+    'Scoring risk and uncertainty…',
+    'Preparing your estimate inputs…',
+  ];
+  private brdStatusTimer: ReturnType<typeof setInterval> | null = null;
+  private destroyRef = inject(DestroyRef);
+
+  /*
+   * ──────────────────────────────────────────────────────────────────
    ! Computed Signals: because these values are derived from other signals,
    * they are automatically updated when their dependencies change.
    * but we cannot change them directly, because they are computed
@@ -273,7 +304,7 @@ export class ProjectFormComponent {
     }
 
     /*
-     * "Add New Supplier" from the project view page arrives here as
+     * "Add New Estimation" from the project view page arrives here as
      * ?project=<name> (create mode only — edit mode already has its own
      * key). Preselects "existing project" mode with that project chosen,
      * same as picking it manually from the dropdown.
@@ -550,6 +581,72 @@ export class ProjectFormComponent {
   }
 
   /*
+   * BRD upload from the basics step. patchValue only touches steps 2-4,
+   * so every control stays editable and the valueChanges subscription
+   * refreshes the estimate for the Review step automatically.
+   */
+  private startBrdStatusCycle(): void {
+    this.brdStatusIndex.set(0);
+    this.brdStatusTimer = setInterval(() => {
+      // Advance to the next message and hold on the last one.
+      this.brdStatusIndex.update((i) => Math.min(i + 1, this.brdStatusMessages.length - 1));
+    }, 3000);
+    this.destroyRef.onDestroy(() => this.stopBrdStatusCycle());
+  }
+
+  private stopBrdStatusCycle(): void {
+    if (this.brdStatusTimer !== null) {
+      clearInterval(this.brdStatusTimer);
+      this.brdStatusTimer = null;
+    }
+  }
+
+  onBrdFileSelected(file: File): void {
+    if (this.brdAnalyzing()) return;
+    if (file.size > 10 * 1024 * 1024) {
+      this.brdError.set('File is too large. Maximum size is 10 MB.');
+      return;
+    }
+    this.brdAnalyzing.set(true);
+    this.brdError.set('');
+    this.brdSummary.set('');
+    this.brdCoverage.set('');
+    this.brdFileName.set(file.name);
+    this.startBrdStatusCycle();
+    this.projectsApi.analyzeBrd(file).subscribe({
+      next: ({ suggestions: s, summary, coverage }) => {
+        this.stopBrdStatusCycle();
+        this.brdAnalyzing.set(false);
+        this.form.patchValue({
+          masterDataInterfaces: s.masterDataInterfaces,
+          transactionalInterfaces: s.transactionalInterfaces,
+          inbound: s.inbound,
+          outbound: s.outbound,
+          customLogic: s.customLogic,
+          uiImpact: s.uiImpact,
+          newApiOrBusinessFlows: s.newApiOrBusinessFlows,
+          integrations: s.integrations,
+          existingErp: s.existingErp,
+          hyperCare: s.hyperCare,
+          clientDependency: s.clientDependency,
+          reportingAnalytics: s.reportingAnalytics,
+          dataLayer: s.dataLayer,
+          uncertainties: s.uncertainties,
+        });
+        this.brdSummary.set(summary);
+        this.brdCoverage.set(coverage);
+      },
+      error: (err: unknown) => {
+        this.stopBrdStatusCycle();
+        this.brdAnalyzing.set(false);
+        this.brdError.set(
+          err instanceof Error ? err.message : 'Could not analyze the document.',
+        );
+      },
+    });
+  }
+
+  /*
    * ──────────────────────────────────────────────────────────────────
    !  Wizard () navigation
    * ──────────────────────────────────────────────────────────────────
@@ -656,14 +753,18 @@ export class ProjectFormComponent {
     const editing = this.editingProject();
 
     // Block a second entry with the same project + supplier combination.
-    const duplicate = this.projectsStore.getByKey(entry.projectName, entry.supplier);
+    // No-supplier entries are exempt — a project can have any number of
+    // those, since "no supplier yet" isn't an identity to collide on.
+    const duplicate = entry.supplier
+      ? this.projectsStore.getByKey(entry.projectName, entry.supplier)
+      : undefined;
     const isItself =
       editing &&
       editing.projectName === entry.projectName &&
       editing.supplier === entry.supplier;
     if (duplicate && !isItself) {
       this.submitError.set(
-        `"${entry.projectName}" already has an entry for supplier "${entry.supplier || '—'}".`,
+        `"${entry.projectName}" already has an entry for supplier "${entry.supplier}".`,
       );
       return;
     }
@@ -673,7 +774,7 @@ export class ProjectFormComponent {
     this.submitSuccess.set(false);
 
     const save$ = editing
-      ? this.projectsStore.updateEntry(editing.projectName, editing.supplier, entry)
+      ? this.projectsStore.updateEntry(editing.id ?? '', editing.projectName, entry)
       : this.projectsStore.add(entry);
 
     save$.subscribe({

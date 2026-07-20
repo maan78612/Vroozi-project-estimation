@@ -2,7 +2,12 @@ import { Service, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../config/api.config';
-import { ApiProject, ApiResponse, toApiError } from '../../intefaces/api.interface';
+import {
+  ApiBrdAnalysis,
+  ApiProject,
+  ApiResponse,
+  toApiError,
+} from '../../intefaces/api.interface';
 import { ProjectInterface } from '../../intefaces/form/project.interface';
 import { ProjectSizeEnum } from '../../enums/project-size.enum';
 
@@ -121,6 +126,22 @@ export class ProjectsApiService {
           throwError(() => toApiError(err, 'Could not save the project.')),
         ),
       );
+  }
+
+  /*
+   * Uploads a BRD document; the backend analyzes it with AI and returns
+   * suggestions for steps 2-4 plus a short summary. No Content-Type set
+   * here — HttpClient adds the multipart boundary itself.
+   */
+  analyzeBrd(file: File): Observable<ApiBrdAnalysis> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this.http.post<ApiResponse<ApiBrdAnalysis>>(`${BASE}/analyze-brd`, formData).pipe(
+      map((res) => res.data),
+      catchError((err: unknown) =>
+        throwError(() => toApiError(err, 'Could not analyze the document.')),
+      ),
+    );
   }
 
   /** Admin only — changes the project's owner. */

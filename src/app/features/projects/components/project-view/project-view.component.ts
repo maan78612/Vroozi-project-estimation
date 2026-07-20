@@ -236,7 +236,7 @@ export class ProjectViewComponent {
     if (!entry) return;
 
     this.deleting.set(true);
-    this.projectsStore.deleteEntry(entry.projectName, entry.supplier).subscribe({
+    this.projectsStore.deleteEntry(entry.id ?? '').subscribe({
       next: () => {
         this.deleting.set(false);
         this.entryDeleteTarget.set(null);

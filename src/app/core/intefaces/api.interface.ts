@@ -73,6 +73,41 @@ export interface ApiProject {
   updatedAt?: string;
 }
 
+/*
+ * AI suggestions from POST /projects/analyze-brd — one value for every
+ * wizard input on steps 2-4, ready for form.patchValue().
+ */
+export interface ApiBrdSuggestions {
+  masterDataInterfaces: number;
+  transactionalInterfaces: number;
+  inbound: number;
+  outbound: number;
+  customLogic: YesNo;
+  uiImpact: YesNo;
+  newApiOrBusinessFlows: YesNo;
+  integrations: YesNo;
+  existingErp: YesNo;
+  hyperCare: YesNo;
+  clientDependency: YesNo;
+  reportingAnalytics: YesNo;
+  dataLayer: number;
+  uncertainties: number;
+}
+
+/*
+ * Model-reported extraction quality: "full" when the document explicitly
+ * supported nearly every field, "partial" when several were inferred or
+ * defaulted, "none" when it wasn't a usable BRD. Drives the result card's
+ * success / warning / failure styling on the wizard's basics step.
+ */
+export type BrdCoverage = 'full' | 'partial' | 'none';
+
+export interface ApiBrdAnalysis {
+  suggestions: ApiBrdSuggestions;
+  summary: string;
+  coverage: BrdCoverage;
+}
+
 /** ERP pick-list option from GET /erps. */
 export interface ApiErp {
   _id: string;

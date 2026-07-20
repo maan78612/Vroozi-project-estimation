@@ -7,6 +7,7 @@ import { ButtonComponent } from '../../../../shared/compoments/button/button';
 import { DataTableComponent } from '../../../../shared/compoments/data-table/data-table.component';
 import { PaginationComponent } from '../../../../shared/compoments/pagination/pagination.component';
 import { AddOptionDialogComponent } from '../../../../shared/compoments/add-option-dialog/add-option-dialog.component';
+import { ConfirmDialogComponent } from '../../../../shared/compoments/confirm-dialog/confirm-dialog.component';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { FormFieldInterface } from '../../../../core/intefaces/form/form-field.interface';
 import { FieldTypeEnum } from '../../../../core/enums/field-type.enum';
@@ -109,6 +110,7 @@ const EMPLOYEE_EDIT_FIELDS: FormFieldInterface[] = [
     DataTableComponent,
     PaginationComponent,
     AddOptionDialogComponent,
+    ConfirmDialogComponent,
     InitialsPipe,
   ],
   templateUrl: './users-list.component.html',
@@ -284,6 +286,40 @@ export class UsersListComponent {
       error: (err: unknown) => {
         this.saving.set(false);
         this.saveError.set(err instanceof Error ? err.message : 'Could not save the employee.');
+      },
+    });
+  }
+
+  // ── Delete employee ──────────────────────────────────────────────────
+  deleteTarget = signal<UserInterface | null>(null);
+  deleting = signal(false);
+  deleteError = signal('');
+
+  requestDelete(employee: UserInterface): void {
+    this.deleteError.set('');
+    this.deleteTarget.set(employee);
+  }
+
+  cancelDelete(): void {
+    if (this.deleting()) return;
+    this.deleteTarget.set(null);
+  }
+
+  confirmDelete(): void {
+    const target = this.deleteTarget();
+    if (!target) return;
+
+    this.deleting.set(true);
+    this.usersService.delete(target.id).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.deleteTarget.set(null);
+      },
+      error: (err: unknown) => {
+        this.deleting.set(false);
+        this.deleteError.set(
+          err instanceof Error ? err.message : 'Could not delete the employee.',
+        );
       },
     });
   }

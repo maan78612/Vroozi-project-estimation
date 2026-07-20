@@ -110,6 +110,9 @@
                       <button type="button" class="row-action" (click)="openEdit(employee)" aria-label="Edit employee">
                         <span class="material-symbols-outlined">edit</span>
                       </button>
+                      <button type="button" class="row-action row-action-delete" (click)="requestDelete(employee)" aria-label="Delete employee">
+                        <span class="material-symbols-outlined">delete</span>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -138,6 +141,18 @@
       [errorMessage]="saveError()"
       (save)="saveDialog($event)"
       (cancelled)="closeDialog()"
+    />
+  }
+
+  @if (deleteTarget(); as employee) {
+    <app-confirm-dialog
+      title="Delete employee?"
+      [message]="'This permanently removes &quot;' + employee.name + '&quot;\'s login account. Any project they own will need a new owner. This can\'t be undone.'"
+      confirmLabel="Delete employee"
+      [confirming]="deleting()"
+      [errorMessage]="deleteError()"
+      (confirmed)="confirmDelete()"
+      (cancelled)="cancelDelete()"
     />
   }
 </div>

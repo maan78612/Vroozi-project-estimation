@@ -73,27 +73,24 @@ export class ProjectsStoreService {
 
   /*
    * ──────────────────────────────────────────────────────────────────
-   !  Replaces one supplier entry, found by its original name+supplier.
+   !  Replaces one supplier entry, identified by its own id (NOT by
+   *  name+supplier — several entries can now share the same project
+   *  with no supplier at all, so that pair stopped being unique).
    *  If the project name was edited, the rename applies to the whole
    *  project — every sibling document gets the new projectName too.
    * ──────────────────────────────────────────────────────────────────
    */
-  updateEntry(
-    originalName: string,
-    originalSupplier: string,
-    entry: ProjectInterface,
-  ): Observable<void> {
-    const existing = this.getByKey(originalName, originalSupplier);
-    if (!existing?.id) {
+  updateEntry(entryId: string, originalName: string, entry: ProjectInterface): Observable<void> {
+    if (!entryId) {
       return throwError(() => new Error('This project entry no longer exists.'));
     }
 
     const siblings =
       entry.projectName !== originalName
-        ? this.entriesFor(originalName).filter((e) => e.id && e.id !== existing.id)
+        ? this.entriesFor(originalName).filter((e) => e.id && e.id !== entryId)
         : [];
 
-    return this.api.update(existing.id, entry).pipe(
+    return this.api.update(entryId, entry).pipe(
       switchMap((updated) => this.reassignIfNeeded(updated, entry.user)),
       switchMap(() =>
         siblings.length
@@ -114,13 +111,13 @@ export class ProjectsStoreService {
     return forkJoin(ids.map((id) => this.api.delete(id))).pipe(switchMap(() => this.refresh$()));
   }
 
-  // Removes one supplier entry from a project.
-  deleteEntry(projectName: string, supplier: string): Observable<void> {
-    const entry = this.getByKey(projectName, supplier);
-    if (!entry?.id) {
+  // Removes one supplier entry from a project, identified by its own id
+  // (name+supplier is no longer unique — see updateEntry).
+  deleteEntry(entryId: string): Observable<void> {
+    if (!entryId) {
       return throwError(() => new Error('This project entry no longer exists.'));
     }
-    return this.api.delete(entry.id).pipe(switchMap(() => this.refresh$()));
+    return this.api.delete(entryId).pipe(switchMap(() => this.refresh$()));
   }
 
   /*

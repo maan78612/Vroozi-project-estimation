@@ -78,15 +78,28 @@
 @color-success-container: ~"var(--color-success-container)";
 @color-on-success-container: ~"var(--color-on-success-container)";
 
+// ── Semantic: warning ────────────────────────────────────────────────
+// Warm amber, deliberately hotter than the gold primary so "caution"
+// reads apart from brand accents (same restrained key as success).
+@color-warning: ~"var(--color-warning)";
+@color-on-warning: ~"var(--color-on-warning)";
+@color-warning-container: ~"var(--color-warning-container)";
+@color-on-warning-container: ~"var(--color-on-warning-container)";
+
 // ── Project size scale — a traffic-light-ish ramp independent of the
 // gold brand color, so size badges (project-list, project-view) read
-// at a glance without competing with primary/accent usage. Constant
-// across both themes on purpose (see file header). ──────────────────
-@size-s-color: #1c6e56;
-@size-m-color: #856404;
-@size-l-color: #7d4e1a;
-@size-xl-color: #7d3510;
-@size-xxl-color: #842029;
+// at a glance without competing with primary/accent usage. The badge
+// *background* tint (@size-*-color-rgb, below) is a fixed dark hue
+// shared by both themes, but the text itself lightens on dark /
+// deepens on light — same hue either way, never a hue swap (see
+// --color-primary-hover note near the theme blocks). Without that
+// split, the dark-theme text sits close in tone to its own tinted
+// background and reads dull.
+@size-s-color: ~"var(--size-s-color)";
+@size-m-color: ~"var(--size-m-color)";
+@size-l-color: ~"var(--size-l-color)";
+@size-xl-color: ~"var(--size-xl-color)";
+@size-xxl-color: ~"var(--size-xxl-color)";
 
 //* ──────────────────────────────────────────────────────────────────
 // Typography — Manrope (headline/body) + JetBrains Mono (labels)
@@ -470,6 +483,10 @@ body {
   --color-on-success: #0a2e17;
   --color-success-container: #1c6e56;
   --color-on-success-container: #d3f5e3;
+  --color-warning: #f2a054;
+  --color-on-warning: #3a2005;
+  --color-warning-container: #7d4e1a;
+  --color-on-warning-container: #ffe0c2;
 
   // ── RGB variants for fade()-replacement rgba() calls ─────────────────
   --color-primary-rgb: 236, 193, 90;
@@ -483,17 +500,26 @@ body {
   --color-on-danger-fill-rgb: 255, 218, 214;
   --color-success-rgb: 127, 217, 160;
   --color-success-container-rgb: 28, 110, 86;
+  --color-warning-rgb: 242, 160, 84;
+  --color-warning-container-rgb: 125, 78, 26;
   --color-surface-container-rgb: 35, 31, 26;
   --color-surface-container-high-rgb: 45, 41, 36;
   --color-surface-container-highest-rgb: 56, 52, 46;
   --color-surface-container-lowest-rgb: 17, 14, 9;
 
-  // ── Project size ramp — identical in both themes ─────────────────────
+  // ── Project size ramp — background tint is identical in both themes;
+  // text lightens here (dark theme) and deepens in the light override
+  // below, same hue either way. ──────────────────────────────────────
   --size-s-color-rgb: 28, 110, 86;
   --size-m-color-rgb: 133, 100, 4;
   --size-l-color-rgb: 125, 78, 26;
   --size-xl-color-rgb: 125, 53, 16;
   --size-xxl-color-rgb: 132, 32, 41;
+  --size-s-color: #43e0b2;
+  --size-m-color: #ffc723;
+  --size-l-color: #e89c48;
+  --size-xl-color: #f37433;
+  --size-xxl-color: #e55865;
 
   // Native <select> chevron (project-filter-bar, users-list, clients-list
   // sort/filter selects) — a CSS custom property because it's a
@@ -572,6 +598,10 @@ body {
   --color-on-success: #ffffff;
   --color-success-container: #d4ead9;
   --color-on-success-container: #163d24;
+  --color-warning: #8c4f10;
+  --color-on-warning: #ffffff;
+  --color-warning-container: #f7e2cd;
+  --color-on-warning-container: #4a2a06;
 
   // ── RGB variants ──────────────────────────────────────────────────
   --color-primary-rgb: 138, 102, 2;
@@ -585,6 +615,8 @@ body {
   --color-on-danger-fill-rgb: 255, 255, 255;
   --color-success-rgb: 30, 110, 60;
   --color-success-container-rgb: 212, 234, 217;
+  --color-warning-rgb: 140, 79, 16;
+  --color-warning-container-rgb: 247, 226, 205;
   --color-surface-container-rgb: 241, 234, 217;
   --color-surface-container-high-rgb: 236, 227, 205;
   --color-surface-container-highest-rgb: 230, 220, 194;
@@ -598,5 +630,13 @@ body {
   --glass-bg-opacity: 100%;
   --glass-blur: none;
   --glass-border: var(--color-outline-variant);
-  // Size ramp RGB variants are intentionally not redeclared — same in both themes.
+  // Size ramp RGB variants (badge background tint) are intentionally not
+  // redeclared — same in both themes. The text color is, though: it
+  // deepens here for contrast against the light tint (dark theme lightens
+  // the same hue instead — see :root).
+  --size-s-color: #19624c;
+  --size-m-color: #765904;
+  --size-l-color: #704617;
+  --size-xl-color: #6f2f0e;
+  --size-xxl-color: #781d25;
 }

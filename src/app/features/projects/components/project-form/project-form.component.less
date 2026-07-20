@@ -586,3 +586,168 @@
 .edit-page {
   min-height: 100vh;
 }
+
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║  BRD ANALYSIS OVERLAY — full-screen while the AI reads the document.    ║
+// ║  Pure theater on top of a single HTTP request (see brdStatusMessages).  ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
+
+.brd-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200; // above the sticky wizard chrome (30) and dialogs
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(24, 20, 12, 0.55);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  animation: brd-overlay-in 0.25s ease-out;
+}
+
+@keyframes brd-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.brd-overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.55rem;
+  width: min(420px, 100%);
+  padding: 2.6rem 2.2rem 2.2rem;
+  background: @color-surface-container;
+  border: 1.5px solid rgba(var(--color-primary-rgb), 30%);
+  border-radius: @radius-xl;
+  box-shadow:
+    0 0 0 6px rgba(var(--color-primary-rgb), 7%),
+    0 24px 60px rgba(0, 0, 0, 0.35);
+  animation: brd-card-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+@keyframes brd-card-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+// ── The orb: pulsing gold core + two counter-rotating rings ────────────────
+
+.brd-orb {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin-bottom: 0.9rem;
+}
+
+.brd-orb-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: @radius-full;
+  border: 2px solid transparent;
+  border-top-color: @color-primary;
+  border-right-color: rgba(var(--color-primary-rgb), 35%);
+  animation: brd-spin-slow 1.6s linear infinite;
+
+  &--reverse {
+    inset: 9px;
+    border-top-color: rgba(var(--color-primary-rgb), 55%);
+    border-right-color: transparent;
+    animation: brd-spin-slow 2.4s linear infinite reverse;
+  }
+}
+
+@keyframes brd-spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+.brd-orb-core {
+  position: absolute;
+  inset: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: @radius-full;
+  background: linear-gradient(140deg, rgba(var(--color-primary-rgb), 22%), rgba(var(--color-primary-rgb), 8%));
+  border: 1.5px solid rgba(var(--color-primary-rgb), 40%);
+  animation: brd-core-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes brd-core-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 30%); }
+  50% { box-shadow: 0 0 0 14px rgba(var(--color-primary-rgb), 0%); }
+}
+
+.brd-orb-icon {
+  width: 26px;
+  height: 26px;
+  background-color: @color-primary;
+  mask: url('/assets/icons/sparkles.svg') no-repeat center / contain;
+  -webkit-mask: url('/assets/icons/sparkles.svg') no-repeat center / contain;
+  animation: brd-icon-twinkle 1.8s ease-in-out infinite;
+}
+
+@keyframes brd-icon-twinkle {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.82); opacity: 0.7; }
+}
+
+// ── Copy ────────────────────────────────────────────────────────────────────
+
+.brd-overlay-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: @color-on-surface;
+}
+
+.brd-overlay-file {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: @color-primary;
+}
+
+.brd-overlay-status {
+  margin: 0.35rem 0 0;
+  min-height: 1.3em; // stable height while messages swap
+  font-size: 0.875rem;
+  color: @color-on-surface-variant;
+}
+
+.brd-overlay-track {
+  position: relative;
+  width: min(240px, 80%);
+  height: 4px;
+  margin-top: 0.8rem;
+  border-radius: @radius-full;
+  background: rgba(var(--color-primary-rgb), 14%);
+  overflow: hidden;
+}
+
+.brd-overlay-shimmer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  border-radius: @radius-full;
+  background: linear-gradient(90deg, transparent, @color-primary, transparent);
+  animation: brd-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes brd-shimmer {
+  from { left: -40%; }
+  to { left: 100%; }
+}
+
+.brd-overlay-note {
+  margin-top: 0.7rem;
+  font-size: 0.755rem;
+  color: @color-on-surface-variant;
+}

@@ -1,12 +1,7 @@
 <div class="step-body" [formGroup]="form()">
-
-  @if (isEditMode()) {
-    <div class="field-block">
-      <span class="field-label">Project Name</span>
-      <h2 class="project-name-heading">{{ form().get('projectName')?.value }}</h2>
-    </div>
-  } @else {
-    <!-- New project, or another supplier for an existing one -->
+  <!-- New project, or another supplier for an existing one. This step only
+       renders inside the create wizard — the edit page is a separate
+       component (EditProjectFormComponent), so there is no edit mode here. -->
     <div class="field-block">
       <span class="field-label">What are you adding?</span>
       <div class="mode-toggle" role="radiogroup" aria-label="What are you adding?">
@@ -43,7 +38,7 @@
           </span>
           <span class="mode-texts">
             <span class="mode-title">Existing project</span>
-            <span class="mode-desc">Add another supplier's estimation to a project</span>
+            <span class="mode-desc">Add another estimation to a project</span>
           </span>
           <span class="mode-check" aria-hidden="true">
             <span class="mode-check-icon icon-check"></span>
@@ -65,7 +60,9 @@
           searchPlaceholder="Search projects…"
         />
         @if (hasError('projectName')) {
-          <span class="field-error" role="alert">Choose which project this supplier belongs to</span>
+          <span class="field-error" role="alert"
+            >Choose which project this supplier belongs to</span
+          >
         }
       </div>
     } @else {
@@ -87,7 +84,6 @@
         }
       </div>
     }
-  }
 
   @if (isAdmin()) {
     <div class="field-block">
@@ -146,7 +142,8 @@
       searchPlaceholder="Search suppliers…"
     />
     <span class="field-hint">
-      Each entry covers one supplier — add more suppliers as separate entries later.
+      Optional — leave blank if no supplier is assigned yet. Each entry covers at most one
+      supplier; add more entries later, with or without one.
     </span>
   </div>
 
@@ -168,7 +165,8 @@
       />
       <span class="field-hint">
         @if (entryMode() === 'existing') {
-          Locked to this project's client — set on its first supplier entry. Change it from the edit form instead.
+          Locked to this project's client — set on its first supplier entry. Change it from the edit
+          form instead.
         } @else {
           Which client this project is for — only they (and admins) can see it.
         }
@@ -176,4 +174,77 @@
     </div>
   }
 
+  <!-- ── AI Quick-Fill: optional BRD analysis, visually its own card ──
+       This step only ever renders inside the create wizard (the edit page
+       is a separate component), so no edit-mode guard is needed here. -->
+  <div class="brd-card" [class.has-summary]="brdSummary()">
+      <div class="brd-card-header">
+        <span class="brd-card-icon-wrap" aria-hidden="true">
+          <span class="brd-icon icon-sparkles"></span>
+        </span>
+        <div class="brd-card-titles">
+          <span class="brd-card-title">
+            AI Quick-Fill
+            <span class="brd-chip">Optional</span>
+          </span>
+          <span class="brd-card-subtitle">Powered by AI document analysis</span>
+        </div>
+      </div>
+
+      <p class="brd-card-copy">
+        Skip the manual scoping — upload your Business Requirement Document and AI reads it:
+        counting interfaces, spotting complexity drivers, and scoring risk. Steps 2–4 are pre-filled
+        for you; review and adjust anything before submitting.
+      </p>
+
+      <input
+        #brdInput
+        type="file"
+        hidden
+        accept=".pdf,.docx,.md,.markdown,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
+        (change)="onBrdFileChange($event)"
+      />
+      <button
+        type="button"
+        class="brd-upload-btn"
+        [disabled]="brdAnalyzing()"
+        (click)="brdInput.click()"
+      >
+        <span class="brd-icon icon-sparkles" aria-hidden="true"></span>
+        <span>{{ brdSummary() ? 'Analyze a different BRD' : 'Upload BRD & auto-fill' }}</span>
+      </button>
+      <span class="brd-formats">PDF, Word (.docx), Markdown, or plain text · up to 10 MB</span>
+
+      @if (brdError()) {
+        <div class="brd-summary-card card-failure" role="alert">
+          <div class="brd-summary-title">
+            <span class="brd-icon icon-alert-circle" aria-hidden="true"></span>
+            Couldn’t analyze the document
+          </div>
+          <p class="brd-summary-text">{{ brdError() }}</p>
+          <span class="brd-summary-note">Try again, or fill Steps 2–4 manually.</span>
+        </div>
+      }
+      @if (brdSummary()) {
+        <div
+          class="brd-summary-card"
+          role="status"
+          [class.card-success]="brdCoverage() === 'full'"
+          [class.card-warning]="brdCoverage() === 'partial'"
+          [class.card-failure]="brdCoverage() === 'none'"
+        >
+          <div class="brd-summary-title">
+            <span
+              class="brd-icon"
+              aria-hidden="true"
+              [class.icon-check-circle]="brdCoverage() === 'full'"
+              [class.icon-alert-circle]="brdCoverage() !== 'full'"
+            ></span>
+            {{ brdResultTitle() }} — {{ brdFileName() }}
+          </div>
+          <p class="brd-summary-text">{{ brdSummary() }}</p>
+          <span class="brd-summary-note">{{ brdResultNote() }}</span>
+        </div>
+      }
+    </div>
 </div>
