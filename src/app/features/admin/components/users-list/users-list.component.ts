@@ -85,6 +85,7 @@ const EMPLOYEE_CREATE_FIELDS: FormFieldInterface[] = [
     inputType: 'password',
     placeholder: 'Minimum 8 characters',
     icon: 'lock',
+    minLength: 8,
   },
   ...TRAILING_EMPLOYEE_FIELDS,
 ];
@@ -99,6 +100,7 @@ const EMPLOYEE_EDIT_FIELDS: FormFieldInterface[] = [
     inputType: 'password',
     placeholder: 'Leave blank to keep the current password',
     icon: 'lock',
+    minLength: 8,
   },
   ...TRAILING_EMPLOYEE_FIELDS,
 ];

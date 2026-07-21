@@ -98,6 +98,7 @@
               <th>Project</th>
               <th>Size</th>
               <th>ERP System</th>
+              <th>Supplier</th>
               <th>Effort</th>
               @if (isAdmin()) {
                 <th>Member</th>
@@ -111,9 +112,6 @@
               <tr>
                 <td>
                   <div class="project-name">{{ group.projectName }}</div>
-                  @if (group.entries.length > 1) {
-                    <div class="project-subtitle">{{ group.entries.length }} suppliers</div>
-                  }
                 </td>
                 <td>
                   @if (sizeForGroup(group); as size) {
@@ -121,6 +119,20 @@
                   }
                 </td>
                 <td>{{ erpForGroup(group) }}</td>
+                <td>
+                  <div class="supplier-chips">
+                    @if (visibleSuppliersForGroup(group).length === 0) {
+                      <span class="no-suppliers">—</span>
+                    } @else {
+                      @for (name of visibleSuppliersForGroup(group); track name) {
+                        <span class="supplier-chip">{{ name }}</span>
+                      }
+                      @if (remainingSuppliersCountForGroup(group) > 0) {
+                        <span class="supplier-chip supplier-chip-more">+{{ remainingSuppliersCountForGroup(group) }}</span>
+                      }
+                    }
+                  </div>
+                </td>
                 <td>{{ rangeForGroup(group) }}</td>
                 @if (isAdmin()) {
                   <td>{{ assignedToNameForGroup(group) }}</td>
@@ -132,6 +144,9 @@
                       <span class="material-symbols-outlined">visibility</span>
                     </button>
                     @if (isAdmin()) {
+                      <button type="button" class="row-action" aria-label="Duplicate project" (click)="requestDuplicateGroup(group)">
+                        <span class="material-symbols-outlined">content_copy</span>
+                      </button>
                       <button type="button" class="row-action row-action-delete" aria-label="Delete project" (click)="requestDeleteGroup(group)">
                         <span class="material-symbols-outlined">delete</span>
                       </button>
@@ -166,6 +181,18 @@
         [errorMessage]="deleteError()"
         (confirmed)="confirmDeleteProject()"
         (cancelled)="cancelDelete()"
+      />
+    }
+
+    <!-- Duplicate project -->
+    @if (duplicateTarget(); as group) {
+      <app-duplicate-project-dialog
+        [group]="group"
+        [existingNames]="existingProjectNames()"
+        [saving]="duplicating()"
+        [errorMessage]="duplicateError()"
+        (confirmed)="confirmDuplicate($event)"
+        (cancelled)="cancelDuplicate()"
       />
     }
   </main>

@@ -3,6 +3,7 @@ import { Observable, forkJoin, map, of, switchMap, tap, throwError } from 'rxjs'
 import { ProjectInterface } from '../../intefaces/form/project.interface';
 import { ProjectsApiService } from './projects-api.service';
 import { RoleService } from '../role/role-service';
+import { fetchAllPages } from '../../utils/fetch-all-pages.util';
 
 /*
  * ──────────────────────────────────────────────────────────────────
@@ -39,7 +40,7 @@ export class ProjectsStoreService {
     this.loading.set(true);
     this.loadError.set('');
 
-    this.api.list().subscribe({
+    this.fetchAll$().subscribe({
       next: (entries) => {
         this.projects.set(entries);
         this.loading.set(false);
@@ -53,12 +54,27 @@ export class ProjectsStoreService {
     });
   }
 
+  // Every entry across every page — the server caps a single request at
+  // 100 rows, so this walks pages until there's nothing left (see
+  // fetch-all-pages.util.ts). Shared by load() and refresh$() below.
+  private fetchAll$(): Observable<ProjectInterface[]> {
+    return fetchAllPages((page) =>
+      this.api.listPage(page).pipe(map((r) => ({ items: r.projects, meta: r.meta }))),
+    );
+  }
+
   entriesFor(projectName: string): ProjectInterface[] {
     return this.projects().filter((p) => p.projectName === projectName);
   }
 
   getByKey(projectName: string, supplier: string): ProjectInterface | undefined {
     return this.projects().find((p) => p.projectName === projectName && p.supplier === supplier);
+  }
+
+  // The stable, unambiguous lookup — unlike getByKey, this can't collide
+  // (two entries can share a project name + a blank supplier; ids are unique).
+  getById(id: string): ProjectInterface | undefined {
+    return this.projects().find((p) => p.id === id);
   }
 
   // Adds a supplier entry — starts a new project or extends an existing one.
@@ -101,6 +117,24 @@ export class ProjectsStoreService {
     );
   }
 
+  /*
+   * Clones a set of supplier entries under a new project name — the
+   * project-level "Duplicate" action. Each clone preserves its own
+   * source entry's owner (reassignIfNeeded, same mechanism `add()` already
+   * uses), not whoever triggered the duplicate — mirrors updateEntry's
+   * sibling-forkJoin pattern above.
+   */
+  duplicateProject(newProjectName: string, sourceEntries: ProjectInterface[]): Observable<void> {
+    if (!sourceEntries.length) return this.refresh$();
+    return forkJoin(
+      sourceEntries.map((entry) =>
+        this.api
+          .create({ ...entry, projectName: newProjectName })
+          .pipe(switchMap((created) => this.reassignIfNeeded(created, entry.user))),
+      ),
+    ).pipe(switchMap(() => this.refresh$()));
+  }
+
   // Removes an entire project — every supplier entry sharing this projectName.
   deleteProject(projectName: string): Observable<void> {
     const ids = this.entriesFor(projectName)
@@ -136,7 +170,7 @@ export class ProjectsStoreService {
 
   // Re-fetch after every mutation — one source of truth: the server.
   private refresh$(): Observable<void> {
-    return this.api.list().pipe(
+    return this.fetchAll$().pipe(
       tap((entries) => this.projects.set(entries)),
       map(() => undefined),
     );

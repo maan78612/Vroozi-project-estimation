@@ -85,7 +85,7 @@
         }
 
         @if (isInvalid(field.key)) {
-          <span class="error-text">{{ field.label }} is required.</span>
+          <span class="error-text">{{ errorMessage(field) }}</span>
         }
       </div>
     }

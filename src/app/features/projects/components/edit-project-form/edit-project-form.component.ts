@@ -45,6 +45,10 @@ export class EditProjectFormComponent {
   form = input.required<FormGroup>();
   loading = input(false);
   isAdmin = input(false);
+  // True when this entry is a copy being created from another one (see
+  // ProjectFormComponent.isDuplicateMode) — swaps a few labels so Save
+  // reads as "create a new entry", not "overwrite the source".
+  isDuplicating = input(false);
   assignableUsers = input<UserInterface[]>([]);
   erps = input<string[]>([]);
   suppliers = input<string[]>([]);

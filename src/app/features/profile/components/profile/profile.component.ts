@@ -47,6 +47,7 @@ const PASSWORD_FIELDS: FormFieldInterface[] = [
     inputType: 'password',
     placeholder: 'Minimum 8 characters',
     icon: 'lock_reset',
+    minLength: 8,
   },
 ];
 
@@ -115,10 +116,6 @@ export class ProfileComponent {
     const currentPassword = value['currentPassword'] as string;
     const newPassword = value['newPassword'] as string;
     if (!currentPassword || !newPassword) return;
-    if (newPassword.length < 8) {
-      this.passwordError.set('New password must be at least 8 characters.');
-      return;
-    }
 
     this.savingPassword.set(true);
     this.passwordError.set('');

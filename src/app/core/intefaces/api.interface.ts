@@ -126,15 +126,29 @@ export interface ApiAuthData {
   token: string;
 }
 
+/** One field-level validation problem — mirrors the backend's FieldError. */
+interface ApiFieldError {
+  field: string;
+  message: string;
+}
+
 /*
  * Normalizes any HTTP failure into a plain Error whose message is the
  * backend's own `message` when available — components already display
  * `err.message`, so services throw through this helper.
+ *
+ * A 422 validation failure carries the real detail in `errors[]` (one
+ * entry per bad field), not the generic top-level `message` ("Validation
+ * failed") — join those into the returned message so the user actually
+ * learns what's wrong, instead of every validation error in the app
+ * rendering as the same unhelpful "Validation failed" banner.
  */
 export function toApiError(err: unknown, fallback: string): Error {
   if (err instanceof HttpErrorResponse) {
-    const backendMessage = (err.error as { message?: string } | null)?.message;
-    if (backendMessage) return new Error(backendMessage);
+    const body = err.error as { message?: string; errors?: ApiFieldError[] } | null;
+    const fieldMessages = body?.errors?.map((e) => e.message).filter(Boolean);
+    if (fieldMessages?.length) return new Error(fieldMessages.join('. '));
+    if (body?.message) return new Error(body.message);
     if (err.status === 0) {
       return new Error('Could not reach the server. Please check your connection and try again.');
     }

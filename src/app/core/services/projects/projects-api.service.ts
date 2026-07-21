@@ -6,6 +6,7 @@ import {
   ApiBrdAnalysis,
   ApiProject,
   ApiResponse,
+  PaginationMeta,
   toApiError,
 } from '../../intefaces/api.interface';
 import { ProjectInterface } from '../../intefaces/form/project.interface';
@@ -99,11 +100,13 @@ function toBody(entry: Partial<ProjectInterface>): Record<string, unknown> {
 export class ProjectsApiService {
   private http = inject(HttpClient);
 
-  list(): Observable<ProjectInterface[]> {
+  // One page of up to 100 entries (the server's own cap) — see
+  // fetchAllPages, which callers use to walk every page.
+  listPage(page: number): Observable<{ projects: ProjectInterface[]; meta?: PaginationMeta }> {
     return this.http
-      .get<ApiResponse<{ projects: ApiProject[] }>>(BASE, { params: { limit: 100 } })
+      .get<ApiResponse<{ projects: ApiProject[] }>>(BASE, { params: { limit: 100, page } })
       .pipe(
-        map((res) => res.data.projects.map(fromDoc)),
+        map((res) => ({ projects: res.data.projects.map(fromDoc), meta: res.meta })),
         catchError((err: unknown) => throwError(() => toApiError(err, 'Could not load projects.'))),
       );
   }

@@ -1,0 +1,97 @@
+<div class="dup-backdrop" (click)="onBackdropClick()">
+  <div
+    class="dup-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Duplicate project"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="dup-head">
+      <div class="dup-head-texts">
+        <span class="dup-eyebrow">Duplicate project</span>
+        <h3 class="dup-title">{{ group().projectName }}</h3>
+        <p class="dup-subtitle">
+          {{ group().entries.length }} supplier{{ group().entries.length === 1 ? '' : 's' }} — choose which to include
+        </p>
+      </div>
+      <button type="button" class="dup-close" aria-label="Close" [disabled]="saving()" (click)="onCancel()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="dup-body">
+      <label class="dup-name-label" for="dup-name">New project name</label>
+      <input
+        id="dup-name"
+        type="text"
+        class="dup-name-input"
+        [class.has-error]="nameCollision()"
+        [value]="newName()"
+        [disabled]="saving()"
+        (input)="onNameChange($any($event.target).value)"
+        placeholder="e.g. HEB (Copy)"
+      />
+      @if (nameCollision()) {
+        <p class="dup-name-error">
+          A project named "{{ newName().trim() }}" already exists — suppliers would be added to
+          it instead of creating a new project. Choose a different name.
+        </p>
+      }
+
+      <div class="dup-list">
+        @for (entry of group().entries; track entry.id) {
+          <button
+            type="button"
+            class="dup-row"
+            [class.is-selected]="isSelected(entry)"
+            [disabled]="saving()"
+            (click)="toggle(entry)"
+          >
+            <span class="dup-checkbox" [class.is-checked]="isSelected(entry)" aria-hidden="true">
+              @if (isSelected(entry)) {
+                <span class="material-symbols-outlined">check</span>
+              }
+            </span>
+            <span class="row-avatar" aria-hidden="true">{{ (entry.supplier | initials) || '—' }}</span>
+            <span class="row-main">
+              <span class="row-name">{{ entry.supplier || 'No supplier' }}</span>
+              <span class="row-meta">
+                {{ entry.erp || 'No ERP' }}
+                &nbsp;·&nbsp; {{ interfacesOf(entry) }} interfaces
+              </span>
+            </span>
+            @if (entry.tentativeProjectSize) {
+              <span class="row-size size-{{ entry.tentativeProjectSize.toLowerCase() }}">{{ entry.tentativeProjectSize }}</span>
+            }
+          </button>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <div class="banner banner-error dup-error">
+          <span class="material-symbols-outlined banner-icon">error</span>
+          <p class="banner-message">{{ errorMessage() }}</p>
+        </div>
+      }
+
+      <div class="dup-actions">
+        <app-button
+          variant="link"
+          label="Discard"
+          [fullWidth]="false"
+          [disabled]="saving()"
+          (clicked)="onCancel()"
+        />
+        <app-button
+          variant="primary"
+          label="Duplicate Project"
+          loadingLabel="Duplicating…"
+          [loading]="saving()"
+          [disabled]="!canSubmit()"
+          [fullWidth]="false"
+          (clicked)="onConfirm()"
+        />
+      </div>
+    </div>
+  </div>
+</div>

@@ -12,15 +12,21 @@ import {
   rollupErp,
   rollupRangeLabel,
   rollupSize,
+  rollupSuppliers,
 } from '../../../../core/utils/project-rollup.util';
 import { ButtonComponent } from '../../../../shared/compoments/button/button';
 import { DataTableComponent } from '../../../../shared/compoments/data-table/data-table.component';
 import { PaginationComponent } from '../../../../shared/compoments/pagination/pagination.component';
 import { ProjectFilterBarComponent } from '../../../../shared/compoments/project-filter-bar/project-filter-bar.component';
 import { ConfirmDialogComponent } from '../../../../shared/compoments/confirm-dialog/confirm-dialog.component';
+import { DuplicateProjectDialogComponent } from '../../../../shared/compoments/duplicate-project-dialog/duplicate-project-dialog.component';
 import { SpinnerComponent } from '../../../../shared/compoments/spinner/spinner.component';
 
 const PAGE_SIZE = 10;
+
+// Rows show at most this many supplier chips before collapsing the rest
+// into "+N" — same convention as clients-list.component.ts's project chips.
+const MAX_VISIBLE_SUPPLIERS = 3;
 
 /*
  * ──────────────────────────────────────────────────────────────────
@@ -43,6 +49,7 @@ const PAGE_SIZE = 10;
     PaginationComponent,
     ProjectFilterBarComponent,
     ConfirmDialogComponent,
+    DuplicateProjectDialogComponent,
     SpinnerComponent,
   ],
   templateUrl: './project-list.component.html',
@@ -154,6 +161,17 @@ export class ProjectListComponent {
   deleting = signal(false);
   deleteError = signal('');
 
+  // Pending duplicate action — admin only (see template gating), mirrors
+  // the delete-flow signals above.
+  duplicateTarget = signal<ProjectGroup | null>(null);
+  duplicating = signal(false);
+  duplicateError = signal('');
+  // Every project name already in use — the duplicate dialog blocks
+  // submitting a name that collides with one of these (see its own
+  // validation), so a duplicate can never silently merge into an
+  // existing project (including the source project itself).
+  readonly existingProjectNames = this.projectsStore.projectNames;
+
   assignedToName(project: ProjectInterface): string {
     if (project.userName) return project.userName;
     const match = this.assignableUsers().find((u) => u.id === project.user);
@@ -169,6 +187,14 @@ export class ProjectListComponent {
   // Table row columns — same rollup ProjectCardComponent / ProjectViewComponent use.
   erpForGroup(group: ProjectGroup): string {
     return rollupErp(group.entries) || '—';
+  }
+
+  visibleSuppliersForGroup(group: ProjectGroup): string[] {
+    return rollupSuppliers(group.entries).slice(0, MAX_VISIBLE_SUPPLIERS);
+  }
+
+  remainingSuppliersCountForGroup(group: ProjectGroup): number {
+    return Math.max(0, rollupSuppliers(group.entries).length - MAX_VISIBLE_SUPPLIERS);
   }
 
   sizeForGroup(group: ProjectGroup): ProjectSizeEnum | null {
@@ -222,9 +248,14 @@ export class ProjectListComponent {
   }
 
   // The view screen shows the full rolled-up project and is where editing starts.
+  // Routes on the first entry's id — just an anchor to give the URL a
+  // stable id instead of the project name; ProjectViewComponent resolves
+  // it back to the name and shows every sibling entry (see app.routes.ts).
   viewGroup(group: ProjectGroup): void {
+    const anchorId = group.entries[0]?.id;
+    if (!anchorId) return;
     const base = this.isAdmin() ? '/admin/projects' : '/project';
-    this.router.navigate([base, encodeURIComponent(group.projectName), 'view']);
+    this.router.navigate([base, anchorId, 'view']);
   }
 
   requestDeleteGroup(group: ProjectGroup): void {
@@ -256,6 +287,33 @@ export class ProjectListComponent {
         this.deleting.set(false);
         this.deleteError.set(
           err instanceof Error ? err.message : 'Could not delete the project. Please try again.',
+        );
+      },
+    });
+  }
+
+  requestDuplicateGroup(group: ProjectGroup): void {
+    this.duplicateError.set('');
+    this.duplicateTarget.set(group);
+  }
+
+  cancelDuplicate(): void {
+    if (this.duplicating()) return;
+    this.duplicateTarget.set(null);
+  }
+
+  confirmDuplicate(payload: { newProjectName: string; selectedEntries: ProjectInterface[] }): void {
+    this.duplicating.set(true);
+    this.duplicateError.set('');
+    this.projectsStore.duplicateProject(payload.newProjectName, payload.selectedEntries).subscribe({
+      next: () => {
+        this.duplicating.set(false);
+        this.duplicateTarget.set(null);
+      },
+      error: (err: unknown) => {
+        this.duplicating.set(false);
+        this.duplicateError.set(
+          err instanceof Error ? err.message : 'Could not duplicate the project. Please try again.',
         );
       },
     });

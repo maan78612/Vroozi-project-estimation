@@ -27,10 +27,11 @@
             <app-button icon="add" label="Add Estimation" [fullWidth]="false" (clicked)="addSupplier()" />
           }
           <!-- Every role can edit (clients get the same edit rights as the
-               owning employee — scoped server-side); deleting stays hidden
-               from clients. -->
+               owning employee — scoped server-side); duplicating and
+               deleting stay hidden from clients. -->
           <app-button icon="edit" label="Edit" [fullWidth]="false" (clicked)="editSelected()" />
           @if (!isClient()) {
+            <app-button icon="content_copy" label="Duplicate" [fullWidth]="false" (clicked)="duplicateSelected()" />
             <app-button icon="delete" [danger]="true" label="Delete" [fullWidth]="false" (clicked)="requestDeleteSelected()" />
           }
         </div>

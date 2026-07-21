@@ -43,6 +43,7 @@ export const CLIENT_CREATE_FIELDS: FormFieldInterface[] = [
     inputType: 'password',
     placeholder: 'Minimum 8 characters',
     icon: 'lock',
+    minLength: 8,
   },
 ];
 
@@ -56,5 +57,6 @@ export const CLIENT_EDIT_FIELDS: FormFieldInterface[] = [
     inputType: 'password',
     placeholder: 'Leave blank to keep the current password',
     icon: 'lock',
+    minLength: 8,
   },
 ];

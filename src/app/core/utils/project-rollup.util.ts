@@ -33,6 +33,15 @@ export function rollupSuppliers(entries: ProjectInterface[]): string[] {
   return entries.map((e) => e.supplier).filter(Boolean);
 }
 
+// Human-readable summary across the suppliers — 'Oscorp', 'Oscorp, Acme',
+// or 'Oscorp, Acme, Globex +2'. '' when every entry's supplier is blank.
+export function rollupSupplierSummary(entries: ProjectInterface[]): string {
+  const named = rollupSuppliers(entries);
+  if (named.length === 0) return '';
+  if (named.length <= 3) return named.join(', ');
+  return `${named.slice(0, 3).join(', ')} +${named.length - 3}`;
+}
+
 // Largest size across the suppliers — the project is at least this big.
 export function rollupSize(entries: ProjectInterface[]): ProjectSizeEnum | null {
   let best: ProjectSizeEnum | null = null;

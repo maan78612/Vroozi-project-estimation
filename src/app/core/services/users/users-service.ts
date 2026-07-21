@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../../config/api.config';
 import { ApiResponse, ApiUser, toApiError } from '../../intefaces/api.interface';
 import { UserInterface } from '../../intefaces/user-interface';
 import { mapApiUser } from '../auth/auth-service';
+import { fetchAllPages } from '../../utils/fetch-all-pages.util';
 
 export interface CreateEmployeeInput {
   name: string;
@@ -45,20 +46,22 @@ export class UsersService {
     this.loading.set(true);
     this.loadError.set('');
 
-    this.http
-      .get<ApiResponse<{ users: ApiUser[] }>>(`${API_BASE_URL}/users`, {
-        params: { role: 'user', limit: 100 },
-      })
-      .subscribe({
-        next: (res) => {
-          this.assignableUsers.set(res.data.users.map(mapApiUser));
-          this.loading.set(false);
-        },
-        error: (err: unknown) => {
-          this.loading.set(false);
-          this.loadError.set(toApiError(err, 'Could not load employees.').message);
-        },
-      });
+    fetchAllPages<ApiUser>((page) =>
+      this.http
+        .get<ApiResponse<{ users: ApiUser[] }>>(`${API_BASE_URL}/users`, {
+          params: { role: 'user', limit: 100, page },
+        })
+        .pipe(map((res) => ({ items: res.data.users, meta: res.meta }))),
+    ).subscribe({
+      next: (users) => {
+        this.assignableUsers.set(users.map(mapApiUser));
+        this.loading.set(false);
+      },
+      error: (err: unknown) => {
+        this.loading.set(false);
+        this.loadError.set(toApiError(err, 'Could not load employees.').message);
+      },
+    });
   }
 
   /** Admin only (enforced by the API). Creates a role="user" account and adds it to the directory. */

@@ -10,9 +10,11 @@
  *  ever-growing page. Edit/Delete act on whichever entry is selected.
  * ──────────────────────────────────────────────────────────────────
  */
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { map } from 'rxjs';
 import { UsersService } from '../../../../core/services/users/users-service';
 import { ProjectsStoreService } from '../../../../core/services/projects/projects-store.service';
 import { RoleService } from '../../../../core/services/role/role-service';
@@ -25,6 +27,7 @@ import {
   rollupOutboundTotal,
   rollupRangeLabel,
   rollupSize,
+  rollupSupplierSummary,
 } from '../../../../core/utils/project-rollup.util';
 import { COMPLEXITY_FLAGS, RISK_FLAGS } from '../../../../core/config/feature-flags.config';
 import { ButtonComponent } from '../../../../shared/compoments/button/button';
@@ -50,8 +53,28 @@ export class ProjectViewComponent {
   readonly complexityFlags = COMPLEXITY_FLAGS;
   readonly riskFlags = RISK_FLAGS;
 
-  private readonly routeKey = this.route.snapshot.paramMap.get('key') ?? '';
-  private readonly decodedName = decodeURIComponent(this.routeKey);
+  /*
+   * Angular reuses this component instance when navigating between two
+   * projects' view pages (same route, different :id) — reading
+   * route.snapshot once here would freeze on whichever project was first
+   * opened. paramMap is an Observable specifically so the id (and
+   * everything derived from it) stays live across that reuse.
+   *
+   * :id is one entry's own id — an anchor picked purely to give this
+   * page a stable, unencoded URL instead of the project name. A
+   * "project" here is every entry sharing that anchor's project name
+   * (there's no single document representing the group itself), so the
+   * very first thing derived from it resolves the anchor back to that
+   * name. If the anchor entry itself gets deleted later (its sibling
+   * suppliers don't), this link goes stale — same tradeoff as any id you
+   * copy out of a URL and hold onto after the thing it points to is gone.
+   */
+  private readonly routeId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('id') ?? '')),
+    { initialValue: this.route.snapshot.paramMap.get('id') ?? '' },
+  );
+  private readonly anchorEntry = computed(() => this.projectsStore.getById(this.routeId()));
+  private readonly decodedName = computed(() => this.anchorEntry()?.projectName ?? '');
 
   readonly isAdmin = this.roleService.isAdmin;
   // Client-role accounts get a read-only view — Edit/Delete are hidden below.
@@ -69,13 +92,24 @@ export class ProjectViewComponent {
    * client-user (who isn't the `owner` of any entry) would always see
    * zero results and land on the "not found" state below.
    */
-  readonly entries = computed(() => this.projectsStore.entriesFor(this.decodedName));
+  readonly entries = computed(() => this.projectsStore.entriesFor(this.decodedName()));
 
   readonly notFound = computed(() => !this.loading() && !this.loadError() && this.entries().length === 0);
 
   constructor() {
     this.projectsStore.load();
     if (this.isAdmin()) this.usersService.load();
+
+    // Same reuse gap as decodedName above: reset per-project UI state
+    // whenever the route key actually changes, or a stale search query /
+    // selected supplier silently carries over from whichever project was
+    // viewed previously in this reused instance.
+    effect(() => {
+      this.decodedName();
+      this.selectedEntryId.set('');
+      this.supplierQuery.set('');
+      this.mobileDetailOpen.set(false);
+    });
   }
 
   /*
@@ -85,7 +119,7 @@ export class ProjectViewComponent {
    * ──────────────────────────────────────────────────────────────────
    */
   projectName(): string {
-    return this.entries()[0]?.projectName ?? this.decodedName;
+    return this.entries()[0]?.projectName ?? this.decodedName();
   }
 
   erp(): string {
@@ -95,12 +129,7 @@ export class ProjectViewComponent {
   // Named suppliers only — '' (chip hidden) when every entry's supplier is blank,
   // matching how ProjectCardComponent already hides its supplier chip in that case.
   supplierSummary(): string {
-    const named = this.entries()
-      .map((e) => e.supplier)
-      .filter(Boolean);
-    if (named.length === 0) return '';
-    if (named.length <= 3) return named.join(', ');
-    return `${named.slice(0, 3).join(', ')} +${named.length - 3}`;
+    return rollupSupplierSummary(this.entries());
   }
 
   size(): ProjectSizeEnum | null {
@@ -194,10 +223,21 @@ export class ProjectViewComponent {
    */
   editSelected(): void {
     const entry = this.selectedEntry();
-    if (!entry) return;
+    if (!entry?.id) return;
     const base = this.isAdmin() ? '/admin/projects' : '/project';
-    this.router.navigate([base, encodeURIComponent(entry.projectName), 'edit'], {
-      queryParams: { supplier: entry.supplier },
+    this.router.navigate([base, entry.id, 'edit'], { state: { project: entry } });
+  }
+
+  // Opens the same edit form pre-filled from this entry, but in create mode
+  // (see ProjectFormComponent.isDuplicateMode) — Save produces a new entry,
+  // the original is untouched. The "(Copy)" suffix is applied after load,
+  // in the form.
+  duplicateSelected(): void {
+    const entry = this.selectedEntry();
+    if (!entry?.id) return;
+    const base = this.isAdmin() ? '/admin/projects' : '/project';
+    this.router.navigate([base, entry.id, 'edit'], {
+      queryParams: { mode: 'duplicate' },
       state: { project: entry },
     });
   }

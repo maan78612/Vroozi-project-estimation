@@ -107,8 +107,12 @@ export const routes: Routes = [
               ),
           },
           {
-            // Read-only detail screen for the project — :key is the URL-encoded project name.
-            path: 'projects/:key/view',
+            // Read-only detail screen for the project — a "project" here is
+            // every entry sharing a project name, not a single document, so
+            // there's no one id to route on. :id anchors on one of those
+            // entries (picked in viewGroup() below); ProjectViewComponent
+            // resolves it back to the project name and shows every sibling.
+            path: 'projects/:id/view',
             loadComponent: () =>
               import('./features/projects/components/project-view/project-view.component').then(
                 (m) => m.ProjectViewComponent,
@@ -127,9 +131,10 @@ export const routes: Routes = [
       {
         /*
          * Must be declared AFTER projects/new so Angular matches /new first.
-         * :key is the URL-encoded project name (column A value).
+         * :id is the entry's own Mongo _id — stable, and never needs URL
+         * encoding (unlike the project name, which can contain spaces).
          */
-        path: 'projects/:key/edit',
+        path: 'projects/:id/edit',
         loadComponent: () =>
           import('./features/projects/components/project-form/project-form.component').then(
             (m) => m.ProjectFormComponent,
@@ -145,7 +150,7 @@ export const routes: Routes = [
     children: [
       {
         // Persistent nav shell — wraps the list/detail pages; the
-        // wizard (:key/edit, below) stays outside it.
+        // wizard (:id/edit, below) stays outside it.
         path: '',
         component: AppShellComponent,
         children: [
@@ -158,10 +163,11 @@ export const routes: Routes = [
           },
           ...profileAndStaticRoutes,
           {
-            // Read-only detail screen for the project — :key is the URL-encoded
-            // project name. Declared AFTER the profile/static routes so fixed
-            // words like `profile` match those, not this parameter.
-            path: ':key/view',
+            // Read-only detail screen for the project — :id anchors on one
+            // entry (see the admin route of the same shape above for why).
+            // Declared AFTER the profile/static routes so fixed words like
+            // `profile` match those, not this parameter.
+            path: ':id/view',
             loadComponent: () =>
               import('./features/projects/components/project-view/project-view.component').then(
                 (m) => m.ProjectViewComponent,
@@ -170,8 +176,9 @@ export const routes: Routes = [
         ],
       },
       {
-        // :key is the URL-encoded project name (column A value).
-        path: ':key/edit',
+        // :id is the entry's own Mongo _id — see the admin route of the
+        // same shape above for why this isn't the project name.
+        path: ':id/edit',
         loadComponent: () =>
           import('./features/projects/components/project-form/project-form.component').then(
             (m) => m.ProjectFormComponent,

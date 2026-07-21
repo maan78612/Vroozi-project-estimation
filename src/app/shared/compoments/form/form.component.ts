@@ -49,7 +49,11 @@ export class FormComponent implements OnInit {
     const initial = this.initialValue();
     const group: Record<string, unknown[]> = {};
     this.fields().forEach((field) => {
-      group[field.key] = [initial[field.key] ?? '', field.required ? [Validators.required] : []];
+      const validators = [];
+      if (field.required) validators.push(Validators.required);
+      if (field.inputType === 'email') validators.push(Validators.email);
+      if (field.minLength) validators.push(Validators.minLength(field.minLength));
+      group[field.key] = [initial[field.key] ?? '', validators];
     });
     this.formGroup = this.fb.group(group);
   }
@@ -72,6 +76,20 @@ export class FormComponent implements OnInit {
   isInvalid(key: string): boolean {
     const ctrl = this.formGroup.get(key);
     return !!ctrl && ctrl.invalid && ctrl.touched;
+  }
+
+  // Which validator actually failed decides the message — "X is required"
+  // was previously shown for every kind of failure, including a badly
+  // formatted email or a too-short password, which told the user nothing.
+  errorMessage(field: FormFieldInterface): string {
+    const errors = this.formGroup.get(field.key)?.errors;
+    if (!errors) return '';
+    if (errors['required']) return `${field.label} is required.`;
+    if (errors['email']) return 'Enter a valid email address.';
+    if (errors['minlength']) {
+      return `${field.label} must be at least ${errors['minlength'].requiredLength} characters.`;
+    }
+    return `${field.label} is invalid.`;
   }
 
   onSubmit(): void {

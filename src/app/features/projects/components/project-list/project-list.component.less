@@ -116,12 +116,33 @@
   font-weight: 600;
 }
 
-.project-subtitle {
+.supplier-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  max-width: 220px;
+}
+
+.no-suppliers {
+  .typography-body-md();
+  color: @color-outline;
+}
+
+.supplier-chip {
+  display: inline-block;
   .typography-label-sm();
   text-transform: none;
   letter-spacing: normal;
+  font-weight: 500;
   color: @color-on-surface-variant;
-  margin-top: 0.15rem;
+  background: rgba(var(--color-primary-rgb), 7%);
+  border-radius: @radius-md;
+  padding: 0.2rem 0.55rem;
+
+  &.supplier-chip-more {
+    color: @color-outline;
+    background: rgba(var(--color-outline-variant-rgb), 30%);
+  }
 }
 
 .row-actions {
@@ -191,5 +212,9 @@
     h1 {
       font-size: 1.4rem;
     }
+  }
+
+  .supplier-chips {
+    max-width: none;
   }
 });

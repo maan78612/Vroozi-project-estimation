@@ -30,6 +30,7 @@ import { FieldTypeEnum } from '../../../../core/enums/field-type.enum';
 import { ProjectSizeEnum } from '../../../../core/enums/project-size.enum';
 import { estimateProjectSize } from '../../../../core/utils/project-size.util';
 import { EstimateBreakdown, estimateRangeDays } from '../../../../core/utils/estimate.util';
+import { isExactDuplicateEntry } from '../../../../core/utils/project-entry-equality.util';
 import { AddOptionDialogComponent } from '../../../../shared/compoments/add-option-dialog/add-option-dialog.component';
 import { EditProjectFormComponent } from '../edit-project-form/edit-project-form.component';
 import { ProjectBasicsStepComponent } from './steps/project-basics-step/project-basics-step.component';
@@ -143,9 +144,13 @@ export class ProjectFormComponent {
    !  Component state signals variables:
    * ──────────────────────────────────────────────────────────────────
    */
-  private readonly _routeKey = this.route.snapshot.paramMap.get('key');
-  // Which supplier row of the project is being edited (may be empty).
-  private readonly _routeSupplier = this.route.snapshot.queryParamMap.get('supplier') ?? '';
+  // The entry's own Mongo _id — stable and unambiguous, unlike name+supplier
+  // (two entries can share a project name with both suppliers blank).
+  private readonly _routeId = this.route.snapshot.paramMap.get('id');
+  // Duplicate mode arrives as ?mode=duplicate on the same edit route (see
+  // project-view's duplicateSelected()) — same route key/supplier lookup as
+  // a normal edit, but Save creates a new entry instead of overwriting it.
+  readonly isDuplicateMode = this.route.snapshot.queryParamMap.get('mode') === 'duplicate';
 
   currentStep = signal(0);
   // Mobile-only: the sidebar step drawer collapses into a compact
@@ -214,14 +219,14 @@ export class ProjectFormComponent {
    ! Computed Signals: because these values are derived from other signals,
    * they are automatically updated when their dependencies change.
    * but we cannot change them directly, because they are computed
-   * [!!this._routeKey] means that if there is a route key, we are editing
+   * [!!this._routeId] means that if there is a route id, we are editing
    * an existing project rather than creating a new one.
    * ──────────────────────────────────────────────────────────────────
    */
 
-  // * !! at this._routeKey is used for converting a value to a boolean.
+  // * !! at this._routeId is used for converting a value to a boolean.
 
-  readonly isEditMode = computed(() => !!this._routeKey);
+  readonly isEditMode = computed(() => !!this._routeId);
 
   readonly isAdmin = this.roleService.isAdmin;
   readonly isClient = this.roleService.isClient;
@@ -352,11 +357,11 @@ export class ProjectFormComponent {
     });
 
     // Edit mode: look the project up once the store has finished loading.
-    // No route key means a brand-new project — form starts blank.
+    // No route id means a brand-new project — form starts blank.
     effect(() => {
-      if (!this._routeKey || this.editingProject()) return;
+      if (!this._routeId || this.editingProject()) return;
       if (this.projectsStore.loading()) return;
-      this.loadProjectByKey(this._routeKey);
+      this.loadProjectById(this._routeId);
     });
   }
 
@@ -395,20 +400,14 @@ export class ProjectFormComponent {
    * ----------------------- Data loading ----------------------------
    * ──────────────────────────────────────────────────────────────────
    */
-  private loadProjectByKey(key: string): void {
-    const decoded = decodeURIComponent(key);
-
+  private loadProjectById(id: string): void {
     // Avoid an extra lookup when we already have the entry in memory
-    // (passed via router state from the list page's "edit" action).
+    // (passed via router state from the list/view page's "edit" action).
     const stateProject = this.router.lastSuccessfulNavigation()?.extras?.state?.['project'] as
       ProjectInterface | undefined;
 
     const found =
-      stateProject &&
-      stateProject.projectName === decoded &&
-      stateProject.supplier === this._routeSupplier
-        ? stateProject
-        : this.projectsStore.getByKey(decoded, this._routeSupplier);
+      stateProject && stateProject.id === id ? stateProject : this.projectsStore.getById(id);
 
     if (!found) {
       this.loadError.set('This project entry could not be found.');
@@ -433,12 +432,28 @@ export class ProjectFormComponent {
      * Non-admins see the name but can't change it (renaming would split
      * this entry out of its project group — the backend strips the field
      * from their updates too, this just makes the form honest about it).
-     * getRawValue() in onSubmit still reads disabled controls, so the
-     * rest of the payload is unaffected.
+     * Duplicate mode locks both project name AND client for EVERY role,
+     * admins included: a duplicate is meant to stay attached to the
+     * source's project (and, since a project's client is shared across
+     * all its entries, that project's client too) — only the supplier
+     * and its estimation fields are meant to vary. getRawValue() in
+     * onSubmit still reads disabled controls, so the rest of the
+     * payload is unaffected.
      */
-    if (!this.isAdmin()) {
+    if (!this.isAdmin() || this.isDuplicateMode) {
       this.form.get('projectName')?.disable({ emitEvent: false });
     }
+    if (this.isDuplicateMode) {
+      this.form.get('client')?.disable({ emitEvent: false });
+    }
+    // Duplicate mode: pre-fill every field straight from the source,
+    // supplier included — it's a real picklist value, so inventing a
+    // "(Copy)" variant would offer a name that doesn't actually exist in
+    // the Suppliers catalog. A straight Save is correctly caught by the
+    // exact-duplicate guard below (same supplier AND every other field
+    // unchanged); changing anything — the supplier or an estimation
+    // field — clears it. editingProject holds the source being copied
+    // from, not a document being modified in place.
     this.editingProject.set(found);
   }
 
@@ -752,19 +767,33 @@ export class ProjectFormComponent {
 
     const editing = this.editingProject();
 
-    // Block a second entry with the same project + supplier combination.
-    // No-supplier entries are exempt — a project can have any number of
-    // those, since "no supplier yet" isn't an identity to collide on.
-    const duplicate = entry.supplier
-      ? this.projectsStore.getByKey(entry.projectName, entry.supplier)
-      : undefined;
-    const isItself =
-      editing &&
-      editing.projectName === entry.projectName &&
-      editing.supplier === entry.supplier;
-    if (duplicate && !isItself) {
+    /*
+     * Block saving an entry that's identical, field for field, to another
+     * entry already in this project — most commonly hit by "Duplicate
+     * Supplier" landing straight back on Save with nothing changed (see
+     * isExactDuplicateEntry). Sharing a supplier name alone is NOT a
+     * collision — only every other property matching too is, so
+     * re-estimating a later phase with the same supplier (different
+     * interfaces/complexity) is still allowed.
+     *
+     * In normal edit mode, resaving the entry being edited without
+     * changing anything must NOT trip this — it's the same document,
+     * not a duplicate of itself. Duplicate mode has no such "itself" to
+     * exempt: Save always creates a brand new document, so a straight
+     * Save with nothing changed from the pre-filled source values must
+     * still be caught.
+     */
+    const exactDuplicate = this.projectsStore
+      .entriesFor(entry.projectName)
+      .find((sibling) => {
+        if (!this.isDuplicateMode && sibling.id === editing?.id) return false;
+        return isExactDuplicateEntry(entry, sibling);
+      });
+    if (exactDuplicate) {
       this.submitError.set(
-        `"${entry.projectName}" already has an entry for supplier "${entry.supplier}".`,
+        entry.supplier
+          ? `"${entry.projectName}" already has an identical entry for supplier "${entry.supplier}". Change at least one field before saving.`
+          : `"${entry.projectName}" already has an identical entry. Change at least one field before saving.`,
       );
       return;
     }
@@ -773,7 +802,9 @@ export class ProjectFormComponent {
     this.submitError.set('');
     this.submitSuccess.set(false);
 
-    const save$ = editing
+    // Duplicate mode always creates a new entry, even though editingProject()
+    // is populated (it's the source being copied from, not the target).
+    const save$ = editing && !this.isDuplicateMode
       ? this.projectsStore.updateEntry(editing.id ?? '', editing.projectName, entry)
       : this.projectsStore.add(entry);
 

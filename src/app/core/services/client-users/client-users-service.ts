@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../../config/api.config';
 import { ApiResponse, ApiUser, toApiError } from '../../intefaces/api.interface';
 import { UserInterface } from '../../intefaces/user-interface';
 import { mapApiUser } from '../auth/auth-service';
+import { fetchAllPages } from '../../utils/fetch-all-pages.util';
 
 export interface CreateClientUserInput {
   name: string;
@@ -42,20 +43,22 @@ export class ClientUsersService {
     this.loading.set(true);
     this.loadError.set('');
 
-    this.http
-      .get<ApiResponse<{ users: ApiUser[] }>>(`${API_BASE_URL}/users`, {
-        params: { role: 'client', limit: 100 },
-      })
-      .subscribe({
-        next: (res) => {
-          this.clientUsers.set(res.data.users.map(mapApiUser));
-          this.loading.set(false);
-        },
-        error: (err: unknown) => {
-          this.loading.set(false);
-          this.loadError.set(toApiError(err, 'Could not load clients.').message);
-        },
-      });
+    fetchAllPages<ApiUser>((page) =>
+      this.http
+        .get<ApiResponse<{ users: ApiUser[] }>>(`${API_BASE_URL}/users`, {
+          params: { role: 'client', limit: 100, page },
+        })
+        .pipe(map((res) => ({ items: res.data.users, meta: res.meta }))),
+    ).subscribe({
+      next: (users) => {
+        this.clientUsers.set(users.map(mapApiUser));
+        this.loading.set(false);
+      },
+      error: (err: unknown) => {
+        this.loading.set(false);
+        this.loadError.set(toApiError(err, 'Could not load clients.').message);
+      },
+    });
   }
 
   /** Admin only (enforced by the API). Creates a role="client" account and adds it to the directory. */
