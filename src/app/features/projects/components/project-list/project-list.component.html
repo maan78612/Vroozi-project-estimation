@@ -96,6 +96,7 @@
           <thead>
             <tr>
               <th>Project</th>
+              <th>Type</th>
               <th>Size</th>
               <th>ERP System</th>
               <th>Supplier</th>
@@ -113,6 +114,7 @@
                 <td>
                   <div class="project-name">{{ group.projectName }}</div>
                 </td>
+                <td>{{ scopeForGroup(group) }}</td>
                 <td>
                   @if (sizeForGroup(group); as size) {
                     <span class="size-badge size-{{ size.toLowerCase() }}">{{ size }}</span>

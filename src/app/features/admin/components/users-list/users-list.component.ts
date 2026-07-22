@@ -32,9 +32,11 @@ const PAGE_SIZE = 10;
 
 type EmployeeSortOption = 'name' | 'projects';
 
-// Password is required on create, optional on edit (blank = keep the
-// current password) — same split as CLIENT_CREATE_FIELDS/CLIENT_EDIT_FIELDS
-// in client-fields.config.ts.
+// No password on create — the account starts inactive and the user gets
+// an emailed "set your password" link (see backend user.service.createUser).
+// Edit still allows an admin to optionally set/override a password
+// directly (blank = keep the current one) — same split as
+// CLIENT_CREATE_FIELDS/CLIENT_EDIT_FIELDS in client-fields.config.ts.
 const BASE_EMPLOYEE_FIELDS: FormFieldInterface[] = [
   {
     key: 'name',
@@ -77,16 +79,6 @@ const TRAILING_EMPLOYEE_FIELDS: FormFieldInterface[] = [
 
 const EMPLOYEE_CREATE_FIELDS: FormFieldInterface[] = [
   ...BASE_EMPLOYEE_FIELDS,
-  {
-    key: 'password',
-    label: 'Password',
-    type: FieldTypeEnum.Text,
-    required: true,
-    inputType: 'password',
-    placeholder: 'Minimum 8 characters',
-    icon: 'lock',
-    minLength: 8,
-  },
   ...TRAILING_EMPLOYEE_FIELDS,
 ];
 
@@ -262,6 +254,15 @@ export class UsersListComponent {
     this.dialogOpen.set(false);
   }
 
+  // Shown after a successful create — the account has no password yet
+  // (see EMPLOYEE_CREATE_FIELDS above), so the admin needs to know an
+  // activation email is what gets the new employee signed in.
+  createdNotice = signal<UserInterface | null>(null);
+
+  dismissCreatedNotice(): void {
+    this.createdNotice.set(null);
+  }
+
   saveDialog(value: Record<string, string | number>): void {
     const name = (value['name'] as string)?.trim();
     const email = (value['email'] as string)?.trim();
@@ -271,19 +272,19 @@ export class UsersListComponent {
     if (!name || !email) return;
 
     const target = this.editTarget();
-    if (!target && !password) return; // password required on create
 
     this.saving.set(true);
     this.saveError.set('');
 
     const save$ = target
       ? this.usersService.update(target.id, { name, email, password, jobTitle, department })
-      : this.usersService.create({ name, email, password: password!, jobTitle, department });
+      : this.usersService.create({ name, email, jobTitle, department });
 
     save$.subscribe({
-      next: () => {
+      next: (saved) => {
         this.saving.set(false);
         this.dialogOpen.set(false);
+        if (!target) this.createdNotice.set(saved);
       },
       error: (err: unknown) => {
         this.saving.set(false);

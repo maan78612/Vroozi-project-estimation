@@ -70,6 +70,14 @@ export const routes: Routes = [
         (m) => m.ForgotPasswordComponent,
       ),
   },
+  {
+    path: 'reset-password/:token',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/components/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent,
+      ),
+  },
 
   // ── Admin routes (admin role only) ──────────────────────────────────────
   {

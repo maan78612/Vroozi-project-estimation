@@ -47,7 +47,9 @@ export interface ApiUser {
 export interface ApiProject {
   _id: string;
   projectName: string;
+  projectScope: 'Internal' | 'External';
   erp: string;
+  edi: YesNo;
   supplier: string;
   // Populated ({ _id, name, email }) from every endpoint the app uses,
   // same as `owner` — see ApiUser.
@@ -133,7 +135,25 @@ interface ApiFieldError {
 }
 
 /*
- * Normalizes any HTTP failure into a plain Error whose message is the
+ * An Error that also carries the backend's machine-readable `code`, for
+ * the rare case a component needs to branch on WHICH error this is
+ * instead of just displaying the message (e.g. login's "account not
+ * activated" dialog vs. a plain wrong-password banner). Every existing
+ * `err instanceof Error` check keeps working unchanged, since this IS one.
+ */
+export class ApiClientError extends Error {
+  code?: string;
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
+/** Login failure when an admin-created account hasn't set its password yet — must match the backend's literal ApiError code in auth.service.ts (project-managment-backend). */
+export const ACCOUNT_NOT_ACTIVATED_CODE = 'ACCOUNT_NOT_ACTIVATED';
+
+/*
+ * Normalizes any HTTP failure into an Error whose message is the
  * backend's own `message` when available — components already display
  * `err.message`, so services throw through this helper.
  *
@@ -145,13 +165,13 @@ interface ApiFieldError {
  */
 export function toApiError(err: unknown, fallback: string): Error {
   if (err instanceof HttpErrorResponse) {
-    const body = err.error as { message?: string; errors?: ApiFieldError[] } | null;
+    const body = err.error as { message?: string; errors?: ApiFieldError[]; code?: string } | null;
     const fieldMessages = body?.errors?.map((e) => e.message).filter(Boolean);
-    if (fieldMessages?.length) return new Error(fieldMessages.join('. '));
-    if (body?.message) return new Error(body.message);
+    if (fieldMessages?.length) return new ApiClientError(fieldMessages.join('. '), body?.code);
+    if (body?.message) return new ApiClientError(body.message, body?.code);
     if (err.status === 0) {
-      return new Error('Could not reach the server. Please check your connection and try again.');
+      return new ApiClientError('Could not reach the server. Please check your connection and try again.');
     }
   }
-  return err instanceof Error ? err : new Error(fallback);
+  return err instanceof Error ? err : new ApiClientError(fallback);
 }

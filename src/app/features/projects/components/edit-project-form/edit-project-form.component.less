@@ -393,6 +393,22 @@
   color: @color-on-surface-variant;
 }
 
+// Set once at creation (Project Scope, EDI) — shown, not editable, here.
+// Deliberately plain (no button chrome, no hover/cursor) so it doesn't
+// read as interactive.
+.readonly-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.4rem 0.9rem;
+  border-radius: @radius-full;
+  background: @color-surface-container-high;
+  border: 1px solid @color-outline-variant;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: @color-on-surface-variant;
+}
+
 // ╔══════════════════════════════════════════════════════════════════════════╗
 // ║  INTEGRATION SCOPE — single-row compact stepper strip                    ║
 // ╚══════════════════════════════════════════════════════════════════════════╝

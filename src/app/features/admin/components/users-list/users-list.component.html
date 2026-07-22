@@ -144,6 +144,19 @@
     />
   }
 
+  @if (createdNotice(); as created) {
+    <app-confirm-dialog
+      title="Employee created"
+      [message]="'&quot;' + created.name + '&quot; has been added. We\'ve emailed ' + created.email + ' a link to set their password — they won\'t be able to sign in until they complete it.'"
+      confirmLabel="Got it"
+      [showCancel]="false"
+      [danger]="false"
+      [showLogo]="true"
+      (confirmed)="dismissCreatedNotice()"
+      (cancelled)="dismissCreatedNotice()"
+    />
+  }
+
   @if (deleteTarget(); as employee) {
     <app-confirm-dialog
       title="Delete employee?"

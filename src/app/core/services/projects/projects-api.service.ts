@@ -30,7 +30,9 @@ function fromDoc(doc: ApiProject): ProjectInterface {
   return {
     id: doc._id,
     projectName: doc.projectName,
+    projectScope: doc.projectScope,
     erp: doc.erp,
+    edi: doc.edi,
     supplier: doc.supplier ?? '',
     client: client ? client._id : ((doc.client as string) ?? ''),
     clientName: client?.name,
@@ -69,7 +71,9 @@ function toBody(entry: Partial<ProjectInterface>): Record<string, unknown> {
   (
     [
       'projectName',
+      'projectScope',
       'erp',
+      'edi',
       'client',
       'masterDataInterfaces',
       'transactionalInterfaces',

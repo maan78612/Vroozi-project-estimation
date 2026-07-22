@@ -1,6 +1,7 @@
 import { ProjectSizeEnum } from '../../enums/project-size.enum';
 
 export type YesNo = 'Yes' | 'No';
+export type ProjectScope = 'Internal' | 'External';
 
 /*
  * One entry = one supplier row, carrying its own full data. A project
@@ -9,7 +10,12 @@ export type YesNo = 'Yes' | 'No';
 export interface ProjectInterface {
   id?: string; // MongoDB _id — absent only before the first save
   projectName: string; // groups entries into a project
-  erp: string;
+  // Internal (in-house) vs. External (client-facing) — set once, alongside projectName.
+  projectScope: ProjectScope;
+  erp: string; // optional — not every project has one on file up front
+  // Whether this project exchanges data with the ERP via EDI. When
+  // "Yes", `supplier` becomes required (see project-form.component.ts).
+  edi: YesNo;
   supplier: string; // this entry's supplier — may be empty
   // Which client (role="client" user) this project is for. Admin-editable
   // only — the client role's project access is scoped by this (see the

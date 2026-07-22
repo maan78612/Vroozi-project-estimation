@@ -34,6 +34,8 @@
         loadingLabel="Signing in..."
         [isSubmitting]="isSubmitting()"
         [submitError]="submitError()"
+        [submitSuccess]="submitSuccess()"
+        [successMessage]="successMessage()"
         (formSubmit)="onSubmit($event)"
       />
 
@@ -43,4 +45,19 @@
     </div>
 
   </div>
+
+  @if (showActivationDialog()) {
+    <app-confirm-dialog
+      title="Account setup incomplete"
+      message="Your account setup is not yet complete. Please set your password using the email we sent you to activate your account."
+      confirmLabel="Resend Email"
+      cancelLabel="Close"
+      [danger]="false"
+      loadingLabel="Sending..."
+      [confirming]="resendPending()"
+      [errorMessage]="resendError()"
+      (confirmed)="onResendActivation()"
+      (cancelled)="onCloseActivationDialog()"
+    />
+  }
 </div>

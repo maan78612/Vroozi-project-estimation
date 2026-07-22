@@ -10,7 +10,6 @@ import { fetchAllPages } from '../../utils/fetch-all-pages.util';
 export interface CreateEmployeeInput {
   name: string;
   email: string;
-  password: string;
   jobTitle?: string;
   department?: string;
 }

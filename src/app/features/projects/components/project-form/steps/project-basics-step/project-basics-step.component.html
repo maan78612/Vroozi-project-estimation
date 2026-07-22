@@ -1,180 +1,6 @@
 <div class="step-body" [formGroup]="form()">
-  <!-- New project, or another supplier for an existing one. This step only
-       renders inside the create wizard — the edit page is a separate
-       component (EditProjectFormComponent), so there is no edit mode here. -->
-    <div class="field-block">
-      <span class="field-label">What are you adding?</span>
-      <div class="mode-toggle" role="radiogroup" aria-label="What are you adding?">
-        <button
-          type="button"
-          class="mode-option"
-          role="radio"
-          [attr.aria-checked]="entryMode() === 'new'"
-          [class.is-selected]="entryMode() === 'new'"
-          (click)="entryModeChange.emit('new')"
-        >
-          <span class="mode-icon-wrap" aria-hidden="true">
-            <span class="mode-icon icon-folder-plus"></span>
-          </span>
-          <span class="mode-texts">
-            <span class="mode-title">New project</span>
-            <span class="mode-desc">Start a project with its first supplier</span>
-          </span>
-          <span class="mode-check" aria-hidden="true">
-            <span class="mode-check-icon icon-check"></span>
-          </span>
-        </button>
-        <button
-          type="button"
-          class="mode-option"
-          role="radio"
-          [attr.aria-checked]="entryMode() === 'existing'"
-          [class.is-selected]="entryMode() === 'existing'"
-          [disabled]="existingProjects().length === 0"
-          (click)="entryModeChange.emit('existing')"
-        >
-          <span class="mode-icon-wrap" aria-hidden="true">
-            <span class="mode-icon icon-users"></span>
-          </span>
-          <span class="mode-texts">
-            <span class="mode-title">Existing project</span>
-            <span class="mode-desc">Add another estimation to a project</span>
-          </span>
-          <span class="mode-check" aria-hidden="true">
-            <span class="mode-check-icon icon-check"></span>
-          </span>
-        </button>
-      </div>
-    </div>
-
-    @if (entryMode() === 'existing') {
-      <div class="field-block">
-        <span class="field-label">
-          Project <span class="required-mark" aria-hidden="true">*</span>
-        </span>
-        <app-search-dropdown
-          formControlName="projectName"
-          [options]="existingProjectOptions()"
-          [isError]="hasError('projectName')"
-          placeholder="Choose a project…"
-          searchPlaceholder="Search projects…"
-        />
-        @if (hasError('projectName')) {
-          <span class="field-error" role="alert"
-            >Choose which project this supplier belongs to</span
-          >
-        }
-      </div>
-    } @else {
-      <div class="field-block">
-        <label class="field-label" for="f-projectName">
-          Project Name <span class="required-mark" aria-hidden="true">*</span>
-        </label>
-        <input
-          id="f-projectName"
-          type="text"
-          class="field-input"
-          [class.is-error]="hasError('projectName')"
-          formControlName="projectName"
-          placeholder="e.g. Forest Lawn Integration"
-          autocomplete="off"
-        />
-        @if (hasError('projectName')) {
-          <span class="field-error" role="alert">Project name is required (min. 2 characters)</span>
-        }
-      </div>
-    }
-
-  @if (isAdmin()) {
-    <div class="field-block">
-      <span class="field-label">
-        Assigned To <span class="required-mark" aria-hidden="true">*</span>
-      </span>
-      <app-search-dropdown
-        formControlName="user"
-        [options]="employeeOptions()"
-        [isError]="hasError('user')"
-        placeholder="Select an employee…"
-        searchPlaceholder="Search by name or email…"
-      />
-      @if (hasError('user')) {
-        <span class="field-error" role="alert">Choose who this project is assigned to</span>
-      }
-    </div>
-  }
-
-  <div class="field-block">
-    <div class="field-label-row">
-      <span class="field-label">
-        ERP System <span class="required-mark" aria-hidden="true">*</span>
-      </span>
-      @if (isAdmin()) {
-        <button type="button" class="add-option-link" (click)="addErpRequested.emit()">
-          + Add new
-        </button>
-      }
-    </div>
-    <app-search-dropdown
-      formControlName="erp"
-      [options]="erpOptions()"
-      [isError]="hasError('erp')"
-      placeholder="Select an ERP system…"
-      searchPlaceholder="Search ERP systems…"
-    />
-    @if (hasError('erp')) {
-      <span class="field-error" role="alert">ERP system is required</span>
-    }
-  </div>
-
-  <div class="field-block">
-    <div class="field-label-row">
-      <span class="field-label">Supplier</span>
-      @if (isAdmin()) {
-        <button type="button" class="add-option-link" (click)="addSupplierRequested.emit()">
-          + Add new
-        </button>
-      }
-    </div>
-    <app-search-dropdown
-      formControlName="supplier"
-      [options]="supplierOptions()"
-      placeholder="Select a supplier…"
-      searchPlaceholder="Search suppliers…"
-    />
-    <span class="field-hint">
-      Optional — leave blank if no supplier is assigned yet. Each entry covers at most one
-      supplier; add more entries later, with or without one.
-    </span>
-  </div>
-
-  @if (isAdmin()) {
-    <div class="field-block">
-      <div class="field-label-row">
-        <span class="field-label">Client</span>
-        @if (entryMode() !== 'existing') {
-          <button type="button" class="add-option-link" (click)="addClientRequested.emit()">
-            + Add new
-          </button>
-        }
-      </div>
-      <app-search-dropdown
-        formControlName="client"
-        [options]="clientOptions()"
-        placeholder="Select a client…"
-        searchPlaceholder="Search clients…"
-      />
-      <span class="field-hint">
-        @if (entryMode() === 'existing') {
-          Locked to this project's client — set on its first supplier entry. Change it from the edit
-          form instead.
-        } @else {
-          Which client this project is for — only they (and admins) can see it.
-        }
-      </span>
-    </div>
-  }
-
   <!-- ── AI Quick-Fill: optional BRD analysis, visually its own card ──
+       Moved to the top of the step so it's the first thing a user sees.
        This step only ever renders inside the create wizard (the edit page
        is a separate component), so no edit-mode guard is needed here. -->
   <div class="brd-card" [class.has-summary]="brdSummary()">
@@ -247,4 +73,248 @@
         </div>
       }
     </div>
+
+  <!-- New project, or another supplier for an existing one. This step only
+       renders inside the create wizard — the edit page is a separate
+       component (EditProjectFormComponent), so there is no edit mode here. -->
+    <div class="field-block entry-mode-block">
+      <span class="field-label">What are you adding?</span>
+      <div class="mode-toggle" role="radiogroup" aria-label="What are you adding?">
+        <button
+          type="button"
+          class="mode-option"
+          role="radio"
+          [attr.aria-checked]="entryMode() === 'new'"
+          [class.is-selected]="entryMode() === 'new'"
+          (click)="entryModeChange.emit('new')"
+        >
+          <span class="mode-icon-wrap" aria-hidden="true">
+            <span class="mode-icon icon-folder-plus"></span>
+          </span>
+          <span class="mode-texts">
+            <span class="mode-title">New project</span>
+            <span class="mode-desc">Start a project with its first supplier</span>
+          </span>
+          <span class="mode-check" aria-hidden="true">
+            <span class="mode-check-icon icon-check"></span>
+          </span>
+        </button>
+        <button
+          type="button"
+          class="mode-option"
+          role="radio"
+          [attr.aria-checked]="entryMode() === 'existing'"
+          [class.is-selected]="entryMode() === 'existing'"
+          [disabled]="existingProjects().length === 0"
+          (click)="entryModeChange.emit('existing')"
+        >
+          <span class="mode-icon-wrap" aria-hidden="true">
+            <span class="mode-icon icon-users"></span>
+          </span>
+          <span class="mode-texts">
+            <span class="mode-title">Existing project</span>
+            <span class="mode-desc">Add another estimation to a project</span>
+          </span>
+          <span class="mode-check" aria-hidden="true">
+            <span class="mode-check-icon icon-check"></span>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <div class="scope-edi-row">
+      <div class="field-block">
+        <span class="field-label">
+          Project Scope <span class="required-mark" aria-hidden="true">*</span>
+        </span>
+        <div class="scope-toggle" role="radiogroup" aria-label="Project Scope">
+          <button
+            type="button"
+            class="scope-option"
+            role="radio"
+            [attr.aria-checked]="isScope('Internal')"
+            [class.is-selected]="isScope('Internal')"
+            (click)="setScope('Internal')"
+          >
+            Internal
+          </button>
+          <button
+            type="button"
+            class="scope-option"
+            role="radio"
+            [attr.aria-checked]="isScope('External')"
+            [class.is-selected]="isScope('External')"
+            (click)="setScope('External')"
+          >
+            External
+          </button>
+        </div>
+        @if (hasError('projectScope')) {
+          <span class="field-error" role="alert">Choose whether this project is Internal or External</span>
+        }
+      </div>
+
+      <div class="field-block">
+        <span class="field-label">EDI</span>
+        <div class="scope-toggle" role="radiogroup" aria-label="EDI">
+          <button
+            type="button"
+            class="scope-option"
+            role="radio"
+            [attr.aria-checked]="yn('edi') === 'Yes'"
+            [class.is-selected]="yn('edi') === 'Yes'"
+            (click)="setEdi('Yes')"
+          >
+            Yes
+          </button>
+          <button
+            type="button"
+            class="scope-option"
+            role="radio"
+            [attr.aria-checked]="yn('edi') === 'No'"
+            [class.is-selected]="yn('edi') === 'No'"
+            (click)="setEdi('No')"
+          >
+            No
+          </button>
+        </div>
+      </div>
+    </div>
+
+    @if (entryMode() === 'existing') {
+      <div class="field-block">
+        <span class="field-label">
+          Project <span class="required-mark" aria-hidden="true">*</span>
+        </span>
+        <app-search-dropdown
+          formControlName="projectName"
+          [options]="existingProjectOptions()"
+          [isError]="hasError('projectName')"
+          placeholder="Choose a project…"
+          searchPlaceholder="Search projects…"
+        />
+        @if (hasError('projectName')) {
+          <span class="field-error" role="alert"
+            >Choose which project this supplier belongs to</span
+          >
+        }
+      </div>
+    } @else {
+      <div class="field-block">
+        <label class="field-label" for="f-projectName">
+          Project Name <span class="required-mark" aria-hidden="true">*</span>
+        </label>
+        <input
+          id="f-projectName"
+          type="text"
+          class="field-input"
+          [class.is-error]="hasError('projectName')"
+          formControlName="projectName"
+          placeholder="e.g. Forest Lawn Integration"
+          autocomplete="off"
+        />
+        @if (hasError('projectName')) {
+          <span class="field-error" role="alert">Project name is required (min. 2 characters)</span>
+        }
+      </div>
+    }
+
+  @if (isAdmin()) {
+    <div class="field-block">
+      <span class="field-label">
+        Assigned To <span class="required-mark" aria-hidden="true">*</span>
+      </span>
+      <app-search-dropdown
+        formControlName="user"
+        [options]="employeeOptions()"
+        [isError]="hasError('user')"
+        placeholder="Select an employee…"
+        searchPlaceholder="Search by name or email…"
+      />
+      @if (hasError('user')) {
+        <span class="field-error" role="alert">Choose who this project is assigned to</span>
+      }
+    </div>
+  }
+
+  <div class="field-block">
+    <div class="field-label-row">
+      <span class="field-label">ERP System</span>
+      @if (isAdmin()) {
+        <button type="button" class="add-option-link" (click)="addErpRequested.emit()">
+          + Add new
+        </button>
+      }
+    </div>
+    <app-search-dropdown
+      formControlName="erp"
+      [options]="erpOptions()"
+      [isError]="hasError('erp')"
+      placeholder="Select an ERP system…"
+      searchPlaceholder="Search ERP systems…"
+    />
+    <span class="field-hint">Optional — leave blank if not known yet.</span>
+  </div>
+
+  <div class="field-block">
+    <div class="field-label-row">
+      <span class="field-label">
+        Supplier
+        @if (yn('edi') === 'Yes') {
+          <span class="required-mark" aria-hidden="true">*</span>
+        }
+      </span>
+      @if (isAdmin()) {
+        <button type="button" class="add-option-link" (click)="addSupplierRequested.emit()">
+          + Add new
+        </button>
+      }
+    </div>
+    <app-search-dropdown
+      formControlName="supplier"
+      [options]="supplierOptions()"
+      [isError]="hasError('supplier')"
+      placeholder="Select a supplier…"
+      searchPlaceholder="Search suppliers…"
+    />
+    @if (hasError('supplier')) {
+      <span class="field-error" role="alert">Supplier is required when EDI is enabled</span>
+    } @else {
+      <span class="field-hint">
+        @if (yn('edi') === 'Yes') {
+          Required because EDI is enabled.
+        } @else {
+          Optional — leave blank if no supplier is assigned yet. Each entry covers at most one
+          supplier; add more entries later, with or without one.
+        }
+      </span>
+    }
+  </div>
+
+  @if (isAdmin()) {
+    <div class="field-block">
+      <div class="field-label-row">
+        <span class="field-label">Client</span>
+        @if (entryMode() !== 'existing') {
+          <button type="button" class="add-option-link" (click)="addClientRequested.emit()">
+            + Add new
+          </button>
+        }
+      </div>
+      <app-search-dropdown
+        formControlName="client"
+        [options]="clientOptions()"
+        placeholder="Select a client…"
+        searchPlaceholder="Search clients…"
+      />
+      <span class="field-hint">
+        @if (entryMode() === 'existing') {
+          Locked to this project's client — set on its first supplier entry. Change it from the edit
+          form instead.
+        } @else {
+          Which client this project is for — only they (and admins) can see it.
+        }
+      </span>
+    </div>
+  }
 </div>

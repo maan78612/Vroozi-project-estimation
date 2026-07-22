@@ -87,6 +87,64 @@ export class AuthService {
       );
   }
 
+  /** POST /auth/forgot-password — always resolves; the backend replies with the same generic message whether or not the email is registered. */
+  forgotPassword(email: string): Observable<void> {
+    return this.http
+      .post<ApiResponse<null>>(`${API_BASE_URL}/auth/forgot-password`, { email })
+      .pipe(
+        map(() => undefined),
+        catchError((err: unknown) =>
+          throwError(() => toApiError(err, 'Could not send reset email. Please try again.')),
+        ),
+      );
+  }
+
+  /** POST /auth/resend-activation — always resolves; only actually re-sends when the account exists and isn't activated yet. */
+  resendActivationEmail(email: string): Observable<void> {
+    return this.http
+      .post<ApiResponse<null>>(`${API_BASE_URL}/auth/resend-activation`, { email })
+      .pipe(
+        map(() => undefined),
+        catchError((err: unknown) =>
+          throwError(() => toApiError(err, 'Could not resend the activation email. Please try again.')),
+        ),
+      );
+  }
+
+  /**
+   * GET /auth/reset-password/:token/verify — read-only, doesn't consume
+   * the token. Lets the reset-password page tell "still good" from
+   * "already used or expired" as soon as it loads, instead of only on
+   * submit. Treats a network/server error as invalid rather than
+   * propagating it — the page has one thing to show either way (the
+   * form, or an expired-link message), so there's no separate error state.
+   */
+  verifyResetToken(token: string): Observable<boolean> {
+    return this.http
+      .get<ApiResponse<{ valid: boolean }>>(`${API_BASE_URL}/auth/reset-password/${token}/verify`)
+      .pipe(
+        map((res) => res.data.valid),
+        catchError(() => [false]),
+      );
+  }
+
+  /** POST /auth/reset-password/:token */
+  resetPassword(token: string, password: string, confirmPassword: string): Observable<void> {
+    return this.http
+      .post<ApiResponse<null>>(`${API_BASE_URL}/auth/reset-password/${token}`, {
+        password,
+        confirmPassword,
+      })
+      .pipe(
+        map(() => undefined),
+        catchError((err: unknown) =>
+          throwError(() =>
+            toApiError(err, 'Could not reset password. The link may be invalid or expired.'),
+          ),
+        ),
+      );
+  }
+
   logout(): void {
     this.session.clear();
   }

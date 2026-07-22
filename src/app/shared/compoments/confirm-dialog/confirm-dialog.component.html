@@ -6,6 +6,11 @@
     [attr.aria-label]="title()"
     (click)="$event.stopPropagation()"
   >
+    @if (showLogo()) {
+      <div class="confirm-logo">
+        <app-logo [iconOnly]="true" [size]="28" />
+      </div>
+    }
     <h3 class="confirm-title">{{ title() }}</h3>
     <p class="confirm-message">{{ message() }}</p>
 
@@ -17,18 +22,20 @@
     }
 
     <div class="confirm-actions">
-      <app-button
-        variant="link"
-        [label]="cancelLabel()"
-        [fullWidth]="false"
-        [disabled]="confirming()"
-        (clicked)="onCancel()"
-      />
+      @if (showCancel()) {
+        <app-button
+          variant="link"
+          [label]="cancelLabel()"
+          [fullWidth]="false"
+          [disabled]="confirming()"
+          (clicked)="onCancel()"
+        />
+      }
       <app-button
         variant="primary"
-        [danger]="true"
+        [danger]="danger()"
         [label]="confirmLabel()"
-        loadingLabel="Deleting…"
+        [loadingLabel]="loadingLabel()"
         [loading]="confirming()"
         [fullWidth]="false"
         (clicked)="confirmed.emit()"

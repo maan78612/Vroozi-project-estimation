@@ -7,9 +7,10 @@ import { FieldTypeEnum } from '../enums/field-type.enum';
  *  (a real login account), not a separate catalog entity, so this
  *  mirrors EMPLOYEE_FIELDS (users-list.component.ts) exactly.
  *
- *  Password is required on create, optional on edit (blank = keep
- *  the current password) — hence two field sets sharing everything
- *  else.
+ *  No password on create — the account starts inactive and the user
+ *  gets an emailed "set your password" link (see backend
+ *  user.service.createUser). Edit still allows an admin to optionally
+ *  set/override a password directly (blank = keep the current one).
  * ──────────────────────────────────────────────────────────────────
  */
 const BASE_CLIENT_FIELDS: FormFieldInterface[] = [
@@ -33,19 +34,7 @@ const BASE_CLIENT_FIELDS: FormFieldInterface[] = [
   },
 ];
 
-export const CLIENT_CREATE_FIELDS: FormFieldInterface[] = [
-  ...BASE_CLIENT_FIELDS,
-  {
-    key: 'password',
-    label: 'Password',
-    type: FieldTypeEnum.Text,
-    required: true,
-    inputType: 'password',
-    placeholder: 'Minimum 8 characters',
-    icon: 'lock',
-    minLength: 8,
-  },
-];
+export const CLIENT_CREATE_FIELDS: FormFieldInterface[] = BASE_CLIENT_FIELDS;
 
 export const CLIENT_EDIT_FIELDS: FormFieldInterface[] = [
   ...BASE_CLIENT_FIELDS,

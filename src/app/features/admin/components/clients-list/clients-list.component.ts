@@ -170,6 +170,15 @@ export class ClientsListComponent {
     this.dialogOpen.set(false);
   }
 
+  // Shown after a successful create — the account has no password yet
+  // (see CLIENT_CREATE_FIELDS), so the admin needs to know an activation
+  // email is what gets the new client signed in.
+  createdNotice = signal<UserInterface | null>(null);
+
+  dismissCreatedNotice(): void {
+    this.createdNotice.set(null);
+  }
+
   saveDialog(value: Record<string, string | number>): void {
     const name = (value['name'] as string)?.trim();
     const email = (value['email'] as string)?.trim();
@@ -177,19 +186,19 @@ export class ClientsListComponent {
     if (!name || !email) return;
 
     const target = this.editTarget();
-    if (!target && !password) return; // password required on create
 
     this.saving.set(true);
     this.saveError.set('');
 
-    const save$: Observable<unknown> = target
+    const save$: Observable<UserInterface> = target
       ? this.clientUsersService.update(target.id, { name, email, password })
-      : this.clientUsersService.create({ name, email, password: password! });
+      : this.clientUsersService.create({ name, email });
 
     save$.subscribe({
-      next: () => {
+      next: (saved) => {
         this.saving.set(false);
         this.dialogOpen.set(false);
+        if (!target) this.createdNotice.set(saved);
       },
       error: (err: unknown) => {
         this.saving.set(false);

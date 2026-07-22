@@ -97,7 +97,11 @@ export class ProjectFormComponent {
    * ──────────────────────────────────────────────────────────────────
    */
   private readonly stepRequiredFields: (keyof ProjectInterface)[][] = [
-    ['projectName', 'user', 'erp'],
+    // 'erp' is no longer required. 'supplier' is unconditionally listed —
+    // it has no validator at all unless EDI is "Yes" (see
+    // applySupplierValidator), so listing it here is a no-op except when
+    // that dynamic validator has actually kicked in.
+    ['projectName', 'user', 'projectScope', 'supplier'],
     ['masterDataInterfaces', 'transactionalInterfaces', 'inbound', 'outbound'],
     [],
     ['dataLayer', 'uncertainties'],
@@ -115,7 +119,9 @@ export class ProjectFormComponent {
    */
   readonly form = this.fb.group({
     projectName: ['', [Validators.required, Validators.minLength(2)]],
-    erp: ['', [Validators.required]],
+    projectScope: [null as 'Internal' | 'External' | null, [Validators.required]],
+    erp: [''],
+    edi: ['No'],
     supplier: [''],
     // Admin-editable only — see the basics step template.
     client: [''],
@@ -261,6 +267,13 @@ export class ProjectFormComponent {
     this.form.valueChanges.subscribe(() => this.recomputeEstimate());
     this.recomputeEstimate();
 
+    // EDI drives whether Supplier is required (see the EDI toggle in
+    // project-basics-step.component.html). patchValue in edit mode below
+    // emits valueChanges by default, so loading an entry with edi:"Yes"
+    // re-triggers this automatically — no extra hook needed there.
+    this.form.get('edi')?.valueChanges.subscribe((val) => this.applySupplierValidator(val));
+    this.applySupplierValidator(this.form.get('edi')?.value);
+
     // "Existing project" mode: picking a project auto-fills its ERP as a
     // convenience (still editable). Re-fires on every distinct pick, and
     // is a no-op in 'new' mode or when the field is cleared.
@@ -335,7 +348,9 @@ export class ProjectFormComponent {
        */
       this.form.patchValue({
         projectName: p.projectName ?? '',
+        projectScope: p.projectScope ?? null,
         erp: p.erp ?? '',
+        edi: p.edi ?? 'No',
         supplier: p.supplier ?? '',
         client: p.client ?? '',
         user: p.user ?? '',
@@ -363,6 +378,14 @@ export class ProjectFormComponent {
       if (this.projectsStore.loading()) return;
       this.loadProjectById(this._routeId);
     });
+  }
+
+  // Supplier has no validator at all unless EDI is "Yes" — a project
+  // that exchanges data with the ERP via EDI needs a supplier on file.
+  private applySupplierValidator(edi: string | null | undefined): void {
+    const ctrl = this.form.get('supplier');
+    ctrl?.setValidators(edi === 'Yes' ? [Validators.required] : []);
+    ctrl?.updateValueAndValidity({ emitEvent: false });
   }
 
   /*
@@ -514,7 +537,7 @@ export class ProjectFormComponent {
     },
     client: {
       title: 'Add Client',
-      subtitle: 'Creates a login account — the client can sign in immediately.',
+      subtitle: 'Creates a login account — we’ll email them a link to set their password.',
       fields: CLIENT_CREATE_FIELDS,
     },
   };
@@ -531,13 +554,12 @@ export class ProjectFormComponent {
     if (target === 'client') {
       const name = (value['name'] as string)?.trim();
       const email = (value['email'] as string)?.trim();
-      const password = (value['password'] as string) ?? '';
-      if (!name || !email || !password) return;
+      if (!name || !email) return;
 
       this.addOptionSaving.set(true);
       this.addOptionError.set('');
 
-      this.clientUsersService.create({ name, email, password }).subscribe({
+      this.clientUsersService.create({ name, email }).subscribe({
         next: (created) => {
           this.addOptionSaving.set(false);
           this.addOptionTarget.set(null);
@@ -743,7 +765,9 @@ export class ProjectFormComponent {
     const raw = this.form.getRawValue();
     const entry: ProjectInterface = {
       projectName: (raw.projectName ?? '').trim(),
+      projectScope: raw.projectScope as 'Internal' | 'External',
       erp: raw.erp ?? '',
+      edi: (raw.edi ?? 'No') as YesNo,
       supplier: (raw.supplier ?? '').trim(),
       client: raw.client ?? '',
       user: raw.user ?? '',

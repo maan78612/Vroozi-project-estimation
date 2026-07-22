@@ -14,7 +14,7 @@ import { PROJECT_SIZE_ORDER } from './project-sort.util';
 
 // Distinct non-empty values of `field` across entries — '' if none, the
 // single shared value if they agree, 'Multiple' if they differ.
-function rollupDistinct(entries: ProjectInterface[], field: 'erp' | 'clientName'): string {
+function rollupDistinct(entries: ProjectInterface[], field: 'erp' | 'clientName' | 'projectScope'): string {
   const values = new Set(entries.map((e) => e[field]).filter((v): v is string => !!v));
   if (values.size === 0) return '';
   if (values.size === 1) return [...values][0];
@@ -27,6 +27,13 @@ export function rollupErp(entries: ProjectInterface[]): string {
 
 export function rollupClient(entries: ProjectInterface[]): string {
   return rollupDistinct(entries, 'clientName');
+}
+
+// Internal/External — set once per project, alongside its name, so every
+// entry normally agrees; 'Multiple' only surfaces if that invariant is
+// ever broken (same defensive shape as rollupErp/rollupClient).
+export function rollupProjectScope(entries: ProjectInterface[]): string {
+  return rollupDistinct(entries, 'projectScope');
 }
 
 export function rollupSuppliers(entries: ProjectInterface[]): string[] {

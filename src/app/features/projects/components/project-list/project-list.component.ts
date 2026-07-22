@@ -10,6 +10,7 @@ import { ProjectGroup, groupProjects } from '../../../../core/utils/project-grou
 import {
   rollupClient,
   rollupErp,
+  rollupProjectScope,
   rollupRangeLabel,
   rollupSize,
   rollupSuppliers,
@@ -185,6 +186,10 @@ export class ProjectListComponent {
   }
 
   // Table row columns — same rollup ProjectCardComponent / ProjectViewComponent use.
+  scopeForGroup(group: ProjectGroup): string {
+    return rollupProjectScope(group.entries) || '—';
+  }
+
   erpForGroup(group: ProjectGroup): string {
     return rollupErp(group.entries) || '—';
   }

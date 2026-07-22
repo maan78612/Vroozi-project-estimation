@@ -72,6 +72,20 @@
 
             <div class="basics-grid">
               <div class="field-block">
+                <span class="field-label">Project Scope</span>
+                <!-- Set once at creation, not editable here. -->
+                <span class="readonly-badge">{{ form().get('projectScope')?.value }}</span>
+              </div>
+
+              @if (yn('edi') === 'Yes') {
+                <div class="field-block">
+                  <span class="field-label">EDI</span>
+                  <!-- Set once at creation, not editable here; hidden entirely when No. -->
+                  <span class="readonly-badge">Yes</span>
+                </div>
+              }
+
+              <div class="field-block">
                 <label class="field-label" for="ef-name">Name</label>
                 <!-- Disabled (visible but locked) for non-admins — the parent
                      disables the control; the backend ignores the field for
@@ -122,11 +136,17 @@
                   placeholder="Select an ERP system…"
                   searchPlaceholder="Search ERP systems…"
                 />
+                <span class="field-hint">Optional — leave blank if not known yet.</span>
               </div>
 
               <div class="field-block">
                 <div class="field-label-row">
-                  <span class="field-label">Supplier</span>
+                  <span class="field-label">
+                    Supplier
+                    @if (yn('edi') === 'Yes') {
+                      <span class="required-mark" aria-hidden="true">*</span>
+                    }
+                  </span>
                   @if (isAdmin()) {
                     <button type="button" class="add-option-link" (click)="addSupplierRequested.emit()">
                       + Add new
@@ -136,9 +156,15 @@
                 <app-search-dropdown
                   formControlName="supplier"
                   [options]="supplierOptions()"
+                  [isError]="hasError('supplier')"
                   placeholder="Select a supplier…"
                   searchPlaceholder="Search suppliers…"
                 />
+                @if (hasError('supplier')) {
+                  <span class="field-error" role="alert">Supplier is required when EDI is enabled</span>
+                } @else if (yn('edi') === 'Yes') {
+                  <span class="field-hint">Required because EDI is enabled.</span>
+                }
               </div>
             </div>
 

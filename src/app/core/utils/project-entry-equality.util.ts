@@ -16,7 +16,9 @@ import { ProjectInterface } from '../intefaces/form/project.interface';
  * ──────────────────────────────────────────────────────────────────
  */
 const COMPARED_FIELDS: (keyof ProjectInterface)[] = [
+  'projectScope',
   'erp',
+  'edi',
   'supplier',
   'client',
   'user',

@@ -1,9 +1,10 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { ProjectInterface } from '../../../../../../core/intefaces/form/project.interface';
+import { ProjectInterface, ProjectScope } from '../../../../../../core/intefaces/form/project.interface';
 import { BrdCoverage } from '../../../../../../core/intefaces/api.interface';
 import { UserInterface } from '../../../../../../core/intefaces/user-interface';
-import { hasError } from '../../../../../../core/utils/form-control.util';
+import { FeatureFlagInterface } from '../../../../../../core/intefaces/form/feature-flag.interface';
+import { hasError, yn, setYn } from '../../../../../../core/utils/form-control.util';
 import {
   SearchDropdownComponent,
   SearchDropdownOption,
@@ -74,6 +75,24 @@ export class ProjectBasicsStepComponent {
 
   hasError(key: keyof ProjectInterface): boolean {
     return hasError(this.form(), key);
+  }
+
+  // EDI — drives whether Supplier is required (see project-form.component.ts's applySupplierValidator).
+  yn(key: FeatureFlagInterface['key']): 'Yes' | 'No' {
+    return yn(this.form(), key);
+  }
+
+  setEdi(val: 'Yes' | 'No'): void {
+    setYn(this.form(), 'edi', val);
+  }
+
+  // Internal / External project scope — set once, alongside Project Name.
+  isScope(scope: ProjectScope): boolean {
+    return this.form().get('projectScope')?.value === scope;
+  }
+
+  setScope(scope: ProjectScope): void {
+    this.form().get('projectScope')?.setValue(scope);
   }
 
   brdResultTitle(): string {
