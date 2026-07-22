@@ -5,6 +5,7 @@ import { RoleService } from '../../../core/services/role/role-service';
 import { ThemeService } from '../../../core/services/theme/theme-service';
 import { InitialsPipe } from '../../pipes/initials.pipe';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { AppLogoComponent } from '../app-logo/app-logo.component';
 
 interface NavLink {
   label: string;
@@ -29,7 +30,14 @@ interface NavLink {
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, InitialsPipe, ConfirmDialogComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    InitialsPipe,
+    ConfirmDialogComponent,
+    AppLogoComponent,
+  ],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.less',
 })

@@ -2,7 +2,13 @@
   <header class="shell-header">
     <div class="shell-header-inner">
       <div class="shell-brand-row">
-        <span class="shell-brand">ProjectsEstimation</span>
+        <div class="shell-brand-mark">
+          <app-logo [size]="34" [iconOnly]="true" />
+          <div class="shell-brand-text">
+            <span class="shell-brand">Sherlock Holmes</span>
+            <span class="shell-brand-subtitle">Project Estimation</span>
+          </div>
+        </div>
 
         <nav class="shell-nav">
           @for (link of navLinks(); track link.path) {
@@ -120,7 +126,7 @@
   </main>
 
   <footer class="shell-footer">
-    <span class="shell-footer-copy">© 2026 ProjectsEstimation</span>
+    <span class="shell-footer-copy">© 2026 Sherlock Holmes</span>
   </footer>
 
   @if (signOutConfirmOpen()) {

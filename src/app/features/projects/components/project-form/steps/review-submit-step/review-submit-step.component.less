@@ -1,11 +1,5 @@
 @import (reference) 'styles.less';
 
-@size-s-color: #1c6e56;
-@size-m-color: #856404;
-@size-l-color: #7d4e1a;
-@size-xl-color: #7d3510;
-@size-xxl-color: #842029;
-
 .rv-section {
   background: @color-surface-container-low;
   border: 1.5px solid @color-outline-variant;
@@ -17,20 +11,76 @@
   }
 
   &.rv-computed {
-    background: rgba(var(--color-primary-rgb), 4%);
-    border-color: rgba(var(--color-primary-rgb), 18%);
+    // `@color-primary-container` (unlike `@color-primary`) is the same hex
+    // in both themes, so this card reads identically in light and dark
+    // instead of the raw primary's pale-gold-vs-deep-brown swing.
+    background: color-mix(in srgb, @color-primary-container, black 10%);
+    border-color: rgba(var(--color-primary-rgb), 45%);
+    .premium-glow(28px, 10%);
 
     .rv-head {
-      background: rgba(var(--color-primary-rgb), 7%);
+      background: @color-primary-container;
+      border-bottom-color: rgba(0, 0, 0, 12%);
+    }
+
+    .rv-title,
+    .rv-effort-icon,
+    .rv-effort-label,
+    .rv-effort-value,
+    .rv-computed-hint {
+      color: #000;
+    }
+
+    .rv-effort-size-badge {
+      // Near-black with a whisper of the size-tier hue mixed in — reads as
+      // "black" but avoids a flat, disconnected block.
+      background: color-mix(in srgb, #000 92%, currentColor 8%);
+    }
+
+    // Dark theme keeps the solid gold-block look above unchanged. Light
+    // theme only: that same block read as a muddy, seamed gradient next to
+    // the page's already-warm ivory surfaces, so it gets a softer wash
+    // instead — scoped here rather than changing the shared rule above.
+    :host-context([data-theme='light']) & {
+      background: color-mix(in srgb, @color-primary-container 22%, @color-surface-container-low);
+      border-color: rgba(var(--color-primary-container-rgb), 35%);
+
+      .rv-head {
+        background: transparent;
+        border-bottom-color: rgba(var(--color-primary-container-rgb), 22%);
+      }
+
+      .rv-title,
+      .rv-effort-icon {
+        color: @color-primary;
+      }
+
+      .rv-effort-label {
+        color: @color-on-surface-variant;
+      }
+
+      .rv-effort-value,
+      .rv-computed-hint {
+        color: @color-on-surface;
+      }
+
+      // Same 20%-tint treatment as the global `.size-badge.size-{tier}`
+      // rule (styles.less), keyed off `currentColor` so it picks up
+      // whichever tier color is active instead of the near-black block
+      // above — matches the badge style used elsewhere in the app
+      // (Project List, Project View).
+      .rv-effort-size-badge {
+        background: color-mix(in srgb, currentColor 20%, transparent);
+      }
     }
   }
 }
 
 .rv-computed-hint {
   margin: 0;
-  padding: 0 1.25rem 0.9rem;
+  padding: 0.35rem 1.25rem 0.9rem;
   font-size: 0.75rem;
-  color: @color-error;
+  color: @color-outline;
 }
 
 .rv-head {
@@ -94,6 +144,42 @@
   }
 }
 
+.rv-effort-icon {
+  font-size: 20px;
+  color: @color-primary;
+}
+
+.rv-effort-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  padding: 1.1rem 1.25rem 0.25rem;
+}
+
+.rv-effort-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.rv-effort-block-size {
+  align-items: flex-end;
+}
+
+.rv-effort-label {
+  .typography-label-sm();
+  font-size: 0.95rem;
+  color: @color-on-surface-variant;
+}
+
+.rv-effort-value {
+  .typography-headline-md();
+  font-weight: 800;
+  color: @color-on-surface;
+}
+
 .rv-row {
   display: flex;
   align-items: center;
@@ -133,35 +219,27 @@
   }
 }
 
-.size-badge {
-  flex-shrink: 0;
-  display: inline-block;
-  padding: 0.18rem 0.6rem;
-  border-radius: @radius-md;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+// `.size-badge` base + tone rules are global (see styles.less).
 
-  &.size-s {
-    background: rgba(var(--size-s-color-rgb), 20%);
-    color: @size-s-color;
-  }
-  &.size-m {
-    background: rgba(var(--size-m-color-rgb), 20%);
-    color: @size-m-color;
-  }
-  &.size-l {
-    background: rgba(var(--size-l-color-rgb), 20%);
-    color: @size-l-color;
-  }
-  &.size-xl {
-    background: rgba(var(--size-xl-color-rgb), 20%);
-    color: @size-xl-color;
-  }
-  &.size-xxl {
-    background: rgba(var(--size-xxl-color-rgb), 20%);
-    color: @size-xxl-color;
-  }
+.rv-effort-size-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0;
+  border-radius: @radius-lg;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1;
+  // Ring + letter both key off `currentColor` (the size-tier hue set by
+  // the global `.size-s`/`.size-m`/… rules), so each size gets its own
+  // subtly-tinted emblem instead of one flat black block.
+  // box-shadow:
+  //   inset 0 0 0 1.5px color-mix(in srgb, currentColor 55%, transparent),
+  //   0 3px 10px rgba(0, 0, 0, 30%);
 }
 
 .feedback {
@@ -196,12 +274,20 @@
 }
 
 @keyframes feedback-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .feedback { animation: none; }
+  .feedback {
+    animation: none;
+  }
 }
 
 .icon-check-circle {
@@ -217,5 +303,14 @@
 @media (max-width: @breakpoint-mobile) {
   .rv-rows.rv-grid2 {
     grid-template-columns: 1fr;
+  }
+
+  .rv-effort-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rv-effort-block-size {
+    align-items: flex-start;
   }
 }

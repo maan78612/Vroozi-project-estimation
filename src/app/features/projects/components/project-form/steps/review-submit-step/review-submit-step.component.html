@@ -93,17 +93,20 @@
 
 <div class="rv-section rv-computed">
   <div class="rv-head">
-    <div class="rv-title">Estimated Effort</div>
-  </div>
-  <div class="rv-rows">
-    <div class="rv-row">
-      <span class="rk">Tentative Range (Days)</span
-      ><span class="r-val">{{ fieldValue('tentativeRangeDays') }}</span>
+    <div class="rv-title">
+      <span class="material-symbols-outlined rv-effort-icon" aria-hidden="true">bolt</span>
+      Estimated Effort
     </div>
-    <div class="rv-row">
-      <span class="rk">Tentative Project Size</span>
+  </div>
+  <div class="rv-effort-hero">
+    <div class="rv-effort-block">
+      <span class="rv-effort-label">Tentative Range</span>
+      <span class="rv-effort-value">{{ tentativeRangeDisplay() }}</span>
+    </div>
+    <div class="rv-effort-block rv-effort-block-size">
+      <span class="rv-effort-label">Tentative Project Size</span>
       @if (projectSize()) {
-        <span class="size-badge size-{{ projectSize()!.toLowerCase() }}">{{ projectSize() }}</span>
+        <span class="size-badge rv-effort-size-badge size-{{ projectSize()!.toLowerCase() }}">{{ projectSize() }}</span>
       } @else {
         <span class="r-val">—</span>
       }

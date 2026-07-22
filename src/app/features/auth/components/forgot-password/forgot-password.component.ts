@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ButtonComponent } from '../../../../shared/compoments/button/button';
+import { AppLogoComponent } from '../../../../shared/compoments/app-logo/app-logo.component';
 
 /*
  * ──────────────────────────────────────────────────────────────────
@@ -15,7 +16,7 @@ import { ButtonComponent } from '../../../../shared/compoments/button/button';
  */
 @Component({
   selector: 'app-forgot-password',
-  imports: [ButtonComponent],
+  imports: [ButtonComponent, AppLogoComponent],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.less',
 })

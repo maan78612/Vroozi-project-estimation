@@ -36,11 +36,33 @@
   flex-shrink: 0;
 }
 
+.shell-brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: @color-primary;
+}
+
+.shell-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
 .shell-brand {
-  .typography-headline-sm();
+  .typography-body-lg();
   color: @color-primary;
   font-weight: 700;
   letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.shell-brand-subtitle {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: @color-on-surface-variant;
   white-space: nowrap;
 }
 

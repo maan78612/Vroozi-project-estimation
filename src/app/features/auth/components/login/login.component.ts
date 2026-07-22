@@ -4,12 +4,13 @@ import { AuthService } from '../../../../core/services/auth/auth-service';
 import { ThemeService } from '../../../../core/services/theme/theme-service';
 import { homeRouteForRole } from '../../../../core/utils/role-route.util';
 import { FormComponent } from '../../../../shared/compoments/form/form.component';
+import { AppLogoComponent } from '../../../../shared/compoments/app-logo/app-logo.component';
 import { FormFieldInterface } from '../../../../core/intefaces/form/form-field.interface';
 import { FieldTypeEnum } from '../../../../core/enums/field-type.enum';
 
 @Component({
   selector: 'app-login',
-  imports: [FormComponent],
+  imports: [FormComponent, AppLogoComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.less',
 })

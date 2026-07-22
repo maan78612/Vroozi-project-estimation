@@ -27,6 +27,11 @@ export class ReviewSubmitStepComponent {
     return (this.form().get(key)?.value as string) || '—';
   }
 
+  tentativeRangeDisplay(): string {
+    const value = this.fieldValue('tentativeRangeDays');
+    return value === '—' ? value : `${value} days`;
+  }
+
   // Who the entry is assigned to. For non-admins the assignable list is
   // empty (admin-only endpoint), so fall back to the signed-in user, then
   // to the owner name the API already populated onto the loaded entry —
