@@ -80,3 +80,21 @@ export function estimateRangeDays(input: EstimateInput): EstimateBreakdown {
     complexityMultiplier: Math.round(complexityMultiplier * 100) / 100,
   };
 }
+
+/*
+ * ──────────────────────────────────────────────────────────────────
+ !  AI-assisted estimate — the tentative range reduced by the admin's
+ *  global AI efficiency % (e.g. 50-70 days at 30% → 35-49 days).
+ *  Percentage is validated 0-100 on both ends; a 0% is a no-op (same
+ *  range, unrounded difference).
+ * ──────────────────────────────────────────────────────────────────
+ */
+export function applyAiEfficiency(
+  breakdown: Pick<EstimateBreakdown, 'min' | 'max'>,
+  percentage: number,
+): { range: string; min: number; max: number } {
+  const factor = 1 - percentage / 100;
+  const min = Math.max(1, Math.round(breakdown.min * factor));
+  const max = Math.max(min, Math.round(breakdown.max * factor));
+  return { range: `${min}-${max}`, min, max };
+}

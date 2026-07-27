@@ -16,6 +16,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth/auth-service';
 import { UsersService } from '../../../../core/services/users/users-service';
 import { ErpsService } from '../../../../core/services/erps/erps-service';
+import { AiSettingsService } from '../../../../core/services/ai-settings/ai-settings-service';
 import { SuppliersService } from '../../../../core/services/suppliers/suppliers-service';
 import { ClientUsersService } from '../../../../core/services/client-users/client-users-service';
 import { ProjectsStoreService } from '../../../../core/services/projects/projects-store.service';
@@ -29,7 +30,7 @@ import { FormFieldInterface } from '../../../../core/intefaces/form/form-field.i
 import { FieldTypeEnum } from '../../../../core/enums/field-type.enum';
 import { ProjectSizeEnum } from '../../../../core/enums/project-size.enum';
 import { estimateProjectSize } from '../../../../core/utils/project-size.util';
-import { EstimateBreakdown, estimateRangeDays } from '../../../../core/utils/estimate.util';
+import { EstimateBreakdown, applyAiEfficiency, estimateRangeDays } from '../../../../core/utils/estimate.util';
 import { isExactDuplicateEntry } from '../../../../core/utils/project-entry-equality.util';
 import { AddOptionDialogComponent } from '../../../../shared/compoments/add-option-dialog/add-option-dialog.component';
 import { EditProjectFormComponent } from '../edit-project-form/edit-project-form.component';
@@ -61,6 +62,7 @@ export class ProjectFormComponent {
   private authService = inject(AuthService);
   private usersService = inject(UsersService);
   private erpsService = inject(ErpsService);
+  private aiSettingsService = inject(AiSettingsService);
   private suppliersService = inject(SuppliersService);
   private clientUsersService = inject(ClientUsersService);
   private projectsStore = inject(ProjectsStoreService);
@@ -101,7 +103,7 @@ export class ProjectFormComponent {
     // it has no validator at all unless EDI is "Yes" (see
     // applySupplierValidator), so listing it here is a no-op except when
     // that dynamic validator has actually kicked in.
-    ['projectName', 'user', 'projectScope', 'supplier'],
+    ['projectName', 'user', 'projectScope', 'supplier', 'client'],
     ['masterDataInterfaces', 'transactionalInterfaces', 'inbound', 'outbound'],
     [],
     ['dataLayer', 'uncertainties'],
@@ -124,7 +126,7 @@ export class ProjectFormComponent {
     edi: ['No'],
     supplier: [''],
     // Admin-editable only — see the basics step template.
-    client: [''],
+    client: ['', [Validators.required]],
     user: ['', [Validators.required]],
     masterDataInterfaces: [0, [Validators.required, Validators.min(0)]],
     transactionalInterfaces: [0, [Validators.required, Validators.min(0)]],
@@ -143,6 +145,9 @@ export class ProjectFormComponent {
     // Derived, never typed — see recomputeEstimate().
     tentativeRangeDays: [''],
     tentativeProjectSize: [null as ProjectSizeEnum | null],
+    // AI-assisted estimation snapshot — also derived, see recomputeEstimate().
+    aiEfficiencyPercentage: [0],
+    aiEstimatedRangeDays: [''],
   });
 
   /*
@@ -267,6 +272,15 @@ export class ProjectFormComponent {
     this.form.valueChanges.subscribe(() => this.recomputeEstimate());
     this.recomputeEstimate();
 
+    // The AI efficiency % loads asynchronously (GET /ai-settings) — once it
+    // arrives, re-run the same derivation so the AI-assisted figure appears
+    // without needing a form change. AiSettingsService.load() is kicked off
+    // below with the other reference-data loads.
+    effect(() => {
+      this.aiSettingsService.efficiencyPercentage();
+      this.recomputeEstimate();
+    });
+
     // EDI drives whether Supplier is required (see the EDI toggle in
     // project-basics-step.component.html). patchValue in edit mode below
     // emits valueChanges by default, so loading an entry with edi:"Yes"
@@ -275,22 +289,28 @@ export class ProjectFormComponent {
     this.applySupplierValidator(this.form.get('edi')?.value);
 
     // "Existing project" mode: picking a project auto-fills its ERP as a
-    // convenience (still editable). Re-fires on every distinct pick, and
-    // is a no-op in 'new' mode or when the field is cleared.
+    // convenience (still editable) — an entry can genuinely use a different
+    // ERP than its siblings. Re-fires on every distinct pick, and is a
+    // no-op in 'new' mode or when the field is cleared.
     //
-    // Client is different: it's not just a convenience default, it's
-    // locked to whatever was set on the project's first supplier entry
-    // and can't be changed here. Client-role visibility is scoped
-    // per-document (project.client, see project.service.ts) — a later
-    // entry saved with a different client would silently vanish from
-    // part of "their" project, so every entry sharing a projectName must
-    // carry the same client. (Still editable from the edit form, which
-    // changes it on all — see edit-project-form.component.ts.)
+    // Project Scope, EDI, and Client are different: they're not just
+    // convenience defaults, they're locked to whatever was set on the
+    // project's first supplier entry and can't be changed here — every
+    // entry sharing a projectName must carry the same scope/EDI/client
+    // (Client's visibility is scoped per-document, see project.service.ts;
+    // Scope/EDI are simply properties of the project as a whole, not the
+    // individual supplier entry). All three are still editable from the
+    // edit form, which changes them on every sibling entry at once — see
+    // edit-project-form.component.ts.
     this.form.get('projectName')?.valueChanges.subscribe((name) => {
       if (this.entryMode() !== 'existing' || !name) return;
       const first = this.projectsStore.entriesFor(name)[0];
       if (!first) return;
       this.form.get('erp')?.setValue(first.erp);
+      this.form.get('projectScope')?.setValue(first.projectScope);
+      this.form.get('projectScope')?.disable();
+      this.form.get('edi')?.setValue(first.edi);
+      this.form.get('edi')?.disable();
       this.form.get('client')?.setValue(first.client ?? '');
       this.form.get('client')?.disable();
     });
@@ -300,6 +320,8 @@ export class ProjectFormComponent {
     // ERP + Supplier pick-lists for the basics step.
     this.erpsService.load();
     this.suppliersService.load();
+    // Global AI efficiency % for the Review step's AI-assisted estimate.
+    this.aiSettingsService.load();
     // Client + assignee dropdowns are fed by admin-only endpoints — the
     // call would just 403 for employees/clients, who see read-only text
     // instead of these dropdowns anyway.
@@ -416,6 +438,18 @@ export class ProjectFormComponent {
     this.form
       .get('tentativeProjectSize')
       ?.setValue(estimateProjectSize(breakdown.range), { emitEvent: false });
+
+    // AI-assisted estimate — snapshot of the current global % and the range
+    // it produces. Stored even at 0% (an honest "no AI benefit configured
+    // yet" record); the Review card only displays it once it's > 0.
+    const aiPercentage = this.aiSettingsService.efficiencyPercentage();
+    this.form.get('aiEfficiencyPercentage')?.setValue(aiPercentage, { emitEvent: false });
+    this.form
+      .get('aiEstimatedRangeDays')
+      ?.setValue(
+        aiPercentage > 0 ? applyAiEfficiency(breakdown, aiPercentage).range : '',
+        { emitEvent: false },
+      );
   }
 
   /*
@@ -611,9 +645,11 @@ export class ProjectFormComponent {
     this.entryMode.set(mode);
     // The name field switches between free text and the project dropdown.
     this.form.get('projectName')?.setValue('');
-    // Release the client lock from a previous 'existing' pick (see the
-    // projectName subscription above) — re-locked once a project is
-    // chosen again, left editable in 'new' mode.
+    // Release the Scope/EDI/Client locks from a previous 'existing' pick
+    // (see the projectName subscription above) — re-locked once a project
+    // is chosen again, left editable in 'new' mode.
+    this.form.get('projectScope')?.enable();
+    this.form.get('edi')?.enable();
     this.form.get('client')?.enable();
   }
 
@@ -787,6 +823,8 @@ export class ProjectFormComponent {
       hyperCare: (raw.hyperCare ?? 'No') as YesNo,
       tentativeRangeDays: raw.tentativeRangeDays ?? '',
       tentativeProjectSize: raw.tentativeProjectSize ?? undefined,
+      aiEfficiencyPercentage: raw.aiEfficiencyPercentage ?? 0,
+      aiEstimatedRangeDays: raw.aiEstimatedRangeDays ?? '',
     };
 
     const editing = this.editingProject();

@@ -96,6 +96,15 @@ export class ProjectViewComponent {
 
   readonly notFound = computed(() => !this.loading() && !this.loadError() && this.entries().length === 0);
 
+  // The supplier list pane only earns its place when there's something to
+  // pick between — multiple entries, or a single entry that actually names
+  // a supplier. A lone supplier-less entry (e.g. "Client Portal Refresh")
+  // would just show a redundant "No supplier" row above its own detail.
+  readonly showSupplierList = computed(() => {
+    const list = this.entries();
+    return list.length > 1 || !!list[0]?.supplier;
+  });
+
   constructor() {
     this.projectsStore.load();
     if (this.isAdmin()) this.usersService.load();

@@ -122,65 +122,6 @@
       </div>
     </div>
 
-    <div class="scope-edi-row">
-      <div class="field-block">
-        <span class="field-label">
-          Project Scope <span class="required-mark" aria-hidden="true">*</span>
-        </span>
-        <div class="scope-toggle" role="radiogroup" aria-label="Project Scope">
-          <button
-            type="button"
-            class="scope-option"
-            role="radio"
-            [attr.aria-checked]="isScope('Internal')"
-            [class.is-selected]="isScope('Internal')"
-            (click)="setScope('Internal')"
-          >
-            Internal
-          </button>
-          <button
-            type="button"
-            class="scope-option"
-            role="radio"
-            [attr.aria-checked]="isScope('External')"
-            [class.is-selected]="isScope('External')"
-            (click)="setScope('External')"
-          >
-            External
-          </button>
-        </div>
-        @if (hasError('projectScope')) {
-          <span class="field-error" role="alert">Choose whether this project is Internal or External</span>
-        }
-      </div>
-
-      <div class="field-block">
-        <span class="field-label">EDI</span>
-        <div class="scope-toggle" role="radiogroup" aria-label="EDI">
-          <button
-            type="button"
-            class="scope-option"
-            role="radio"
-            [attr.aria-checked]="yn('edi') === 'Yes'"
-            [class.is-selected]="yn('edi') === 'Yes'"
-            (click)="setEdi('Yes')"
-          >
-            Yes
-          </button>
-          <button
-            type="button"
-            class="scope-option"
-            role="radio"
-            [attr.aria-checked]="yn('edi') === 'No'"
-            [class.is-selected]="yn('edi') === 'No'"
-            (click)="setEdi('No')"
-          >
-            No
-          </button>
-        </div>
-      </div>
-    </div>
-
     @if (entryMode() === 'existing') {
       <div class="field-block">
         <span class="field-label">
@@ -218,6 +159,78 @@
         }
       </div>
     }
+
+    <div class="scope-edi-row">
+      <div class="field-block">
+        <span class="field-label">
+          Project Scope <span class="required-mark" aria-hidden="true">*</span>
+        </span>
+        <div class="scope-toggle" role="radiogroup" aria-label="Project Scope">
+          <button
+            type="button"
+            class="scope-option"
+            role="radio"
+            [attr.aria-checked]="isScope('Internal')"
+            [class.is-selected]="isScope('Internal')"
+            [disabled]="entryMode() === 'existing'"
+            (click)="setScope('Internal')"
+          >
+            Internal
+          </button>
+          <button
+            type="button"
+            class="scope-option"
+            role="radio"
+            [attr.aria-checked]="isScope('External')"
+            [class.is-selected]="isScope('External')"
+            [disabled]="entryMode() === 'existing'"
+            (click)="setScope('External')"
+          >
+            External
+          </button>
+        </div>
+        @if (hasError('projectScope')) {
+          <span class="field-error" role="alert">Choose whether this project is Internal or External</span>
+        } @else if (entryMode() === 'existing') {
+          <span class="field-hint"
+            >Locked to this project's scope — set on its first supplier entry.</span
+          >
+        }
+      </div>
+
+      <div class="field-block">
+        <span class="field-label">EDI</span>
+        <div class="scope-toggle" role="radiogroup" aria-label="EDI">
+          <button
+            type="button"
+            class="scope-option"
+            role="radio"
+            [attr.aria-checked]="yn('edi') === 'Yes'"
+            [class.is-selected]="yn('edi') === 'Yes'"
+            [disabled]="entryMode() === 'existing'"
+            (click)="setEdi('Yes')"
+          >
+            Yes
+          </button>
+          <button
+            type="button"
+            class="scope-option"
+            role="radio"
+            [attr.aria-checked]="yn('edi') === 'No'"
+            [class.is-selected]="yn('edi') === 'No'"
+            [disabled]="entryMode() === 'existing'"
+            (click)="setEdi('No')"
+          >
+            No
+          </button>
+        </div>
+        @if (entryMode() === 'existing') {
+          <span class="field-hint"
+            >Locked to this project's EDI setting — set on its first supplier entry.</span
+          >
+        }
+      </div>
+    </div>
 
   @if (isAdmin()) {
     <div class="field-block">
@@ -304,17 +317,22 @@
       <app-search-dropdown
         formControlName="client"
         [options]="clientOptions()"
+        [isError]="hasError('client')"
         placeholder="Select a client…"
         searchPlaceholder="Search clients…"
       />
-      <span class="field-hint">
-        @if (entryMode() === 'existing') {
-          Locked to this project's client — set on its first supplier entry. Change it from the edit
-          form instead.
-        } @else {
-          Which client this project is for — only they (and admins) can see it.
-        }
-      </span>
+      @if (hasError('client')) {
+        <span class="field-error" role="alert">Client is required</span>
+      } @else {
+        <span class="field-hint">
+          @if (entryMode() === 'existing') {
+            Locked to this project's client — set on its first supplier entry. Change it from the edit
+            form instead.
+          } @else {
+            Which client this project is for — only they (and admins) can see it.
+          }
+        </span>
+      }
     </div>
   }
 </div>

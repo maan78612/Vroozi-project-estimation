@@ -56,6 +56,7 @@ export class AppShellComponent {
         { label: 'Projects', path: '/admin/projects', icon: 'folder_open' },
         { label: 'Employees', path: '/admin/users', icon: 'group' },
         { label: 'Clients', path: '/admin/clients', icon: 'domain' },
+        { label: 'AI Settings', path: '/admin/ai-settings', icon: 'auto_awesome' },
       ];
     }
     return [{ label: 'Projects', path: '/project', icon: 'folder_open' }];

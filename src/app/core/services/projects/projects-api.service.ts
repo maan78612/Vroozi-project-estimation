@@ -54,6 +54,8 @@ function fromDoc(doc: ApiProject): ProjectInterface {
     hyperCare: doc.hyperCare,
     tentativeRangeDays: doc.tentativeRangeDays,
     tentativeProjectSize: doc.tentativeProjectSize as ProjectSizeEnum,
+    aiEfficiencyPercentage: doc.aiEfficiencyPercentage,
+    aiEstimatedRangeDays: doc.aiEstimatedRangeDays,
   };
 }
 
@@ -91,6 +93,8 @@ function toBody(entry: Partial<ProjectInterface>): Record<string, unknown> {
       'hyperCare',
       'tentativeProjectSize',
       'tentativeRangeDays',
+      'aiEfficiencyPercentage',
+      'aiEstimatedRangeDays',
     ] as (keyof ProjectInterface)[]
   ).forEach(copy);
 

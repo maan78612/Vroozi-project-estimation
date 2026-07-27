@@ -94,11 +94,13 @@
 }
 
 // Project Scope + EDI side by side — both are compact pills, so pairing
-// them saves a row instead of each claiming a full-width line.
+// them saves a row instead of each claiming a full-width line. Pushed to
+// opposite ends (Scope left, EDI right) rather than packed together.
 .scope-edi-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 2rem;
+  justify-content: space-between;
+  gap: 1.5rem;
   margin-bottom: 1.375rem;
 
   .field-block {
@@ -152,6 +154,21 @@
   &.is-selected {
     background: @color-primary;
     color: @color-on-primary;
+  }
+
+  // Locked when picking an existing project's Scope/EDI (see
+  // project-form.component.ts) — still shows which option is selected,
+  // just no longer clickable.
+  &:disabled {
+    cursor: not-allowed;
+
+    &:not(.is-selected) {
+      color: @color-outline;
+    }
+
+    &.is-selected {
+      opacity: 0.75;
+    }
   }
 }
 

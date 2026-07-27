@@ -47,4 +47,17 @@ export interface ProjectInterface {
    */
   tentativeRangeDays?: string;
   tentativeProjectSize?: ProjectSizeEnum;
+
+  /*
+   * AI-assisted estimation snapshot — the global AI efficiency % (see
+   * the admin AI Settings page) in effect when this entry was last
+   * saved, and the range that produces. Both derived client-side via
+   * applyAiEfficiency() in estimate.util.ts, exactly like
+   * tentativeRangeDays/tentativeProjectSize above — never typed
+   * directly, and a snapshot rather than a live reference so an
+   * already-saved entry doesn't silently change if the global % is
+   * adjusted later.
+   */
+  aiEfficiencyPercentage?: number;
+  aiEstimatedRangeDays?: string;
 }

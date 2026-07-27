@@ -70,6 +70,8 @@ export interface ApiProject {
   hyperCare: YesNo;
   tentativeProjectSize: string;
   tentativeRangeDays: string;
+  aiEfficiencyPercentage?: number;
+  aiEstimatedRangeDays?: string;
   owner: ApiUser | string;
   createdAt?: string;
   updatedAt?: string;
@@ -108,6 +110,15 @@ export interface ApiBrdAnalysis {
   suggestions: ApiBrdSuggestions;
   summary: string;
   coverage: BrdCoverage;
+}
+
+/*
+ * Global AI-efficiency setting from GET/PATCH /ai-settings — a
+ * singleton, not a pick-list: there is only ever one of these.
+ */
+export interface ApiAiSetting {
+  _id: string;
+  efficiencyPercentage: number;
 }
 
 /** ERP pick-list option from GET /erps. */

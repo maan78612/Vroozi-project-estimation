@@ -115,6 +115,13 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'ai-settings',
+            loadComponent: () =>
+              import('./features/admin/components/ai-settings/ai-settings.component').then(
+                (m) => m.AiSettingsComponent,
+              ),
+          },
+          {
             // Read-only detail screen for the project — a "project" here is
             // every entry sharing a project name, not a single document, so
             // there's no one id to route on. :id anchors on one of those

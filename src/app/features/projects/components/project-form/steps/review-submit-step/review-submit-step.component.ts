@@ -32,6 +32,17 @@ export class ReviewSubmitStepComponent {
     return value === '—' ? value : `${value} days`;
   }
 
+  // AI-assisted estimate — only meaningful once an admin has set a
+  // non-zero efficiency % (see AiSettingsComponent); see aiPercentage().
+  aiEstimatedRangeDisplay(): string {
+    const value = this.fieldValue('aiEstimatedRangeDays');
+    return value === '—' ? value : `${value} days`;
+  }
+
+  aiPercentage(): number {
+    return this.numVal('aiEfficiencyPercentage');
+  }
+
   // Who the entry is assigned to. For non-admins the assignable list is
   // empty (admin-only endpoint), so fall back to the signed-in user, then
   // to the owner name the API already populated onto the loaded entry —

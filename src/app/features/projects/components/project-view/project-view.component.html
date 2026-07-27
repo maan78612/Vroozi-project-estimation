@@ -11,7 +11,7 @@
   </header>
 
   <!-- ── Detail field sections, reused for both the solo and split layouts ── -->
-  <ng-template #detailContent let-entry let-showBack="showBack" let-showAddSupplier="showAddSupplier">
+  <ng-template #detailContent let-entry let-showBack="showBack">
     <div class="detail-scroll">
       @if (showBack) {
         <button type="button" class="detail-back-mobile" (click)="backToList()">
@@ -21,11 +21,6 @@
       <div class="detail-header">
         <h2 class="detail-name">{{ entry.supplier || 'No supplier' }}</h2>
         <div class="detail-actions">
-          <!-- Only shown in the solo layout — the split layout already has
-               its own "Add New Estimation" button in the list pane. -->
-          @if (showAddSupplier && isAdmin()) {
-            <app-button icon="add" label="Add Estimation" [fullWidth]="false" (clicked)="addSupplier()" />
-          }
           <!-- Every role can edit (clients get the same edit rights as the
                owning employee — scoped server-side); duplicating and
                deleting stay hidden from clients. -->
@@ -207,8 +202,10 @@
         }
       }
 
-      <!-- ── Master-detail split (multi-supplier) or solo detail pane ─────── -->
-      @if (entries().length > 1) {
+      <!-- ── Master-detail split — the supplier list pane only shows up when
+           there's actually something to pick between (see showSupplierList).
+           A single supplier-less entry renders its detail alone, full width. -->
+      @if (showSupplierList()) {
         <div class="view-split">
           <aside class="supplier-list-pane" [class.is-active-mobile]="!mobileDetailOpen()">
             <div class="supplier-search">
@@ -262,11 +259,13 @@
           </section>
         </div>
       } @else {
-        <section class="supplier-detail-pane detail-solo">
-          @if (selectedEntry(); as entry) {
-            <ng-container *ngTemplateOutlet="detailContent; context: { $implicit: entry, showBack: false, showAddSupplier: true }" />
-          }
-        </section>
+        <div class="view-split">
+          <section class="supplier-detail-pane is-active-mobile">
+            @for (entry of selectedEntryList(); track entry.id) {
+              <ng-container *ngTemplateOutlet="detailContent; context: { $implicit: entry, showBack: false }" />
+            }
+          </section>
+        </div>
       }
     }
 

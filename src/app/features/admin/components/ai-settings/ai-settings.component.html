@@ -1,0 +1,74 @@
+<div class="ai-settings-page">
+  <div class="page-title-row">
+    <div>
+      <h1>AI Efficiency</h1>
+      <p class="page-subtitle">
+        Set how much faster projects get delivered with AI assistance — shown on every
+        project's Review &amp; Submit step as an AI-assisted estimate.
+      </p>
+    </div>
+  </div>
+
+  @if (loadError()) {
+    <div class="feedback error" role="alert">
+      <span class="material-symbols-outlined feedback-icon" aria-hidden="true">error</span>
+      {{ loadError() }}
+    </div>
+  } @else {
+    <section class="ai-settings-card">
+      <header class="ai-settings-card-header">
+        <span class="material-symbols-outlined ai-settings-card-icon">auto_awesome</span>
+        <div>
+          <h3>Efficiency Percentage</h3>
+          <p>Applied globally to every project's tentative estimate.</p>
+        </div>
+      </header>
+
+      <div class="range-wrap">
+        <div class="range-header">
+          <div>
+            <p class="range-name">AI Efficiency</p>
+            <p class="range-desc">e.g. 30% means a project takes 30% fewer days with AI help</p>
+          </div>
+          <span class="range-pct">{{ draftPercentage() }}<sup>%</sup></span>
+        </div>
+        <input
+          type="range"
+          class="range-input"
+          min="0"
+          max="100"
+          step="1"
+          [value]="draftPercentage()"
+          [disabled]="loading()"
+          (input)="onSliderChange($any($event.target).value)"
+          [style.background]="sliderTrack()"
+        />
+        <div class="range-ticks">
+          <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+        </div>
+      </div>
+
+      @if (saveError()) {
+        <div class="feedback error" role="alert">
+          <span class="material-symbols-outlined feedback-icon" aria-hidden="true">error</span>
+          {{ saveError() }}
+        </div>
+      }
+      @if (saveSuccess()) {
+        <div class="feedback success" role="status">
+          <span class="material-symbols-outlined feedback-icon" aria-hidden="true">check_circle</span>
+          AI efficiency setting saved.
+        </div>
+      }
+
+      <app-button
+        label="Save"
+        loadingLabel="Saving…"
+        [loading]="saving()"
+        [disabled]="loading() || !isDirty()"
+        [fullWidth]="false"
+        (clicked)="save()"
+      />
+    </section>
+  }
+</div>

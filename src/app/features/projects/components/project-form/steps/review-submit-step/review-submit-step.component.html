@@ -103,20 +103,33 @@
       <span class="material-symbols-outlined rv-effort-icon" aria-hidden="true">bolt</span>
       Estimated Effort
     </div>
+    <div class="rv-head-tags">
+      @if (projectSize()) {
+        <span class="size-badge rv-effort-size-badge size-{{ projectSize()!.toLowerCase() }}">{{ projectSize() }}</span>
+      }
+      @if (aiPercentage() > 0) {
+        <span class="rv-ai-tag">-{{ aiPercentage() }}% with AI</span>
+      }
+    </div>
   </div>
   <div class="rv-effort-hero">
     <div class="rv-effort-block">
       <span class="rv-effort-label">Tentative Range</span>
       <span class="rv-effort-value">{{ tentativeRangeDisplay() }}</span>
     </div>
-    <div class="rv-effort-block rv-effort-block-size">
-      <span class="rv-effort-label">Tentative Project Size</span>
-      @if (projectSize()) {
-        <span class="size-badge rv-effort-size-badge size-{{ projectSize()!.toLowerCase() }}">{{ projectSize() }}</span>
-      } @else {
-        <span class="r-val">—</span>
-      }
-    </div>
+
+    @if (aiPercentage() > 0) {
+      <div class="rv-effort-arrow" aria-hidden="true">
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </div>
+      <div class="rv-effort-block rv-effort-block-ai">
+        <span class="rv-effort-label">
+          <span class="material-symbols-outlined rv-ai-icon" aria-hidden="true">auto_awesome</span>
+          Estimated with AI
+        </span>
+        <span class="rv-effort-value rv-effort-value-ai">{{ aiEstimatedRangeDisplay() }}</span>
+      </div>
+    }
   </div>
   <p class="rv-computed-hint">Calculated automatically from the inputs above</p>
 </div>
