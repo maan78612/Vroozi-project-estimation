@@ -268,6 +268,60 @@
   color: @color-primary;
 }
 
+.effort-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// Mirrors .rv-ai-tag on the wizard's Review step (review-submit-step) —
+// same "-X% with AI" pill, sized down slightly for this narrower sidebar.
+.effort-ai-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border-radius: @radius-full;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: rgba(var(--color-primary-rgb), 14%);
+  color: @color-primary;
+}
+
+// AI-assisted estimate callout — sits below the base breakdown, same
+// "Estimated with AI" framing as the wizard's Review step but a compact
+// single-column block instead of that page's side-by-side hero layout.
+.effort-ai-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 1.25rem;
+  padding: 0.9rem 1rem;
+  background: color-mix(in srgb, @color-primary-container 22%, @color-surface-container-low);
+  border: 1px solid rgba(var(--color-primary-rgb), 25%);
+  border-radius: @radius-lg;
+}
+
+.effort-ai-label {
+  .typography-label-sm();
+  font-size: 0.8rem;
+  color: @color-on-surface-variant;
+}
+
+.effort-ai-icon {
+  font-size: 15px;
+  color: @color-primary;
+  vertical-align: text-bottom;
+  margin-right: 0.15rem;
+}
+
+.effort-ai-value {
+  .typography-headline-md();
+  font-weight: 800;
+  color: @color-on-surface;
+}
+
 .effort-breakdown {
   margin: 0;
   display: flex;

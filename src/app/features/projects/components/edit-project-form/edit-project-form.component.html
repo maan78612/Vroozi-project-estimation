@@ -368,9 +368,14 @@
             @if (estimateBreakdown(); as est) {
               <div class="effort-range-row">
                 <span class="effort-range">{{ est.range }} days</span>
-                @if (estimateSize(); as size) {
-                  <span class="size-badge size-{{ size.toLowerCase() }}">{{ size }}</span>
-                }
+                <div class="effort-tags">
+                  @if (estimateSize(); as size) {
+                    <span class="size-badge size-{{ size.toLowerCase() }}">{{ size }}</span>
+                  }
+                  @if (aiPercentage() > 0) {
+                    <span class="effort-ai-tag">-{{ aiPercentage() }}% with AI</span>
+                  }
+                </div>
               </div>
 
               <dl class="effort-breakdown">
@@ -387,6 +392,16 @@
                   <dd>×{{ est.complexityMultiplier }}</dd>
                 </div>
               </dl>
+
+              @if (aiPercentage() > 0) {
+                <div class="effort-ai-block">
+                  <span class="effort-ai-label">
+                    <span class="material-symbols-outlined effort-ai-icon" aria-hidden="true">auto_awesome</span>
+                    Estimated with AI
+                  </span>
+                  <span class="effort-ai-value">{{ aiEstimatedRangeDisplay() }}</span>
+                </div>
+              }
             }
 
             <p class="effort-card-hint">Recalculates automatically as you edit the fields.</p>

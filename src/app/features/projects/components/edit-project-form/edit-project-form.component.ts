@@ -109,6 +109,18 @@ export class EditProjectFormComponent {
     return sliderTrack(this.form(), key);
   }
 
+  // AI-assisted estimate — only meaningful once an admin has set a non-zero
+  // efficiency % (see AiSettingsComponent), same snapshot fields the create
+  // wizard's Review step reads (see review-submit-step.component.ts).
+  aiPercentage(): number {
+    return this.numVal('aiEfficiencyPercentage');
+  }
+
+  aiEstimatedRangeDisplay(): string {
+    const value = this.form().get('aiEstimatedRangeDays')?.value as string;
+    return value ? `${value} days` : '—';
+  }
+
   onSubmit(): void {
     this.save.emit();
   }
