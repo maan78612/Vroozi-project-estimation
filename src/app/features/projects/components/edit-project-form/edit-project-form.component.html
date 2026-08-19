@@ -18,7 +18,8 @@
             <h1 class="edit-title">{{ form().get('projectName')?.value || 'Edit Project' }}</h1>
             <p class="edit-subtitle">
               @if (isDuplicating()) {
-                Duplicating {{ form().get('supplier')?.value || 'this' }} as a new supplier estimation
+                Duplicating {{ form().get('supplier')?.value || 'this' }} as a new supplier
+                estimation
               } @else {
                 Editing {{ form().get('supplier')?.value || 'this' }} supplier estimation
               }
@@ -99,9 +100,13 @@
                   autocomplete="off"
                 />
                 @if (hasError('projectName')) {
-                  <span class="field-error" role="alert">Project name is required (min. 2 characters)</span>
+                  <span class="field-error" role="alert"
+                    >Project name is required (min. 2 characters)</span
+                  >
                 } @else if (isDuplicating()) {
-                  <span class="field-hint">A duplicate always stays under the source entry's project.</span>
+                  <span class="field-hint"
+                    >A duplicate always stays under the source entry's project.</span
+                  >
                 } @else if (!isAdmin()) {
                   <span class="field-hint">Only an admin can rename a project.</span>
                 }
@@ -148,7 +153,11 @@
                     }
                   </span>
                   @if (isAdmin()) {
-                    <button type="button" class="add-option-link" (click)="addSupplierRequested.emit()">
+                    <button
+                      type="button"
+                      class="add-option-link"
+                      (click)="addSupplierRequested.emit()"
+                    >
                       + Add new
                     </button>
                   }
@@ -161,7 +170,9 @@
                   searchPlaceholder="Search suppliers…"
                 />
                 @if (hasError('supplier')) {
-                  <span class="field-error" role="alert">Supplier is required when EDI is enabled</span>
+                  <span class="field-error" role="alert"
+                    >Supplier is required when EDI is enabled</span
+                  >
                 } @else if (yn('edi') === 'Yes') {
                   <span class="field-hint">Required because EDI is enabled.</span>
                 }
@@ -197,9 +208,13 @@
                   disabled
                 />
                 @if (isDuplicating()) {
-                  <span class="field-hint">A duplicate always stays under the source entry's client.</span>
+                  <span class="field-hint"
+                    >A duplicate always stays under the source entry's client.</span
+                  >
                 } @else {
-                  <span class="field-hint">Only an admin can change which client a project is for.</span>
+                  <span class="field-hint"
+                    >Only an admin can change which client a project is for.</span
+                  >
                 }
               </div>
             }
@@ -219,33 +234,93 @@
               <div class="scope-card">
                 <p class="scope-label">Master Data</p>
                 <div class="scope-control">
-                  <button type="button" class="scope-btn" (click)="decrement('masterDataInterfaces')" [disabled]="numVal('masterDataInterfaces') <= 0" aria-label="Decrease">−</button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    (click)="decrement('masterDataInterfaces')"
+                    [disabled]="numVal('masterDataInterfaces') <= 0"
+                    aria-label="Decrease"
+                  >
+                    −
+                  </button>
                   <span class="scope-value">{{ numVal('masterDataInterfaces') }}</span>
-                  <button type="button" class="scope-btn" (click)="increment('masterDataInterfaces')" aria-label="Increase">+</button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    (click)="increment('masterDataInterfaces')"
+                    aria-label="Increase"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
               <div class="scope-card">
                 <p class="scope-label">Transactional</p>
                 <div class="scope-control">
-                  <button type="button" class="scope-btn" (click)="decrement('transactionalInterfaces')" [disabled]="numVal('transactionalInterfaces') <= 0" aria-label="Decrease">−</button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    (click)="decrement('transactionalInterfaces')"
+                    [disabled]="numVal('transactionalInterfaces') <= 0"
+                    aria-label="Decrease"
+                  >
+                    −
+                  </button>
                   <span class="scope-value">{{ numVal('transactionalInterfaces') }}</span>
-                  <button type="button" class="scope-btn" (click)="increment('transactionalInterfaces')" aria-label="Increase">+</button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    (click)="increment('transactionalInterfaces')"
+                    aria-label="Increase"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
               <div class="scope-card">
                 <p class="scope-label">Inbound</p>
                 <div class="scope-control">
-                  <button type="button" class="scope-btn" (click)="decrement('inbound')" [disabled]="numVal('inbound') <= 0" aria-label="Decrease">−</button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    (click)="decrement('inbound')"
+                    [disabled]="numVal('inbound') <= 0"
+                    aria-label="Decrease"
+                  >
+                    −
+                  </button>
                   <span class="scope-value">{{ numVal('inbound') }}</span>
-                  <button type="button" class="scope-btn" (click)="increment('inbound')" aria-label="Increase">+</button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    (click)="increment('inbound')"
+                    aria-label="Increase"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
               <div class="scope-card">
                 <p class="scope-label">Outbound</p>
                 <div class="scope-control">
-                  <button type="button" class="scope-btn" (click)="decrement('outbound')" [disabled]="numVal('outbound') <= 0" aria-label="Decrease">−</button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    (click)="decrement('outbound')"
+                    [disabled]="numVal('outbound') <= 0"
+                    aria-label="Decrease"
+                  >
+                    −
+                  </button>
                   <span class="scope-value">{{ numVal('outbound') }}</span>
-                  <button type="button" class="scope-btn" (click)="increment('outbound')" aria-label="Increase">+</button>
+                  <button
+                    type="button"
+                    class="scope-btn"
+                    (click)="increment('outbound')"
+                    aria-label="Increase"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
             </div>
@@ -334,7 +409,8 @@
                       type="range"
                       class="range-input"
                       formControlName="dataLayer"
-                      min="0" max="100"
+                      min="0"
+                      max="100"
                       [style.background]="sliderTrack('dataLayer')"
                     />
                   </div>
@@ -348,7 +424,8 @@
                       type="range"
                       class="range-input"
                       formControlName="uncertainties"
-                      min="0" max="100"
+                      min="0"
+                      max="100"
                       [style.background]="sliderTrack('uncertainties')"
                     />
                   </div>
@@ -396,7 +473,9 @@
               @if (aiPercentage() > 0) {
                 <div class="effort-ai-block">
                   <span class="effort-ai-label">
-                    <span class="material-symbols-outlined effort-ai-icon" aria-hidden="true">auto_awesome</span>
+                    <span class="material-symbols-outlined effort-ai-icon" aria-hidden="true"
+                      >auto_awesome</span
+                    >
                     Estimated with AI
                   </span>
                   <span class="effort-ai-value">{{ aiEstimatedRangeDisplay() }}</span>

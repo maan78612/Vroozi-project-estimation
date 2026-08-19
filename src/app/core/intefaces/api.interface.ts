@@ -125,6 +125,9 @@ export interface ApiAiSetting {
 export interface ApiErp {
   _id: string;
   name: string;
+  // Whether any existing project has this ERP assigned — drives the
+  // wizard's "Existing ERP" flag.
+  used: boolean;
 }
 
 /** Supplier pick-list option from GET /suppliers. */

@@ -18,6 +18,9 @@ export class ErpsService {
   private http = inject(HttpClient);
 
   readonly erps = signal<string[]>([]);
+  // Lowercased names of ERPs already assigned to at least one project —
+  // the wizard derives its "Existing ERP" flag from this.
+  readonly usedNames = signal<ReadonlySet<string>>(new Set());
   readonly loading = signal(false);
   readonly loadError = signal('');
 
@@ -29,6 +32,13 @@ export class ErpsService {
     this.http.get<ApiResponse<{ erps: ApiErp[] }>>(`${API_BASE_URL}/erps`).subscribe({
       next: (res) => {
         this.erps.set(res.data.erps.map((e) => e.name));
+        this.usedNames.set(
+          new Set(
+            res.data.erps
+              .filter((e) => e.used)
+              .map((e) => e.name.trim().toLowerCase()),
+          ),
+        );
         this.loading.set(false);
       },
       error: (err: unknown) => {

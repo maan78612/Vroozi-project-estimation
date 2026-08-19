@@ -147,6 +147,9 @@ export class ProjectsApiService {
   analyzeBrd(file: File): Observable<ApiBrdAnalysis> {
     const formData = new FormData();
     formData.append('file', file, file.name);
+    // Only the document travels: integrations/clientDependency come from
+    // the Project Scope toggle and existingErp from the ERP dropdown —
+    // all derived live in the form, never from this analysis.
     return this.http.post<ApiResponse<ApiBrdAnalysis>>(`${BASE}/analyze-brd`, formData).pipe(
       map((res) => res.data),
       catchError((err: unknown) =>

@@ -136,12 +136,13 @@ export class ProjectFormComponent {
     uiImpact: ['No'],
     newApiOrBusinessFlows: ['No'],
     integrations: ['No'],
-    existingErp: ['No'],
+    // 'Yes' by rule when no ERP is selected (the initial state).
+    existingErp: ['Yes'],
     hyperCare: ['No'],
     clientDependency: ['No'],
     reportingAnalytics: ['No'],
     dataLayer: [10, [Validators.required, Validators.min(0), Validators.max(100)]],
-    uncertainties: [10, [Validators.required, Validators.min(0), Validators.max(100)]],
+    uncertainties: [20, [Validators.required, Validators.min(0), Validators.max(100)]],
     // Derived, never typed — see recomputeEstimate().
     tentativeRangeDays: [''],
     tentativeProjectSize: [null as ProjectSizeEnum | null],
@@ -288,6 +289,32 @@ export class ProjectFormComponent {
     this.form.get('edi')?.valueChanges.subscribe((val) => this.applySupplierValidator(val));
     this.applySupplierValidator(this.form.get('edi')?.value);
 
+    // Integrations & Client Dependency are strictly derived from Project
+    // Scope: External → Yes, otherwise No — live on every toggle, no
+    // backend/AI involved. emitEvent:false so this doesn't double-fire
+    // recomputeEstimate (the scope change itself already triggers it, after
+    // these two values are updated).
+    this.form.get('projectScope')?.valueChanges.subscribe((scope) => {
+      const flag = scope === 'External' ? 'Yes' : 'No';
+      this.form.patchValue(
+        { integrations: flag, clientDependency: flag },
+        { emitEvent: false },
+      );
+    });
+
+    // Existing ERP is strictly derived from the ERP dropdown — independent
+    // of the BRD upload: no ERP → Yes; an ERP already assigned to some
+    // project (per GET /erps `used`) → Yes; a first-time/unknown ERP → No.
+    this.form.get('erp')?.valueChanges.subscribe(() => this.applyExistingErpFlag());
+    // The usage data arrives async with the pick-list — re-derive once it
+    // lands (new mode only; in edit mode the saved value stands until the
+    // user changes the ERP).
+    effect(() => {
+      this.erpsService.usedNames();
+      if (this.editingProject()) return;
+      this.applyExistingErpFlag();
+    });
+
     // "Existing project" mode: picking a project auto-fills its ERP as a
     // convenience (still editable) — an entry can genuinely use a different
     // ERP than its siblings. Re-fires on every distinct pick, and is a
@@ -389,7 +416,7 @@ export class ProjectFormComponent {
         clientDependency: p.clientDependency ?? 'No',
         reportingAnalytics: p.reportingAnalytics ?? 'No',
         dataLayer: p.dataLayer ?? 10,
-        uncertainties: p.uncertainties ?? 10,
+        uncertainties: p.uncertainties ?? 20,
       });
     });
 
@@ -404,6 +431,15 @@ export class ProjectFormComponent {
 
   // Supplier has no validator at all unless EDI is "Yes" — a project
   // that exchanges data with the ERP via EDI needs a supplier on file.
+  // Existing ERP rule (independent of the BRD upload): no ERP chosen → Yes;
+  // chosen ERP already assigned to some project → Yes; first-time or
+  // unknown ERP → No.
+  private applyExistingErpFlag(): void {
+    const name = (this.form.get('erp')?.value ?? '').trim().toLowerCase();
+    const flag = !name || this.erpsService.usedNames().has(name) ? 'Yes' : 'No';
+    this.form.patchValue({ existingErp: flag }, { emitEvent: false });
+  }
+
   private applySupplierValidator(edi: string | null | undefined): void {
     const ctrl = this.form.get('supplier');
     ctrl?.setValidators(edi === 'Yes' ? [Validators.required] : []);
@@ -690,6 +726,9 @@ export class ProjectFormComponent {
       next: ({ suggestions: s, summary, coverage }) => {
         this.stopBrdStatusCycle();
         this.brdAnalyzing.set(false);
+        // integrations, clientDependency, and existingErp are deliberately
+        // NOT patched — they belong to the Project Scope toggle and the ERP
+        // dropdown respectively, not to the BRD analysis.
         this.form.patchValue({
           masterDataInterfaces: s.masterDataInterfaces,
           transactionalInterfaces: s.transactionalInterfaces,
@@ -698,10 +737,7 @@ export class ProjectFormComponent {
           customLogic: s.customLogic,
           uiImpact: s.uiImpact,
           newApiOrBusinessFlows: s.newApiOrBusinessFlows,
-          integrations: s.integrations,
-          existingErp: s.existingErp,
           hyperCare: s.hyperCare,
-          clientDependency: s.clientDependency,
           reportingAnalytics: s.reportingAnalytics,
           dataLayer: s.dataLayer,
           uncertainties: s.uncertainties,
